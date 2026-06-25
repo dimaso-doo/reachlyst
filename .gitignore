@@ -13,3 +13,4 @@ coverage
 extension/dist
 data/reachlyst-local-db.json
 .vercel
+supabase/.temp

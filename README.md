@@ -53,6 +53,25 @@ Configure Supabase Auth providers:
 - Email/password.
 - Google OAuth.
 
+### Production setup helper
+
+After creating a Supabase project, export the required values and run:
+
+```bash
+export SUPABASE_ACCESS_TOKEN=your-supabase-access-token
+export SUPABASE_PROJECT_REF=your-project-ref
+export SUPABASE_DB_PASSWORD=your-database-password
+export NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+export NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+export OPENAI_API_KEY=optional-openai-key
+export EXTENSION_TOKEN_PEPPER=change-me-to-a-long-random-secret
+
+./scripts/setup-production.sh
+```
+
+The script logs in to Supabase, links the project, pushes migrations, adds Vercel environment variables, and redeploys production. Do not commit these values.
+
 ## Stripe
 
 The billing page and `lib/stripe.ts` are scaffolded for Starter, Pro, and Agency plans. Add Stripe price IDs to `.env.local`, then wire checkout and customer portal routes from the existing plan keys.

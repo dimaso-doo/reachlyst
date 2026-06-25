@@ -7,15 +7,18 @@ export type AiLeadInput = {
   location?: string;
   snippet?: string;
   campaignContext?: string;
+  tone?: string;
+  useCase?: string;
 };
 
 export async function analyzeLead(input: AiLeadInput) {
   if (!process.env.OPENAI_API_KEY) {
+    const isAgency = /agency|marketing|seo|ppc|branding|pr/i.test(`${input.company ?? ""} ${input.title ?? ""} ${input.snippet ?? ""} ${input.campaignContext ?? ""}`);
     return {
-      fit: "good_fit",
-      reason: `${input.name} appears relevant based on title and campaign context. Mocked because OPENAI_API_KEY is not set.`,
-      confidence: 0.74,
-      suggestedConnectionMessage: `Hi ${input.name.split(" ")[0]}, noticed your work at ${input.company ?? "your company"}. Thought it would be useful to connect.`
+      fit: isAgency ? "good_fit" : "maybe",
+      reason: `${input.name} was scored from visible title/company text and the campaign playbook. Mocked because OPENAI_API_KEY is not set.`,
+      confidence: isAgency ? 0.82 : 0.58,
+      suggestedConnectionMessage: `Hi ${input.name.split(" ")[0]}, noticed your work${input.company ? ` at ${input.company}` : ""}. Thought it would be useful to connect.`
     };
   }
 
@@ -24,7 +27,7 @@ export async function analyzeLead(input: AiLeadInput) {
     model: "gpt-4o-mini",
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage under 280 chars. Be concise, human, non-spammy, and do not invent personalization." },
+      { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage under 280 chars. Be concise, human, non-spammy, and do not invent personalization. Follow the provided use case, ICP, tone, and LinkedIn manual-action policy." },
       { role: "user", content: JSON.stringify(input) }
     ]
   });

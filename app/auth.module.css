@@ -3,3 +3,5 @@
 .auth form { display: grid; gap: 12px; margin: 20px 0; }
 .auth input { border: 1px solid var(--line); border-radius: 8px; min-height: 44px; padding: 0 12px; }
 .auth p, .auth a { color: var(--muted); }
+.demoBox { background: #eef7f4; border: 1px solid #cfe8df; border-radius: 8px; display: grid; gap: 6px; margin: 16px 0; padding: 14px; }
+.demoBox span { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }

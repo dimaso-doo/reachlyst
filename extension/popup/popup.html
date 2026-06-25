@@ -10,6 +10,23 @@
       <p>Paste your extension token from Reachlyst settings.</p>
       <input id="apiBase" placeholder="API base" />
       <input id="token" placeholder="Extension token" type="password" />
+      <label>
+        Use case
+        <select id="useCase">
+          <option value="sales_outreach">Sales outreach</option>
+          <option value="partnerships">Partnerships</option>
+          <option value="recruiting">Recruiting</option>
+          <option value="networking">Networking</option>
+        </select>
+      </label>
+      <label>
+        ICP / audience
+        <textarea id="icp" placeholder="Example: US marketing agency owners, 1-50 employees, founder/owner/CXO."></textarea>
+      </label>
+      <label>
+        Tone
+        <input id="tone" placeholder="Professional, concise, human" />
+      </label>
       <button id="save">Save</button>
       <p id="status"></p>
     </main>

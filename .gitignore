@@ -11,3 +11,5 @@ coverage
 *.log
 *.tsbuildinfo
 extension/dist
+data/reachlyst-local-db.json
+.vercel

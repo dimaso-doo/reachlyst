@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { normalizeLinkedInUrl, readJson, requireExtensionToken, sanitizeText } from "@/lib/mockDb";
+import { readJson, requireExtensionToken } from "@/lib/mockDb";
+import { importLeads } from "@/lib/store";
 
 const leadSchema = z.object({
   name: z.string(),
@@ -17,11 +18,6 @@ export async function POST(request: Request) {
   const auth = requireExtensionToken(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request, schema);
-  const imported = body.leads.map((lead, index) => ({
-    id: `mock-lead-${index}`,
-    name: sanitizeText(lead.name),
-    normalizedLinkedInUrl: normalizeLinkedInUrl(lead.linkedinUrl ?? lead.salesNavigatorUrl ?? lead.name),
-    status: "new"
-  }));
+  const imported = await importLeads(body.searchId, body.leads);
   return NextResponse.json({ searchId: body.searchId, importedCount: imported.length, leads: imported });
 }

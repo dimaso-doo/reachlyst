@@ -3,4 +3,7 @@ main { display: grid; gap: 12px; padding: 18px; }
 h1 { margin: 0; }
 p { color: #61706a; margin: 0; }
 input { border: 1px solid #dfe7e2; border-radius: 8px; min-height: 38px; padding: 0 10px; }
+select, textarea { border: 1px solid #dfe7e2; border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 74px; resize: vertical; }
+label { color: #17201b; display: grid; font-size: 12px; font-weight: 800; gap: 6px; }
 button { background: #147c6c; border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 800; min-height: 38px; }

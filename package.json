@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Read-only LinkedIn Sales Navigator assistant and outreach logbook",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

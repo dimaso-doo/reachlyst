@@ -28,11 +28,11 @@ function fallbackAnalysis(input: AiLeadInput, reason: string) {
 function fallbackInviteMessage(input: AiLeadInput) {
   const first = input.name.split(" ")[0];
   const templates = [
-    `Hi ${first}, noticed your work${input.company ? ` at ${input.company}` : ""}. Thought it would be useful to connect.`,
+    `Hi ${first}, noticed your work${input.company ? ` at ${input.company}` : ""}. Thought it made sense to connect.`,
     `Hi ${first}, I came across your profile${input.company ? ` and ${input.company}` : ""}. Open to connecting here?`,
-    `Hi ${first}, your background${input.company ? ` with ${input.company}` : ""} caught my eye. Thought it made sense to connect.`,
+    `Hi ${first}, saw your background${input.company ? ` with ${input.company}` : ""}. Thought it made sense to connect.`,
     `Hi ${first}, saw your work in marketing and wanted to connect with other operators in the space.`,
-    `Hi ${first}, I help keep Sales Navigator outreach organized without automating LinkedIn. Thought it could be relevant${input.company ? ` for ${input.company}` : ""}.`
+    `Hi ${first}, I work on keeping Sales Navigator outreach organized while LinkedIn stays manual. Thought it might be relevant${input.company ? ` for ${input.company}` : ""}.`
   ];
   const index = Math.max(0, ((input.variant ?? 1) - 1) % templates.length);
   return templates[index].slice(0, input.limit ?? 280);
@@ -57,7 +57,7 @@ export async function analyzeLead(input: AiLeadInput) {
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage under 280 chars. Be concise, human, non-spammy, and do not invent personalization. Follow the provided use case, ICP, tone, and LinkedIn manual-action policy." },
+        { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage. The message must be under the provided limit and ideally 180-220 characters. Keep it calm, direct, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', and 'share insights'. Do not invent personalization. Follow the provided use case, ICP, tone, and LinkedIn manual-action policy." },
         { role: "user", content: JSON.stringify(input) }
       ]
     });
@@ -76,7 +76,7 @@ export async function generateInviteMessage(input: AiLeadInput) {
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "Return JSON with a single field message. Write a LinkedIn connection invite under the provided character limit. Keep it professional, concise, human, non-spammy, and do not invent personalization. Do not imply automation." },
+        { role: "system", content: "Return JSON with a single field message. Write a LinkedIn connection invite under the provided character limit, ideally 180-220 characters. Keep it calm, direct, specific, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', and 'share insights'. Do not invent personalization. Do not imply automation." },
         { role: "user", content: JSON.stringify(input) }
       ]
     });

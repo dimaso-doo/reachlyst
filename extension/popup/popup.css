@@ -1,0 +1,6 @@
+body { color: #17201b; font-family: Inter, system-ui, sans-serif; margin: 0; width: 320px; }
+main { display: grid; gap: 12px; padding: 18px; }
+h1 { margin: 0; }
+p { color: #61706a; margin: 0; }
+input { border: 1px solid #dfe7e2; border-radius: 8px; min-height: 38px; padding: 0 10px; }
+button { background: #147c6c; border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 800; min-height: 38px; }

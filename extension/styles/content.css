@@ -1,0 +1,35 @@
+.reachlyst-badge {
+  background: #e4ebff;
+  border: 1px solid #cbd7ff;
+  border-radius: 999px;
+  color: #294da8;
+  display: inline-flex;
+  font: 700 12px/1 Inter, system-ui, sans-serif;
+  margin-left: 8px;
+  padding: 5px 8px;
+}
+.reachlyst-button {
+  background: #147c6c;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font: 800 12px/1 Inter, system-ui, sans-serif;
+  margin: 6px 0;
+  padding: 8px 10px;
+}
+.reachlyst-panel {
+  background: white;
+  border: 1px solid #dfe7e2;
+  border-radius: 8px;
+  box-shadow: 0 18px 60px rgba(23,32,27,.18);
+  color: #17201b;
+  font-family: Inter, system-ui, sans-serif;
+  max-width: 360px;
+  padding: 16px;
+  position: fixed;
+  right: 18px;
+  top: 88px;
+  z-index: 2147483647;
+}
+.reachlyst-panel textarea { min-height: 90px; width: 100%; }

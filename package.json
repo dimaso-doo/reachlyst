@@ -1,0 +1,36 @@
+{
+  "name": "reachlyst",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Read-only LinkedIn Sales Navigator assistant and outreach logbook",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test:extension": "vitest run extension/tests"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "framer-motion": "^11.5.4",
+    "next": "16.2.9",
+    "openai": "^4.63.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "stripe": "^16.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "@types/node": "^20.16.5",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.2.9",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}

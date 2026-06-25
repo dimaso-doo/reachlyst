@@ -1,0 +1,5 @@
+.auth { align-items: center; display: flex; min-height: 100vh; justify-content: center; padding: 24px; }
+.auth section { max-width: 440px; padding: 30px; width: 100%; }
+.auth form { display: grid; gap: 12px; margin: 20px 0; }
+.auth input { border: 1px solid var(--line); border-radius: 8px; min-height: 44px; padding: 0 12px; }
+.auth p, .auth a { color: var(--muted); }

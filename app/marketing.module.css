@@ -1,0 +1,40 @@
+.nav { background: rgba(251,252,250,.86); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(16px); }
+.nav > div { align-items: center; display: flex; justify-content: space-between; min-height: 72px; }
+.nav a { color: var(--muted); font-weight: 700; margin-left: 22px; }
+.logo { color: var(--ink) !important; font-size: 22px; margin-left: 0 !important; }
+.hero { padding: 74px 0 52px; }
+.hero > div { display: grid; gap: 42px; grid-template-columns: .95fr 1.05fr; align-items: center; }
+.hero h1 { font-size: clamp(54px, 8vw, 112px); line-height: .92; margin: 20px 0; }
+.lede { color: var(--muted); font-size: 22px; line-height: 1.45; max-width: 660px; }
+.principle { background: #eef7f4; border-left: 4px solid var(--accent); border-radius: 8px; font-weight: 800; padding: 16px 18px; }
+.actions { display: flex; gap: 12px; margin-top: 24px; }
+.mockup { background: #edf3ef; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.browserBar { align-items: center; background: #17201b; display: flex; gap: 8px; height: 38px; padding-left: 14px; }
+.browserBar span { background: #fff; border-radius: 50%; height: 9px; opacity: .75; width: 9px; }
+.mockGrid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; padding: 20px; }
+.mockGrid section:first-child { grid-column: span 2; }
+.mockGrid strong { font-size: 34px; }
+.band, .testimonials, .faq { background: white; border-block: 1px solid var(--line); padding: 70px 0; }
+.steps, .planGrid { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
+.steps section, .planGrid section { padding: 22px; }
+.steps span { color: var(--gold); font-weight: 900; }
+.sections { padding: 70px 0; }
+.sections > div { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); }
+.sections h2 { margin-bottom: 8px; }
+.sections p, .faq p, .planGrid p { color: var(--muted); line-height: 1.55; }
+.carousel { display: grid; gap: 16px; grid-auto-columns: minmax(260px, 1fr); grid-auto-flow: column; overflow-x: auto; padding-bottom: 8px; }
+.carousel section { padding: 22px; }
+.pricing { padding: 70px 0; }
+.planGrid { grid-template-columns: repeat(3, 1fr); }
+.planGrid strong { display: block; font-size: 38px; margin: 8px 0 18px; }
+.faq > div { display: grid; gap: 14px; }
+.faq section { padding: 22px; }
+.finalCta { background: var(--ink); color: white; padding: 76px 0; text-align: center; }
+.finalCta h2 { font-size: 42px; margin-top: 0; }
+@media (max-width: 860px) {
+  .hero > div, .sections > div, .steps, .planGrid { grid-template-columns: 1fr; }
+  .nav > div { align-items: flex-start; flex-direction: column; gap: 14px; padding: 14px 0; }
+  .nav a { margin-left: 0; margin-right: 14px; }
+  .mockGrid { grid-template-columns: 1fr; }
+  .mockGrid section:first-child { grid-column: span 1; }
+}

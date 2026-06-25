@@ -1,0 +1,7 @@
+.table { margin-top: 18px; overflow-x: auto; padding: 0; }
+.table table { border-collapse: collapse; min-width: 760px; width: 100%; }
+.table th, .table td { border-bottom: 1px solid var(--line); padding: 16px; text-align: left; vertical-align: top; }
+.table th { color: var(--muted); font-size: 13px; text-transform: uppercase; }
+.table small { color: var(--muted); display: block; margin-top: 6px; max-width: 420px; overflow-wrap: anywhere; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.filters button { background: white; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-weight: 700; padding: 8px 12px; }

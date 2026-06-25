@@ -1,0 +1,4 @@
+.avatar { align-items: center; background: linear-gradient(135deg, #eaf2ff, #e8f7ef); border: 1px solid #d7e5ff; border-radius: 50%; color: #0958d9; display: inline-flex; flex: 0 0 auto; font-weight: 900; justify-content: center; }
+.sm { font-size: 11px; height: 30px; width: 30px; }
+.md { font-size: 13px; height: 36px; width: 36px; }
+.lg { font-size: 18px; height: 52px; width: 52px; }

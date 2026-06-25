@@ -30,10 +30,18 @@ Add real keys when ready:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_GROWTH_PRICE_ID`
+- `STRIPE_EARLY_ADOPTER_COUPON_ID`
+- `EARLY_ADOPTER_COUPON_CODE`
+- `EARLY_ADOPTER_COUPON_ENABLED`
+- `SHOW_DEMO_LOGIN`
 - `OPENAI_API_KEY`
 - `EXTENSION_TOKEN_PEPPER`
 
 The MVP returns clean mocked data when external keys are missing.
+
+Private demo login is hidden by default. Use `/login?demo=1` locally, or set `SHOW_DEMO_LOGIN=true`.
+For early adopters, create a 100% off Stripe coupon, set `STRIPE_EARLY_ADOPTER_COUPON_ID`, then toggle `EARLY_ADOPTER_COUPON_ENABLED=true`.
 
 ## Supabase
 

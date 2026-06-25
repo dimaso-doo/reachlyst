@@ -1,19 +1,15 @@
 import Stripe from "stripe";
+import { plans, type BillingPlanKey } from "@/lib/planLimits";
 import { getSupabaseServerClient } from "@/lib/supabase";
 
 export const workspaceId = "00000000-0000-4000-8000-000000000001";
-export type BillingPlanKey = "starter" | "pro" | "agency";
 
 export function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null;
   return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
-export const plans = [
-  { name: "Starter", price: "$19", key: "starter", priceEnv: "STRIPE_STARTER_PRICE_ID", features: ["Manual lead logbook", "Visible lead import", "Basic AI suggestions"] },
-  { name: "Pro", price: "$49", key: "pro", priceEnv: "STRIPE_PRO_PRICE_ID", features: ["Fit scoring", "Message generation", "Inbox read-only sync", "Timeline history"] },
-  { name: "Agency", price: "$149", key: "agency", priceEnv: "STRIPE_AGENCY_PRICE_ID", features: ["Workspace members", "Higher usage limits", "Team reporting"] }
-] as const;
+export { plans, type BillingPlanKey };
 
 export function getAppUrl() {
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
@@ -25,7 +21,10 @@ export function getAppUrl() {
 export function getStripePriceId(plan: string) {
   const config = plans.find((item) => item.key === plan);
   if (!config) return null;
-  return process.env[config.priceEnv] || null;
+  if (config.priceEnv === "STRIPE_GROWTH_PRICE_ID") {
+    return process.env.STRIPE_GROWTH_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || null;
+  }
+  return config.priceEnv ? process.env[config.priceEnv] || null : null;
 }
 
 export async function getWorkspaceSubscription() {
@@ -38,7 +37,7 @@ export async function getWorkspaceSubscription() {
 
 function planFromPriceId(priceId?: string | null): BillingPlanKey {
   const plan = plans.find((item) => process.env[item.priceEnv] === priceId);
-  return (plan?.key ?? "starter") as BillingPlanKey;
+  return (plan?.key ?? "growth") as BillingPlanKey;
 }
 
 export async function syncStripeSubscription(subscription: Stripe.Subscription) {

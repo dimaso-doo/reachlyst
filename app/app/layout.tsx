@@ -1,16 +1,34 @@
 import Link from "next/link";
+import { getDemoSession } from "@/lib/demoSession";
+import { canAccessSuperAdmin } from "@/lib/superAdmin";
 import styles from "./app.module.css";
 
-const nav = [
-  ["Dashboard", "/app/dashboard"],
-  ["Searches", "/app/searches"],
-  ["Leads", "/app/leads"],
-  ["Messages", "/app/messages"],
-  ["Settings", "/app/settings"],
-  ["Billing", "/app/billing"],
-  ["Extension", "/app/extension"]
-];
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const [showSuperAdmin, demo] = await Promise.all([canAccessSuperAdmin(), getDemoSession()]);
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <div className={styles.shell}><aside><Link className={styles.brand} href="/app/dashboard">Reachlyst</Link>{nav.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}<button>Logout</button></aside><main>{children}</main></div>;
+  return <div className={styles.shell}>
+    <aside>
+      <Link className={styles.logo} href="/app/dashboard">Reachlyst</Link>
+      <nav className={styles.navGroup} aria-label="Primary">
+        <Link href="/app/dashboard">Dashboard</Link>
+        <Link href="/app/searches">Searches</Link>
+        <Link className={styles.subLink} href="/app/searches?new=1">Add new search</Link>
+        {showSuperAdmin ? <Link href="/app/admin">Super Admin</Link> : null}
+      </nav>
+      <div className={styles.sidebarSpacer} />
+      <Link className={styles.extensionLink} href="/app/extension">
+        <span>Chrome Extension</span>
+        <small>Download and install guide</small>
+      </Link>
+      <div className={styles.member}>
+        <span aria-hidden="true">{demo.isSuperAdmin ? "A" : "P"}</span>
+        <div>
+          <strong>{demo.name}</strong>
+          <small>{demo.isSuperAdmin ? "Super admin demo" : "Workspace owner"}</small>
+        </div>
+      </div>
+      <Link className={styles.logoutLink} href="/api/demo-logout">Log out</Link>
+    </aside>
+    <main>{children}</main>
+  </div>;
 }

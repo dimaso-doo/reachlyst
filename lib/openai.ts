@@ -14,6 +14,24 @@ export type AiLeadInput = {
   limit?: number;
 };
 
+export type SearchAdvisorMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type SearchAdvisorInput = {
+  mode: "create_search" | "train_search";
+  searchName?: string;
+  searchUrl?: string;
+  context?: string;
+  messages: SearchAdvisorMessage[];
+};
+
+export type LeadInviteChatInput = {
+  lead: AiLeadInput & { currentMessage?: string; status?: string };
+  messages: SearchAdvisorMessage[];
+};
+
 function fallbackAnalysis(input: AiLeadInput, reason: string) {
   const isAgency = /agency|marketing|seo|ppc|branding|pr/i.test(`${input.company ?? ""} ${input.title ?? ""} ${input.snippet ?? ""} ${input.campaignContext ?? ""}`);
   return {
@@ -84,5 +102,133 @@ export async function generateInviteMessage(input: AiLeadInput) {
     return (parsed.message || fallbackInviteMessage(input)).slice(0, input.limit ?? 280);
   } catch {
     return fallbackInviteMessage(input);
+  }
+}
+
+function fallbackSearchAdvisor(input: SearchAdvisorInput) {
+  const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
+  const isTraining = input.mode === "train_search";
+  const inScope = /lead|linkedin|sales|navigator|search|pretrag|poruk|invite|connect|outreach|fit|icp|kup|buyer|company|kompan|firma|industr|title|role|uloga|founder|owner|ceo|agenc|agency|tone|ton|follow|reply|odgovor|target|cilj/i.test(latest);
+  const starter = isTraining
+    ? "Got it. For this search, I would score good fits as decision makers in the target niche, maybe fits as relevant but unclear buyers, and skips as profiles without a clear business match."
+    : "Got it. Let’s define the ICP first: role, industry, location, company size, and clear exclusions.";
+
+  if (!latest.trim()) return starter;
+  if (!inScope) {
+    return "I can only help with Reachlyst workflows: Sales Navigator searches, ICP, fit scoring, manual outreach copy, lead organization, and extension setup.";
+  }
+
+  const wantsLink = /link|url|sales nav|navigator|pretrag/i.test(latest);
+  const wantsMessage = /poruk|invite|connect|tone|ton/i.test(latest);
+
+  if (wantsLink) {
+    return "I can structure the Sales Navigator search around role/title filters, company headcount, geography, industry, and keywords. Tell me what you sell, the target country, company size, and 3-5 bad-fit examples to exclude.";
+  }
+
+  if (wantsMessage) {
+    return "For messages, I would keep the tone short, calm, and specific without fake personalization. Example: “Hi Ana, noticed your work at Bright SEO. Thought it made sense to connect here.” Tell me the offer and audience, and I can draft 3 variants.";
+  }
+
+  return `${starter}\n\nHere is how I would frame it:\n1. Good fit: owner/founder/CEO/partner with a clear B2B buying signal.\n2. Maybe: relevant company, but weak title or unclear intent.\n3. Skip: unrelated industry, wrong company size, or profiles without business context.\n\nSend me the offer and ideal company size, and I will tighten the rules and draft invite copy.`;
+}
+
+export async function adviseOnSearch(input: SearchAdvisorInput) {
+  if (!process.env.OPENAI_API_KEY) return fallbackSearchAdvisor(input);
+
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: [
+            "You are Reachlyst AI, a practical Sales Navigator search and outreach advisor.",
+            "Always answer in English, even if the user writes in another language.",
+            "Have a real conversation. Ask clarifying questions, suggest ICP criteria, fit rules, exclusions, message tone, and concise invite copy.",
+            "Do not claim to automate LinkedIn. Do not suggest auto-connect, auto-send, scraping, bypassing limits, or credential storage.",
+            "Only answer questions related to Reachlyst's purpose: Sales Navigator searches, ICP design, lead fit scoring, outreach copy suggestions, manual LinkedIn workflow, read-only message sync, campaign organization, and Chrome extension setup.",
+            "If the user asks about anything outside that scope, politely refuse in one short English sentence and bring them back to Reachlyst-related work.",
+            "Keep replies concise and actionable. When useful, include Good fit, Maybe, Skip, Suggested invite, and Sales Navigator filter ideas.",
+            "For create_search mode, help the user design a search and optionally draft a Sales Navigator query/filter plan.",
+            "For train_search mode, help the user define how this specific search should score leads and write messages."
+          ].join(" ")
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            mode: input.mode,
+            searchName: input.searchName,
+            searchUrl: input.searchUrl,
+            context: input.context
+          })
+        },
+        ...input.messages.map((message) => ({
+          role: message.role,
+          content: message.content
+        }))
+      ]
+    });
+
+    return response.choices[0]?.message.content ?? fallbackSearchAdvisor(input);
+  } catch {
+    return fallbackSearchAdvisor(input);
+  }
+}
+
+function fallbackLeadInviteChat(input: LeadInviteChatInput) {
+  const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
+  const base = input.lead.currentMessage || fallbackInviteMessage(input.lead);
+  if (!latest.trim()) return `Here is a clean starting point:\n\n${base}`;
+
+  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow/i.test(latest)) {
+    return "I can only help polish LinkedIn invite and outreach copy for this lead.";
+  }
+
+  if (/short|shorter|concise/i.test(latest)) {
+    return base.replace(/Thought it made sense to connect\.?/i, "Open to connecting?").slice(0, 180);
+  }
+
+  if (/direct|simple/i.test(latest)) {
+    return `Hi ${input.lead.name.split(" ")[0]}, came across your profile${input.lead.company ? ` at ${input.lead.company}` : ""}. Thought it made sense to connect.`;
+  }
+
+  return `Try this version:\n\n${base}\n\nIt stays specific, calm, and safe for a manual LinkedIn invite.`;
+}
+
+export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
+  if (!process.env.OPENAI_API_KEY) return fallbackLeadInviteChat(input);
+
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: [
+            "You are Reachlyst AI. Help polish a LinkedIn connection invite for one visible lead.",
+            "Always answer in English.",
+            "Stay strictly in scope: invite copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
+            "If the user asks for anything else, refuse briefly and bring them back to improving the invite.",
+            "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
+            "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",
+            "Avoid hype, flattery, emojis, exclamation marks, and phrases like admire, love, excited, partnership, collaboration, discuss, learn more, or share insights."
+          ].join(" ")
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            lead: input.lead,
+            task: "Polish or generate a safe copyable LinkedIn invite for this lead."
+          })
+        },
+        ...input.messages.map((message) => ({ role: message.role, content: message.content }))
+      ]
+    });
+
+    return response.choices[0]?.message.content ?? fallbackLeadInviteChat(input);
+  } catch {
+    return fallbackLeadInviteChat(input);
   }
 }

@@ -15,11 +15,39 @@ function lines(node: Element | null | undefined) {
   return raw.split(/\n+/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
 }
 
+function cleanName(value: string) {
+  return value.replace(/^View\s+/i, "").replace(/\s+is reachable$/i, "").trim();
+}
+
+function findLeadCard(anchor: HTMLAnchorElement) {
+  const candidates: Element[] = [];
+  let current: Element | null = anchor;
+  for (let depth = 0; current && depth < 8; depth += 1) {
+    candidates.push(current);
+    current = current.parentElement;
+  }
+
+  return candidates.find((candidate) => {
+    const visible = lines(candidate);
+    const textValue = visible.join(" ");
+    return visible.length >= 4 && /About:|Experience:|Saved|recent posts|mutual connections|years|months/i.test(textValue);
+  }) ?? anchor.closest('li, article, [role="listitem"], [data-view-name]') ?? anchor.parentElement;
+}
+
 function inferTitleCompany(visibleLines: string[], name: string) {
-  const line = visibleLines.find((item) => item !== name && item.includes(" · ") && !/saved|years|months|role|company/i.test(item));
+  const nameIndex = visibleLines.findIndex((item) => cleanName(item) === name);
+  const candidates = nameIndex >= 0 ? visibleLines.slice(nameIndex + 1, nameIndex + 5) : visibleLines;
+  const line = candidates.find((item) => item !== name && item.includes(" · ") && !/saved|years|months|role|company|connection/i.test(item))
+    ?? candidates.find((item) => item !== name && !/saved|about:|experience:|years|months|role|company|connection|recent posts/i.test(item));
   if (!line) return {};
   const parts = line.split(" · ").map((part) => part.trim()).filter(Boolean);
   return { title: parts[0], company: parts.slice(1).join(" · ") || undefined };
+}
+
+function inferLocation(visibleLines: string[], name: string) {
+  const nameIndex = visibleLines.findIndex((item) => cleanName(item) === name);
+  const candidates = nameIndex >= 0 ? visibleLines.slice(nameIndex + 1, nameIndex + 7) : visibleLines;
+  return candidates.find((line) => /area|united states|canada|kingdom|germany|france|serbia|greater|metro|metropolitan|california|new york|texas|florida|illinois|boston|chicago|los angeles|san francisco|miami|austin|denver|seattle/i.test(line));
 }
 
 export function parseSalesNavigatorLeads(root: ParentNode = document): { leads: ExtensionLead[]; failures: string[] } {
@@ -31,8 +59,8 @@ export function parseSalesNavigatorLeads(root: ParentNode = document): { leads: 
   for (const anchor of anchors) {
     const url = absolutize(anchor.getAttribute("href") ?? "");
     if (!url || seen.has(url)) continue;
-    const card = anchor.closest('li, article, [role="listitem"], [data-view-name], div') ?? anchor.parentElement;
-    const name = text(anchor).replace(/^View\s+/i, "");
+    const card = findLeadCard(anchor);
+    const name = cleanName(text(anchor));
     if (!name || name.length < 2) {
       failures.push(`Missing name near ${url}`);
       continue;
@@ -47,7 +75,7 @@ export function parseSalesNavigatorLeads(root: ParentNode = document): { leads: 
       linkedinUrl: url.includes("/in/") ? url : undefined,
       title: text(card?.querySelector('[aria-label*="title" i], [data-anonymize="job-title"]')) || inferred.title,
       company: text(card?.querySelector('[aria-label*="company" i], [data-anonymize="company-name"]')) || inferred.company,
-      location: text(card?.querySelector('[aria-label*="location" i]')) || visibleLines.find((line) => /area|united states|canada|kingdom|germany|france|serbia/i.test(line)),
+      location: text(card?.querySelector('[aria-label*="location" i]')) || inferLocation(visibleLines, name),
       snippet: flatWords.slice(0, 40).join(" ")
     });
   }

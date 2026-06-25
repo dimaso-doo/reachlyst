@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJson, requireExtensionToken } from "@/lib/mockDb";
 import { searches } from "@/data/mock";
-import { upsertSearch } from "@/lib/store";
+import { getDashboardData, upsertSearch } from "@/lib/store";
+import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 
 const schema = z.object({ url: z.string().url(), title: z.string().optional() });
 
@@ -10,6 +11,13 @@ export async function POST(request: Request) {
   const auth = requireExtensionToken(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request, schema);
+  const feature = await requirePlanFeature("extensionSync");
+  if (!feature.ok) return feature.response;
+  const existingSearch = (await getDashboardData()).searches.find((search) => search.url === body.url);
+  if (!existingSearch) {
+    const capacity = await requirePlanCapacity("searches", 1);
+    if (!capacity.ok) return capacity.response;
+  }
   const decoded = decodeURIComponent(body.url).toLowerCase();
   const match = searches.find((search) => decoded.includes(search.id.replace("-", " ")) || decoded.includes("marketing agency") && search.id === "agency" || decoded.includes("saas") && search.id === "saas-founders" || decoded.includes("revops") && search.id === "revops");
   const campaign = match ?? searches[2];

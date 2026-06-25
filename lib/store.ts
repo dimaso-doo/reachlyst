@@ -290,6 +290,7 @@ export async function saveGeneratedMessage(input: Record<string, unknown>, messa
     const supabase = getSupabaseServerClient();
     const id = stableUuid(normalizeLinkedInUrl(String(input.linkedinUrl ?? input.salesNavigatorUrl ?? input.name)));
     await supabase?.from("generated_messages").insert({ workspace_id: workspaceId, lead_id: id, message_type: "invite", body: message });
+    await supabase?.from("activities").insert({ workspace_id: workspaceId, lead_id: id, type: "message_generated" });
     return;
   }
   const db = readDb();
@@ -301,6 +302,17 @@ export async function saveGeneratedMessage(input: Record<string, unknown>, messa
     db.activities.unshift({ label: `Generated message for ${lead.name}`, time: "Just now", type: "message_generated", leadId: lead.id, createdAt: now() });
     writeDb(db);
   }
+}
+
+export async function recordAiUsage(type: "ai_analyzed" | "message_generated" = "message_generated") {
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    await supabase?.from("activities").insert({ workspace_id: workspaceId, type });
+    return;
+  }
+  const db = readDb();
+  db.activities.unshift({ label: type.replaceAll("_", " "), time: "Just now", type, createdAt: now() });
+  writeDb(db);
 }
 
 export async function saveLeadAction(leadId: string, action: string) {

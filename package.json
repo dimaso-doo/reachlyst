@@ -18,6 +18,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
+    "@tabler/core": "^1.4.0",
     "framer-motion": "^11.5.4",
     "next": "16.2.9",
     "openai": "^4.63.0",

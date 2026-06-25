@@ -3,6 +3,7 @@ import { z } from "zod";
 import { readJson, requireExtensionToken } from "@/lib/mockDb";
 import { generateInviteMessage } from "@/lib/openai";
 import { saveGeneratedMessage } from "@/lib/store";
+import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 
 const schema = z.object({
   name: z.string(),
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
   const auth = requireExtensionToken(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request, schema);
+  const feature = await requirePlanFeature("inviteGeneration");
+  if (!feature.ok) return feature.response;
+  const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
+  if (!capacity.ok) return capacity.response;
   const message = await generateInviteMessage(body);
   await saveGeneratedMessage(body, message);
   return NextResponse.json({ message: message.slice(0, body.limit ?? 280), storedAsSuggestion: true });

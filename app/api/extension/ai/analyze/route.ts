@@ -12,5 +12,5 @@ export async function POST(request: Request) {
   const body = await readJson(request, schema);
   const result = await analyzeLead(body);
   await saveAnalysis(body, result);
-  return NextResponse.json({ ...result, usage: { model: process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "mock", inputTokens: 0, outputTokens: 0, costEstimate: 0 } });
+  return NextResponse.json({ ...result, usage: { model: result.model ?? (process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "mock"), inputTokens: 0, outputTokens: 0, costEstimate: 0 } });
 }

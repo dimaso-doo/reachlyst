@@ -57,7 +57,7 @@ export async function analyzeLead(input: AiLeadInput) {
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage. The message must be one short sentence under the provided limit, ideally 120-180 characters. Keep it calm, direct, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', and 'request'. Do not invent personalization. Follow the provided use case, ICP, tone, and LinkedIn manual-action policy." },
+        { role: "system", content: "Return JSON with fit good_fit|maybe|skip, reason, confidence 0-1, suggestedConnectionMessage. The message must be one short sentence under the provided limit, ideally 90-160 characters. Style example: 'Hi Ana, saw your work at Bright SEO Agency. Thought it made sense to connect here.' Keep it calm, direct, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', 'request', 'opportunities', 'discuss', 'learn more', 'collaboration', and 'partnership'. Do not invent personalization. Follow the provided use case, ICP, tone, and LinkedIn manual-action policy." },
         { role: "user", content: JSON.stringify(input) }
       ]
     });
@@ -76,7 +76,7 @@ export async function generateInviteMessage(input: AiLeadInput) {
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "Return JSON with a single field message. Write one short LinkedIn connection invite sentence under the provided character limit, ideally 120-180 characters. Keep it calm, direct, specific, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', and 'request'. Do not invent personalization. Do not imply automation." },
+        { role: "system", content: "Return JSON with a single field message. Write one short LinkedIn connection invite sentence under the provided character limit, ideally 90-160 characters. Style example: 'Hi Ana, saw your work at Bright SEO Agency. Thought it made sense to connect here.' Keep it calm, direct, specific, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', 'request', 'opportunities', 'discuss', 'learn more', 'collaboration', and 'partnership'. Do not invent personalization. Do not imply automation." },
         { role: "user", content: JSON.stringify(input) }
       ]
     });

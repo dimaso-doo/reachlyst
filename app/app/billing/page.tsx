@@ -1,18 +1,26 @@
 import { Badge, Button, Card } from "@/components/ui";
+import { ExtensionTokenPanel } from "@/components/ExtensionTokenPanel";
 import { getPlanSnapshot } from "@/lib/entitlements";
+import { getExtensionAccessState } from "@/lib/extensionTokens";
 import { formatLimit } from "@/lib/planLimits";
 import { getStripePriceId, getWorkspaceSubscription, plans } from "@/lib/stripe";
 import styles from "../../marketing.module.css";
 
 export default async function BillingPage() {
   const subscription = await getWorkspaceSubscription();
-  const snapshot = await getPlanSnapshot();
+  const [snapshot, extensionAccess] = await Promise.all([getPlanSnapshot(), getExtensionAccessState()]);
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
 
   return <div>
     <h1>Billing</h1>
     <p>Manage the Reachlyst subscription for this workspace.</p>
     <p><Badge tone={subscription?.status === "active" ? "good" : "blue"}>{snapshot.config.name} plan</Badge> <Badge tone={subscription?.status === "active" ? "good" : "blue"}>{subscription?.status ?? "Demo mode"}</Badge></p>
+    <ExtensionTokenPanel initialAccess={extensionAccess} />
+    <Card className={styles.extensionInstallCard}>
+      <h2>Chrome extension</h2>
+      <p>Download the extension, load it in Chrome, paste your token, then use Reachlyst inside Sales Navigator.</p>
+      <a href="/reachlyst-extension.zip" download>Download extension</a>
+    </Card>
     <Card className={styles.billingUsage}>
       <h2>Current usage</h2>
       <p>{snapshot.usage.searches} / {formatLimit(snapshot.config.limits.searches)} searches</p>

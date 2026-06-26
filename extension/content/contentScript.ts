@@ -1,22 +1,5 @@
 declare const chrome: any;
-declare function parseSalesNavigatorLeads(root?: ParentNode): { leads: ExtensionLeadRuntime[]; failures: string[] };
-
-type ExtensionLeadRuntime = {
-  id?: string;
-  name: string;
-  title?: string;
-  company?: string;
-  location?: string;
-  linkedinUrl?: string;
-  salesNavigatorUrl?: string;
-  about?: string;
-  snippet?: string;
-};
-
-type ChatMessage = { role: "user" | "assistant"; content: string };
-type LeadChatState = { messages: ChatMessage[]; latestInvite: string };
-type LeadChatElement = HTMLDivElement & { reachlystLead?: ExtensionLeadRuntime };
-
+declare function parseSalesNavigatorLeads(root?: ParentNode): { leads: any[]; failures: string[] };
 const EXTENSION_VERSION = "0.1.0";
 const PARSER_VERSION = "2026.06.26";
 const DEFAULT_SETTINGS = {
@@ -26,10 +9,11 @@ const DEFAULT_SETTINGS = {
   reachlystVerified: false
 };
 
-const leadChatState = new Map<string, LeadChatState>();
+const leadChatState = new Map();
 let isMutatingReachlystUi = false;
-let reachlystRunTimer: ReturnType<typeof setTimeout>;
-let activeSearchPlaybook: Record<string, string> | null = null;
+let reachlystRunTimer;
+let activeSearchPlaybook = null;
+let selectedLead = null;
 
 async function getSettings() {
   const values = await chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS));
@@ -41,7 +25,7 @@ async function reachlystIsEnabled() {
   return settings.reachlystEnabled === true && settings.reachlystVerified === true && Boolean(settings.reachlystToken);
 }
 
-async function reachlystApi(path: string, init: RequestInit = {}) {
+async function reachlystApi(path, init = {}) {
   const proxied = await chrome.runtime.sendMessage({
     type: "reachlyst_api",
     path,
@@ -67,8 +51,8 @@ async function reachlystApi(path: string, init: RequestInit = {}) {
   };
 }
 
-function setStatus(message: string, tone = "neutral") {
-  let status = document.querySelector<HTMLElement>(".reachlyst-status");
+function setStatus(message, tone = "neutral") {
+  let status = document.querySelector(".reachlyst-status");
   if (!status) {
     status = document.createElement("aside");
     status.className = "reachlyst-status";
@@ -80,28 +64,31 @@ function setStatus(message: string, tone = "neutral") {
 
 function removeReachlystUi() {
   clearTimeout(reachlystRunTimer);
-  document.querySelectorAll(".reachlyst-status, .reachlyst-lead-chat").forEach((element) => element.remove());
+  selectedLead = null;
+  document.querySelectorAll(".reachlyst-status, .reachlyst-lead-button, .reachlyst-floating-chat").forEach((element) => element.remove());
 }
 
 function showLinkedInNotice() {
   setStatus("Please log in to LinkedIn Sales Navigator first.", "warn");
 }
 
-function leadCardFromAnchor(anchor: Element) {
+function leadCardFromAnchor(anchor) {
   return anchor.closest('li, article, [role="listitem"], .artdeco-list__item') || anchor.parentElement;
 }
 
-function safeDomKey(value: string) {
+function safeDomKey(value) {
   let hash = 0;
   const input = String(value || "");
-  for (let index = 0; index < input.length; index += 1) hash = ((hash << 5) - hash + input.charCodeAt(index)) | 0;
+  for (let index = 0; index < input.length; index += 1) {
+    hash = ((hash << 5) - hash + input.charCodeAt(index)) | 0;
+  }
   return `rly-${Math.abs(hash)}`;
 }
 
-function leadKey(lead: ExtensionLeadRuntime) {
+function leadKey(lead) {
   const raw = lead.salesNavigatorUrl || lead.linkedinUrl || lead.name;
   try {
-    const url = new URL(raw ?? "");
+    const url = new URL(raw);
     return `${url.origin}${url.pathname}`.replace(/\/$/, "").toLowerCase();
   } catch {
     return String(raw || lead.name || "").trim().toLowerCase();
@@ -109,24 +96,32 @@ function leadKey(lead: ExtensionLeadRuntime) {
 }
 
 function leadAnchors() {
-  return Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href*="/sales/lead/"]')).filter((anchor) => {
+  return Array.from(document.querySelectorAll('a[href*="/sales/lead/"]')).filter((anchor) => {
     const name = anchor.textContent?.replace(/\s+/g, " ").trim() || "";
     const rect = anchor.getBoundingClientRect();
     return name.length > 1 && rect.width > 0 && rect.height > 0;
   });
 }
 
-function sameLead(anchor: HTMLAnchorElement, lead: ExtensionLeadRuntime) {
+function sameLead(anchor, lead) {
   const href = anchor.href || "";
   const name = anchor.textContent?.replace(/\s+/g, " ").trim() || "";
   return href === lead.salesNavigatorUrl || href === lead.linkedinUrl || name === lead.name;
 }
 
-function sameLeadRecord(a: ExtensionLeadRuntime, b: ExtensionLeadRuntime) {
+function sameLeadRecord(a, b) {
   return leadKey(a) === leadKey(b) || (a.name && b.name && a.name === b.name);
 }
 
-function leadPayload(lead: ExtensionLeadRuntime, extra: Record<string, unknown> = {}) {
+function firstName(name) {
+  return String(name || "").split(" ")[0] || "there";
+}
+
+function leadSubtitle(lead) {
+  return [lead.title, lead.company, lead.location].filter(Boolean).join(" · ");
+}
+
+function leadPayload(lead, extra = {}) {
   const playbook = activeSearchPlaybook || {};
   const campaignContext = [
     `Use case: ${playbook.useCase || "sales_outreach"}`,
@@ -139,30 +134,26 @@ function leadPayload(lead: ExtensionLeadRuntime, extra: Record<string, unknown> 
   return { ...lead, campaignContext, tone: playbook.tone || "Professional, concise, human", useCase: playbook.useCase || "sales_outreach", ...extra };
 }
 
-function firstName(name: string) {
-  return String(name || "").split(" ")[0] || "there";
-}
-
-function chatStateForLead(lead: ExtensionLeadRuntime) {
+function chatStateForLead(lead) {
   const key = leadKey(lead);
   if (!leadChatState.has(key)) {
     leadChatState.set(key, {
       messages: [{
         role: "assistant",
-        content: `Ask me about ${firstName(lead.name)} or click Generate invite. I will keep it short, manual, and safe to copy.`
+        content: `Selected ${firstName(lead.name)}. Click Generate invite or tell me how to shape the message.`
       }],
       latestInvite: ""
     });
   }
-  return leadChatState.get(key) as LeadChatState;
+  return leadChatState.get(key);
 }
 
-function renderThread(container: Element, lead: ExtensionLeadRuntime) {
+function renderThread(chat, lead) {
   const state = chatStateForLead(lead);
-  const thread = container.querySelector<HTMLElement>(".reachlyst-chat-thread");
+  const thread = chat.querySelector(".reachlyst-chat-thread");
   if (!thread) return;
   thread.innerHTML = "";
-  state.messages.slice(-8).forEach((message) => {
+  state.messages.slice(-10).forEach((message) => {
     const item = document.createElement("p");
     item.className = message.role === "user" ? "reachlyst-chat-user" : "reachlyst-chat-assistant";
     item.textContent = message.content;
@@ -171,88 +162,120 @@ function renderThread(container: Element, lead: ExtensionLeadRuntime) {
   thread.scrollTop = thread.scrollHeight;
 }
 
-function latestAssistantMessage(lead: ExtensionLeadRuntime) {
-  const state = chatStateForLead(lead);
-  return [...state.messages].reverse().find((message) => message.role === "assistant")?.content || state.latestInvite || "";
+function latestInviteForLead(lead) {
+  return chatStateForLead(lead).latestInvite || "";
 }
 
-function ensureLeadChat(anchor: HTMLAnchorElement, lead: ExtensionLeadRuntime) {
-  const card = leadCardFromAnchor(anchor);
-  if (!card) return null;
-  const key = safeDomKey(leadKey(lead));
-  let chat = (card.querySelector(`.reachlyst-lead-chat[data-reachlyst-key="${key}"]`) || card.querySelector(".reachlyst-lead-chat")) as LeadChatElement | null;
-  if (!chat) {
-    isMutatingReachlystUi = true;
-    chat = document.createElement("div") as LeadChatElement;
-    chat.className = "reachlyst-lead-chat";
-    chat.dataset.reachlystKey = key;
-    chat.innerHTML = `
-      <div class="reachlyst-chat-top">
-        <span class="reachlyst-r">R</span>
-        <div>
-          <strong>AI chat for this lead</strong>
-          <small>Generate and polish a copyable invite. You send manually.</small>
-        </div>
-      </div>
-      <div class="reachlyst-chat-thread"></div>
-      <textarea class="reachlyst-chat-input" rows="2" placeholder="Ask for a warmer, shorter, more direct, or more specific invite..."></textarea>
-      <div class="reachlyst-chat-actions">
-        <button class="reachlyst-button" data-action="generate">Generate invite</button>
-        <button class="reachlyst-button reachlyst-button-secondary" data-action="send">Ask AI</button>
-        <button class="reachlyst-button reachlyst-button-secondary" data-action="copy">Copy latest</button>
-        <button class="reachlyst-button reachlyst-button-secondary" data-action="invited">Mark invited</button>
-      </div>
-      <p class="reachlyst-chat-status"></p>
-    `;
-    card.append(chat);
-    queueMicrotask(() => { isMutatingReachlystUi = false; });
-  }
+function ensureFloatingChat() {
+  let chat = document.querySelector(".reachlyst-floating-chat");
+  if (chat) return chat;
 
-  chat.dataset.reachlystKey = key;
-  chat.reachlystLead = lead;
-  renderThread(chat, lead);
-
-  bindLeadChatButtons(chat, lead);
+  isMutatingReachlystUi = true;
+  chat = document.createElement("aside");
+  chat.className = "reachlyst-floating-chat";
+  chat.innerHTML = `
+    <div class="reachlyst-chat-top">
+      <span class="reachlyst-r">R</span>
+      <div>
+        <strong data-role="leadName">Reachlyst AI</strong>
+        <small data-role="leadMeta">Select a lead to start.</small>
+      </div>
+      <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat">×</button>
+    </div>
+    <div class="reachlyst-chat-thread"></div>
+    <textarea class="reachlyst-chat-input" rows="3" placeholder="Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
+    <div class="reachlyst-chat-actions">
+      <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
+      <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Ask AI</button>
+      <button class="reachlyst-button reachlyst-button-secondary" data-action="copy" type="button">Copy latest</button>
+      <button class="reachlyst-button reachlyst-button-secondary" data-action="invited" type="button">Mark invited</button>
+    </div>
+    <p class="reachlyst-chat-status"></p>
+  `;
+  document.body.append(chat);
+  bindFloatingChat(chat);
+  queueMicrotask(() => { isMutatingReachlystUi = false; });
   return chat;
 }
 
-function bindLeadChatButtons(chat: LeadChatElement, lead: ExtensionLeadRuntime) {
-  const generateButton = chat.querySelector<HTMLButtonElement>('[data-action="generate"]');
-  const sendButton = chat.querySelector<HTMLButtonElement>('[data-action="send"]');
-  const copyButton = chat.querySelector<HTMLButtonElement>('[data-action="copy"]');
-  const invitedButton = chat.querySelector<HTMLButtonElement>('[data-action="invited"]');
-  const input = chat.querySelector<HTMLTextAreaElement>(".reachlyst-chat-input");
+function bindFloatingChat(chat) {
+  const closeButton = chat.querySelector('[data-action="close"]');
+  const generateButton = chat.querySelector('[data-action="generate"]');
+  const sendButton = chat.querySelector('[data-action="send"]');
+  const copyButton = chat.querySelector('[data-action="copy"]');
+  const invitedButton = chat.querySelector('[data-action="invited"]');
+  const input = chat.querySelector(".reachlyst-chat-input");
 
-  if (generateButton && !generateButton.dataset.bound) {
-    generateButton.dataset.bound = "true";
-    generateButton.addEventListener("click", () => generateInvite(chat.reachlystLead || lead, chat, generateButton));
-  }
-  if (sendButton && !sendButton.dataset.bound) {
-    sendButton.dataset.bound = "true";
-    sendButton.addEventListener("click", () => sendLeadChat(chat.reachlystLead || lead, chat, sendButton));
-  }
-  if (copyButton && !copyButton.dataset.bound) {
-    copyButton.dataset.bound = "true";
-    copyButton.addEventListener("click", () => copyLatestInvite(chat.reachlystLead || lead, copyButton));
-  }
-  if (invitedButton && !invitedButton.dataset.bound) {
-    invitedButton.dataset.bound = "true";
-    invitedButton.addEventListener("click", () => markLeadInvited(chat.reachlystLead || lead, invitedButton));
-  }
-  if (input && !input.dataset.bound) {
-    input.dataset.bound = "true";
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && sendButton) {
-        event.preventDefault();
-        sendLeadChat(chat.reachlystLead || lead, chat, sendButton);
-      }
-    });
-  }
+  closeButton.addEventListener("click", () => {
+    chat.hidden = true;
+  });
+  generateButton.addEventListener("click", () => selectedLead && generateInvite(selectedLead, chat, generateButton));
+  sendButton.addEventListener("click", () => selectedLead && sendLeadChat(selectedLead, chat, sendButton));
+  copyButton.addEventListener("click", () => selectedLead && copyLatestInvite(selectedLead, chat, copyButton));
+  invitedButton.addEventListener("click", () => selectedLead && markLeadInvited(selectedLead, chat, invitedButton));
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && selectedLead) {
+      event.preventDefault();
+      sendLeadChat(selectedLead, chat, sendButton);
+    }
+  });
 }
 
-async function generateInvite(lead: ExtensionLeadRuntime, chat: Element, button: HTMLButtonElement) {
+function openFloatingChat(lead) {
+  selectedLead = lead;
+  const chat = ensureFloatingChat();
+  chat.hidden = false;
+  chat.querySelector('[data-role="leadName"]').textContent = lead.name;
+  chat.querySelector('[data-role="leadMeta"]').textContent = leadSubtitle(lead) || "Sales Navigator lead";
+  chat.querySelector(".reachlyst-chat-status").textContent = "Chat is tied to this selected lead.";
+  renderThread(chat, lead);
+  chat.querySelector(".reachlyst-chat-input").focus();
+}
+
+function ensureLeadButton(anchor, lead) {
+  const card = leadCardFromAnchor(anchor);
+  if (!card) return null;
+  const key = safeDomKey(leadKey(lead));
+  let button = card.querySelector(`.reachlyst-lead-button[data-reachlyst-key="${key}"]`) || card.querySelector(".reachlyst-lead-button");
+  if (!button) {
+    isMutatingReachlystUi = true;
+    if (getComputedStyle(card).position === "static") card.style.position = "relative";
+    button = document.createElement("button");
+    button.className = "reachlyst-lead-button";
+    button.type = "button";
+    button.textContent = "Reachlyst AI";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openFloatingChat(button.reachlystLead);
+    });
+    card.append(button);
+    queueMicrotask(() => { isMutatingReachlystUi = false; });
+  }
+  button.dataset.reachlystKey = key;
+  button.reachlystLead = lead;
+  button.title = `Open Reachlyst chat for ${lead.name}`;
+  return button;
+}
+
+function attachLeadButtons(leads) {
+  const anchors = leadAnchors();
+  const usedCards = new Set();
+  for (const lead of leads) {
+    const anchor = anchors.find((candidate) => {
+      const card = leadCardFromAnchor(candidate);
+      return card && !usedCards.has(card) && sameLead(candidate, lead);
+    });
+    if (!anchor) continue;
+    usedCards.add(leadCardFromAnchor(anchor));
+    ensureLeadButton(anchor, lead);
+  }
+  return usedCards.size;
+}
+
+async function generateInvite(lead, chat, button) {
   const state = chatStateForLead(lead);
-  const status = chat.querySelector<HTMLElement>(".reachlyst-chat-status");
+  const status = chat.querySelector(".reachlyst-chat-status");
   button.textContent = "Generating";
   if (status) status.textContent = "Generating a copyable invite...";
 
@@ -268,9 +291,9 @@ async function generateInvite(lead: ExtensionLeadRuntime, chat: Element, button:
   button.textContent = "Generate invite";
 }
 
-async function sendLeadChat(lead: ExtensionLeadRuntime, chat: Element, button: HTMLButtonElement) {
-  const input = chat.querySelector<HTMLTextAreaElement>(".reachlyst-chat-input");
-  const status = chat.querySelector<HTMLElement>(".reachlyst-chat-status");
+async function sendLeadChat(lead, chat, button) {
+  const input = chat.querySelector(".reachlyst-chat-input");
+  const status = chat.querySelector(".reachlyst-chat-status");
   const prompt = input?.value?.trim();
   if (!prompt) {
     if (status) status.textContent = "Write what you want AI to change.";
@@ -279,7 +302,7 @@ async function sendLeadChat(lead: ExtensionLeadRuntime, chat: Element, button: H
 
   const state = chatStateForLead(lead);
   state.messages.push({ role: "user", content: prompt });
-  if (input) input.value = "";
+  input.value = "";
   renderThread(chat, lead);
   button.textContent = "Thinking";
   if (status) status.textContent = "AI is working on this lead...";
@@ -287,7 +310,7 @@ async function sendLeadChat(lead: ExtensionLeadRuntime, chat: Element, button: H
   const response = await reachlystApi("/api/extension/ai/lead-chat", {
     method: "POST",
     body: JSON.stringify({
-      lead: leadPayload(lead, { currentMessage: state.latestInvite || latestAssistantMessage(lead) }),
+      lead: leadPayload(lead, { currentMessage: state.latestInvite }),
       messages: state.messages
     })
   });
@@ -299,35 +322,27 @@ async function sendLeadChat(lead: ExtensionLeadRuntime, chat: Element, button: H
   button.textContent = "Ask AI";
 }
 
-async function copyLatestInvite(lead: ExtensionLeadRuntime, button: HTMLButtonElement) {
-  const message = latestAssistantMessage(lead);
-  if (!message) return;
+async function copyLatestInvite(lead, chat, button) {
+  const status = chat.querySelector(".reachlyst-chat-status");
+  const message = latestInviteForLead(lead);
+  if (!message) {
+    if (status) status.textContent = "Generate an invite first.";
+    return;
+  }
   await navigator.clipboard.writeText(message);
   await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) });
   button.textContent = "Copied";
+  if (status) status.textContent = "Copied. Paste and send manually in LinkedIn.";
   setTimeout(() => { button.textContent = "Copy latest"; }, 1400);
 }
 
-async function markLeadInvited(lead: ExtensionLeadRuntime, button: HTMLButtonElement) {
+async function markLeadInvited(lead, chat, button) {
+  const status = chat.querySelector(".reachlyst-chat-status");
   button.textContent = "Saving";
-  await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "invite_likely_sent", message: latestAssistantMessage(lead) }) });
+  await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "invite_likely_sent", message: latestInviteForLead(lead) }) });
   button.textContent = "Invited";
+  if (status) status.textContent = "Marked as manually invited in Reachlyst.";
   setTimeout(() => { button.textContent = "Mark invited"; }, 1400);
-}
-
-function attachLeadChats(leads: ExtensionLeadRuntime[]) {
-  const anchors = leadAnchors();
-  const usedCards = new Set<Element | null>();
-  for (const lead of leads) {
-    const anchor = anchors.find((candidate) => {
-      const card = leadCardFromAnchor(candidate);
-      return card && !usedCards.has(card) && sameLead(candidate, lead);
-    });
-    if (!anchor) continue;
-    usedCards.add(leadCardFromAnchor(anchor));
-    ensureLeadChat(anchor, lead);
-  }
-  return usedCards.size;
 }
 
 async function runSalesNavigator() {
@@ -355,14 +370,14 @@ async function runSalesNavigator() {
     method: "POST",
     body: JSON.stringify({ searchId: detected.id, leads: parsed.leads })
   }).then((response) => response.json());
-  const hydratedLeads = parsed.leads.map((lead) => ({ ...lead, ...(imported.leads || []).find((item: ExtensionLeadRuntime) => sameLeadRecord(item, lead)) }));
+  const hydratedLeads = parsed.leads.map((lead) => ({ ...lead, ...(imported.leads || []).find((item) => sameLeadRecord(item, lead)) }));
 
   await reportParser("sales_search", parsed.leads.length, parsed.failures);
-  const attached = attachLeadChats(hydratedLeads);
-  setStatus(`Reachlyst: ${parsed.leads.length} visible leads found · ${attached} AI chats ready`, attached ? "good" : "warn");
+  const attached = attachLeadButtons(hydratedLeads);
+  setStatus(`Reachlyst: ${parsed.leads.length} visible leads found · ${attached} buttons ready`, attached ? "good" : "warn");
 }
 
-async function reportParser(pageType: string, extractedCount: number, failures: string[]) {
+async function reportParser(pageType, extractedCount, failures) {
   await reachlystApi("/api/extension/parser/report", {
     method: "POST",
     body: JSON.stringify({ parserVersion: PARSER_VERSION, extensionVersion: EXTENSION_VERSION, pageType, extractedCount, failures, url: location.href })
@@ -383,7 +398,7 @@ async function scheduleReachlystRun() {
 
 scheduleReachlystRun();
 
-chrome.runtime.onMessage.addListener((message: { type?: string }, _sender: unknown, sendResponse: (response: { ok: boolean }) => void) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "reachlyst_stop") {
     removeReachlystUi();
     sendResponse({ ok: true });
@@ -399,7 +414,7 @@ chrome.runtime.onMessage.addListener((message: { type?: string }, _sender: unkno
   return false;
 });
 
-chrome.storage.onChanged.addListener((changes: Record<string, unknown>, areaName: string) => {
+chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "sync") return;
   if (changes.reachlystEnabled || changes.reachlystVerified || changes.reachlystToken) scheduleReachlystRun();
 });
@@ -407,7 +422,7 @@ chrome.storage.onChanged.addListener((changes: Record<string, unknown>, areaName
 new MutationObserver((mutations) => {
   if (mutations.every((mutation) => {
     const target = mutation.target;
-    return target instanceof Element && (target.closest(".reachlyst-lead-chat") || target.closest(".reachlyst-status"));
+    return target instanceof Element && (target.closest(".reachlyst-floating-chat") || target.closest(".reachlyst-lead-button") || target.closest(".reachlyst-status"));
   })) return;
   scheduleReachlystRun();
 }).observe(document.body, { childList: true, subtree: true });

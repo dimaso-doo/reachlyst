@@ -10,15 +10,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <aside>
       <Link className={styles.logo} href="/app/dashboard">Reachlyst</Link>
       <nav className={styles.navGroup} aria-label="Primary">
-        <Link href="/app/dashboard">Dashboard</Link>
-        <Link href="/app/searches">Searches</Link>
+        <Link href="/app/settings">Profile</Link>
+        <Link href="/app/billing">Billing</Link>
         {showSuperAdmin ? <Link href="/app/admin">Super Admin</Link> : null}
       </nav>
       <div className={styles.sidebarSpacer} />
-      <Link className={styles.extensionLink} href="/app/extension">
-        <span>Chrome Extension</span>
-        <small>Download and install guide</small>
-      </Link>
       <Link className={styles.member} href="/app/settings">
         <span aria-hidden="true">{demo.isSuperAdmin ? "A" : "P"}</span>
         <div>

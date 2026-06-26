@@ -1,47 +1,80 @@
-.reachlyst-lead-chat {
-  background: #f8fbff;
-  border: 1px solid #d8e5fb;
-  border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, .07);
-  clear: both;
-  display: grid;
-  gap: 10px;
-  margin: 12px 0 0;
-  max-width: min(760px, calc(100% - 148px));
-  padding: 12px;
-  width: 100%;
+.reachlyst-lead-button {
+  background: #1677ff;
+  border: 1px solid #9cc5ff;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(22, 119, 255, .18);
+  color: white;
+  cursor: pointer;
+  font: 900 11px/1 Inter, system-ui, sans-serif;
+  min-height: 30px;
+  padding: 8px 11px;
+  position: absolute;
+  right: 148px;
+  top: 18px;
+  transition: box-shadow .16s ease, transform .16s ease;
+  z-index: 20;
 }
 
-.reachlyst-lead-chat *,
-.reachlyst-lead-chat *::before,
-.reachlyst-lead-chat *::after {
+.reachlyst-lead-button:hover {
+  box-shadow: 0 16px 34px rgba(22, 119, 255, .26);
+  transform: translateY(-1px);
+}
+
+.reachlyst-floating-chat {
+  background: #f8fbff;
+  border: 1px solid #d8e5fb;
+  border-radius: 16px;
+  bottom: 22px;
+  box-shadow: 0 26px 80px rgba(15, 23, 42, .24);
+  color: #172033;
+  display: grid;
+  gap: 10px;
+  max-height: min(680px, calc(100vh - 44px));
+  overflow: hidden;
+  padding: 14px;
+  position: fixed;
+  right: 22px;
+  width: 390px;
+  z-index: 2147483647;
+}
+
+.reachlyst-floating-chat[hidden] {
+  display: none;
+}
+
+.reachlyst-floating-chat *,
+.reachlyst-floating-chat *::before,
+.reachlyst-floating-chat *::after {
   box-sizing: border-box;
 }
 
 .reachlyst-chat-top {
   align-items: center;
-  display: flex;
+  display: grid;
   gap: 10px;
+  grid-template-columns: auto 1fr auto;
 }
 
 .reachlyst-r {
   align-items: center;
   background: #1677ff;
-  border-radius: 10px;
+  border-radius: 11px;
   box-shadow: 0 10px 22px rgba(22, 119, 255, .24);
   color: white;
   display: inline-flex;
-  flex: 0 0 auto;
   font: 900 15px/1 Inter, system-ui, sans-serif;
-  height: 32px;
+  height: 34px;
   justify-content: center;
-  width: 32px;
+  width: 34px;
 }
 
 .reachlyst-chat-top strong {
   color: #162033;
   display: block;
-  font: 900 13px/1.2 Inter, system-ui, sans-serif;
+  font: 900 14px/1.2 Inter, system-ui, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reachlyst-chat-top small {
@@ -49,25 +82,43 @@
   display: block;
   font: 700 11px/1.35 Inter, system-ui, sans-serif;
   margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reachlyst-close {
+  align-items: center;
+  background: #edf4ff;
+  border: 1px solid #cddcff;
+  border-radius: 50%;
+  color: #172033;
+  cursor: pointer;
+  display: inline-flex;
+  font: 900 18px/1 Inter, system-ui, sans-serif;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
 }
 
 .reachlyst-chat-thread {
   background: white;
   border: 1px solid #e1e9f5;
-  border-radius: 10px;
+  border-radius: 12px;
   display: grid;
-  gap: 7px;
-  max-height: 178px;
+  gap: 8px;
+  max-height: 270px;
+  min-height: 150px;
   overflow: auto;
-  padding: 9px;
+  padding: 10px;
 }
 
 .reachlyst-chat-thread p {
-  border-radius: 9px;
+  border-radius: 10px;
   font: 700 12px/1.45 Inter, system-ui, sans-serif;
   margin: 0;
   max-width: 92%;
-  padding: 8px 9px;
+  padding: 9px 10px;
   white-space: pre-wrap;
 }
 
@@ -87,13 +138,13 @@
 .reachlyst-chat-input {
   background: white;
   border: 1px solid #cddcf0;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #172033;
   display: block;
   font: 700 12px/1.45 Inter, system-ui, sans-serif;
-  min-height: 58px;
+  min-height: 76px;
   outline: none;
-  padding: 9px 10px;
+  padding: 10px;
   resize: vertical;
   width: 100%;
 }
@@ -112,12 +163,12 @@
 .reachlyst-button {
   background: #1677ff;
   border: 1px solid #9cc5ff;
-  border-radius: 8px;
+  border-radius: 9px;
   color: white;
   cursor: pointer;
   flex: 0 0 auto;
   font: 900 11px/1 Inter, system-ui, sans-serif;
-  min-height: 32px;
+  min-height: 34px;
   padding: 8px 10px;
   transition: box-shadow .16s ease, transform .16s ease;
 }
@@ -156,3 +207,17 @@
 .reachlyst-status[data-tone="good"] { background: #147c6c; }
 .reachlyst-status[data-tone="warn"] { background: #8b5609; }
 .reachlyst-status[data-tone="danger"] { background: #9d2636; }
+
+@media (max-width: 640px) {
+  .reachlyst-lead-button {
+    position: static;
+    margin: 8px 0 0 72px;
+  }
+
+  .reachlyst-floating-chat {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}

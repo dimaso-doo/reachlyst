@@ -1,10 +1,9 @@
 const DEFAULT_SETTINGS = {
   reachlystApiBase: "https://reachlyst.com",
-  reachlystToken: "reachlyst-browser-session",
-  reachlystUseCase: "sales_outreach",
-  reachlystIcp: "Sales Navigator leads that match the active Reachlyst search playbook.",
-  reachlystTone: "Professional, concise, human, non-spammy",
-  reachlystEnabled: false
+  reachlystToken: "",
+  reachlystEnabled: false,
+  reachlystVerified: false,
+  reachlystPlanName: ""
 };
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -22,7 +21,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   chrome.storage.sync.get(["reachlystApiBase", "reachlystToken"], async (settings) => {
     try {
-      const token = settings.reachlystToken || DEFAULT_SETTINGS.reachlystToken;
+      const token = settings.reachlystToken || "";
       const apiBase = settings.reachlystApiBase || DEFAULT_SETTINGS.reachlystApiBase;
       const response = await fetch(`${apiBase}${message.path}`, {
         method: message.method || "GET",

@@ -1,5 +1,5 @@
 .table { margin-top: 18px; overflow-x: auto; padding: 0; }
-.table table { border-collapse: collapse; min-width: 760px; width: 100%; }
+.table table { border-collapse: collapse; min-width: 860px; width: 100%; }
 .table th, .table td { border-bottom: 1px solid var(--line); padding: 16px; text-align: left; vertical-align: top; }
 .table th { color: var(--muted); font-size: 13px; text-transform: uppercase; }
 .leadCell { align-items: center; display: flex; gap: 10px; min-width: 0; }
@@ -20,6 +20,8 @@
 .metricText { color: var(--ink); font-size: 13px; font-weight: 800; }
 .urlLine { align-items: center; display: flex; gap: 8px; margin-top: 8px; min-width: 0; }
 .urlText { color: var(--muted); display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.messagePreview { align-items: flex-start; display: grid; gap: 8px; max-width: 360px; }
+.messagePreview span { color: var(--ink); display: -webkit-box; font-size: 13px; font-weight: 700; line-height: 1.45; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .pageHeader { align-items: center; display: flex; gap: 18px; justify-content: space-between; margin-bottom: 16px; }
 .pageHeader h1 { font-size: 24px; margin: 0; }
 .pageHeader p { color: var(--muted); margin: 4px 0 0; }

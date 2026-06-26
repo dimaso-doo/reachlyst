@@ -98,7 +98,7 @@
 .workflow p { color: rgba(255,255,255,.68); font-size: 17px; line-height: 1.65; }
 .steps, .planGrid { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
 .steps section, .planGrid section { padding: 22px; }
-.steps section, .planGrid section, .carousel section { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); color: white; }
+.steps section, .pricing .planGrid section, .carousel section { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); color: white; }
 .steps span { color: #60a5fa; font-weight: 900; }
 .faq p, .planGrid p, .carousel p { color: rgba(255,255,255,.68); line-height: 1.55; }
 .testimonials { max-height: 780px; overflow: hidden; position: relative; }
@@ -132,6 +132,16 @@
 .billingUsage { margin: 18px 0 24px; padding: 22px; }
 .billingUsage h2 { margin-top: 0; }
 .billingUsage p { color: var(--muted); margin: 8px 0; }
+.billingPlanGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 24px; }
+.billingPlanGrid section { background: white; border-color: var(--line); color: var(--ink); padding: 22px; }
+.billingPlanGrid h2 { margin-top: 0; }
+.billingPlanGrid strong { color: var(--ink); display: block; font-size: 36px; margin: 8px 0 18px; }
+.billingPlanGrid strong span { color: var(--muted); font-size: 15px; margin-left: 4px; }
+.billingPlanGrid p { color: var(--muted); line-height: 1.55; }
+.billingPlanGrid .planSummary { color: var(--ink) !important; min-height: 52px; }
+.billingPlanGrid .limitList { background: #f8fafc; border-color: var(--line); }
+.billingPlanGrid .limitList p + p { border-top-color: var(--line); }
+.billingPlanGrid .limitList b { color: var(--ink); }
 .addOns { margin-top: 18px; padding: 28px; }
 .addOns h2 { font-size: 34px; margin: 10px 0; }
 .addOns p { color: rgba(255,255,255,.68); max-width: 780px; }
@@ -165,7 +175,7 @@
 .simplePage h1 { font-size: clamp(42px, 6vw, 76px); margin: 70px 0 18px; }
 .simplePage p { color: rgba(255,255,255,.7); font-size: 20px; line-height: 1.6; max-width: 760px; }
 @media (max-width: 860px) {
-  .hero > div, .steps, .planGrid, .videoBody, .reviewGrid, .faq > div { grid-template-columns: 1fr; }
+  .hero > div, .steps, .planGrid, .billingPlanGrid, .videoBody, .reviewGrid, .faq > div { grid-template-columns: 1fr; }
   .aiStrip { grid-template-columns: 1fr; }
   .workflowItem, .workflowItem:nth-child(even) { justify-content: flex-end; }
   .workflowItem section { width: calc(100% - 72px); }

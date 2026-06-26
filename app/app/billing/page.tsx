@@ -20,7 +20,7 @@ export default async function BillingPage() {
       <p>{snapshot.usage.monthlyAiSuggestions} / {formatLimit(snapshot.config.limits.monthlyAiSuggestions)} AI suggestions this month</p>
       <p>{snapshot.config.included.inboxSync ? "Read-only inbox sync included" : "Read-only inbox sync requires Pro"}</p>
     </Card>
-    <div className={styles.planGrid}>
+    <div className={styles.billingPlanGrid}>
       {plans.map((plan) => {
         const configured = Boolean(getStripePriceId(plan.key));
         const current = snapshot.plan === plan.key && subscription?.status !== "canceled";

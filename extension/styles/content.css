@@ -1,176 +1,151 @@
-.reachlyst-inline {
+.reachlyst-lead-chat {
   background: #f8fbff;
-  border: 1px solid #d9e6fb;
-  border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+  border: 1px solid #d8e5fb;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .07);
   clear: both;
   display: grid;
-  gap: 8px;
-  margin: 10px 0 0;
+  gap: 10px;
+  margin: 12px 0 0;
   max-width: min(760px, calc(100% - 148px));
-  padding: 10px;
+  padding: 12px;
   width: 100%;
 }
 
-.reachlyst-inline *,
-.reachlyst-inline *::before,
-.reachlyst-inline *::after {
+.reachlyst-lead-chat *,
+.reachlyst-lead-chat *::before,
+.reachlyst-lead-chat *::after {
   box-sizing: border-box;
 }
 
-.reachlyst-inline-header {
+.reachlyst-chat-top {
   align-items: center;
   display: flex;
-  gap: 8px;
-  min-width: 0;
+  gap: 10px;
 }
 
-.reachlyst-badge,
-.reachlyst-side-badge {
-  background: #e4ebff;
-  border: 1px solid #cbd7ff;
-  border-radius: 999px;
-  color: #294da8;
+.reachlyst-r {
+  align-items: center;
+  background: #1677ff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(22, 119, 255, .24);
+  color: white;
   display: inline-flex;
   flex: 0 0 auto;
-  font: 900 10px/1 Inter, system-ui, sans-serif;
-  letter-spacing: 0;
-  padding: 4px 7px;
-  white-space: nowrap;
+  font: 900 15px/1 Inter, system-ui, sans-serif;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
 }
 
-.reachlyst-side-badge {
-  position: absolute;
-  right: 112px;
-  top: 18px;
-  z-index: 10;
+.reachlyst-chat-top strong {
+  color: #162033;
+  display: block;
+  font: 900 13px/1.2 Inter, system-ui, sans-serif;
 }
 
-.reachlyst-side-badge[data-status="copied"] {
-  background: #eef4ff;
-  border-color: #cbdcff;
-  color: #2454b8;
-}
-
-.reachlyst-side-badge[data-status="invited"] {
-  background: #dff5eb;
-  border-color: #a7e2ca;
-  color: #096448;
-}
-
-.reachlyst-badge[data-status="good_fit"] {
-  background: #dff5eb;
-  border-color: #a7e2ca;
-  color: #096448;
-}
-
-.reachlyst-badge[data-status="analyzing"] {
-  background: #edf2ef;
-  border-color: #cfd9d3;
-  color: #41504a;
-}
-
-.reachlyst-badge[data-status="maybe"] {
-  background: #fff1d7;
-  border-color: #f2cd88;
-  color: #8b5609;
-}
-
-.reachlyst-badge[data-status="skip"] {
-  background: #ffe3e6;
-  border-color: #f3a8b2;
-  color: #9d2636;
-}
-
-.reachlyst-reason {
-  color: #4a5a6d;
+.reachlyst-chat-top small {
+  color: #607086;
   display: block;
   font: 700 11px/1.35 Inter, system-ui, sans-serif;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-top: 2px;
 }
 
-.reachlyst-suggestion {
+.reachlyst-chat-thread {
+  background: white;
+  border: 1px solid #e1e9f5;
+  border-radius: 10px;
   display: grid;
-  gap: 5px;
+  gap: 7px;
+  max-height: 178px;
+  overflow: auto;
+  padding: 9px;
 }
 
-.reachlyst-suggestion > span {
-  color: #1677ff;
-  font: 900 10px/1 Inter, system-ui, sans-serif;
-  letter-spacing: .04em;
-  text-transform: uppercase;
+.reachlyst-chat-thread p {
+  border-radius: 9px;
+  font: 700 12px/1.45 Inter, system-ui, sans-serif;
+  margin: 0;
+  max-width: 92%;
+  padding: 8px 9px;
+  white-space: pre-wrap;
 }
 
-.reachlyst-message,
-.reachlyst-mini-chat textarea {
+.reachlyst-chat-assistant {
+  background: #eef5ff;
+  border: 1px solid #d8e7ff;
+  color: #1f3352;
+  justify-self: start;
+}
+
+.reachlyst-chat-user {
+  background: #1677ff;
+  color: white;
+  justify-self: end;
+}
+
+.reachlyst-chat-input {
   background: white;
   border: 1px solid #cddcf0;
-  border-radius: 8px;
-  color: #17201b;
+  border-radius: 10px;
+  color: #172033;
   display: block;
-  font: 600 12px/1.45 Inter, system-ui, sans-serif;
-  min-height: 54px;
-  padding: 8px 10px;
+  font: 700 12px/1.45 Inter, system-ui, sans-serif;
+  min-height: 58px;
+  outline: none;
+  padding: 9px 10px;
   resize: vertical;
   width: 100%;
 }
 
-.reachlyst-message {
-  cursor: text;
+.reachlyst-chat-input:focus {
+  border-color: #8bbcff;
+  box-shadow: 0 0 0 4px rgba(22, 119, 255, .12);
 }
 
-.reachlyst-actions {
+.reachlyst-chat-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
 }
 
 .reachlyst-button {
   background: #1677ff;
   border: 1px solid #9cc5ff;
-  border-radius: 7px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   flex: 0 0 auto;
-  font: 900 10px/1 Inter, system-ui, sans-serif;
-  padding: 7px 9px;
+  font: 900 11px/1 Inter, system-ui, sans-serif;
+  min-height: 32px;
+  padding: 8px 10px;
+  transition: box-shadow .16s ease, transform .16s ease;
+}
+
+.reachlyst-button:hover {
+  box-shadow: 0 10px 20px rgba(22, 119, 255, .2);
+  transform: translateY(-1px);
 }
 
 .reachlyst-button-secondary {
   background: #edf4ff;
   border-color: #cddcff;
-  color: #17201b;
-}
-
-.reachlyst-mini-chat {
-  background: #eef5ff;
-  border: 1px solid #d2e3ff;
-  border-radius: 8px;
-  display: grid;
-  gap: 7px;
-  padding: 8px;
-}
-
-.reachlyst-mini-chat[hidden] {
-  display: none;
+  color: #172033;
 }
 
 .reachlyst-chat-status {
-  color: #4a5a6d;
-  font: 700 11px/1.35 Inter, system-ui, sans-serif;
+  color: #607086;
+  font: 800 11px/1.35 Inter, system-ui, sans-serif;
   margin: 0;
 }
 
 .reachlyst-status {
-  background: #17201b;
+  background: #172033;
   border: 1px solid rgba(255,255,255,.16);
   border-radius: 999px;
-  box-shadow: 0 14px 40px rgba(23,32,27,.18);
+  box-shadow: 0 14px 40px rgba(23,32,51,.18);
   color: white;
-  font: 800 12px/1 Inter, system-ui, sans-serif;
+  font: 900 12px/1 Inter, system-ui, sans-serif;
   left: 18px;
   padding: 10px 13px;
   position: fixed;

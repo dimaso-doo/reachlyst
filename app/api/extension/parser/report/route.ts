@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const auth = requireExtensionToken(request);
+  const auth = await requireExtensionToken(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request, schema);
   return NextResponse.json({ ok: true, reportId: `parser-${Date.now()}`, received: body });

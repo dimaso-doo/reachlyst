@@ -32,6 +32,21 @@
 .settingsActions { align-items: center; display: flex; gap: 12px; }
 .settingsActions button { background: var(--accent); border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 900; min-height: 42px; padding: 0 16px; }
 .settingsActions span { color: #147c6c; font-weight: 900; }
+.extensionAccess { align-items: center; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) auto; padding: 22px; }
+.extensionAccess h2 { margin: 0 0 6px; }
+.extensionAccess p { color: var(--muted); line-height: 1.5; margin: 0; }
+.accessStatus { align-items: flex-start; display: grid; gap: 6px; justify-items: end; min-width: 190px; }
+.accessStatus span { background: #fee2e2; border-radius: 999px; color: #991b1b; display: inline-flex; font-size: 12px; font-weight: 900; padding: 7px 10px; }
+.accessStatus span[data-active="true"] { background: #dcfce7; color: #166534; }
+.accessStatus small { color: var(--muted); font-size: 12px; font-weight: 800; }
+.tokenBox { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 10px; grid-column: 1 / -1; padding: 14px; }
+.tokenBox label { color: var(--muted); display: grid; font-size: 12px; font-weight: 900; gap: 6px; text-transform: uppercase; }
+.tokenBox input { background: white; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; min-height: 42px; padding: 0 12px; }
+.tokenBox button, .tokenActions button { background: var(--accent); border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 900; min-height: 42px; padding: 0 14px; width: fit-content; }
+.tokenBox button:hover, .tokenActions button:hover { background: var(--accent-strong); }
+.tokenBox small { color: var(--muted); font-weight: 700; }
+.tokenError { color: #b42318 !important; font-weight: 800; grid-column: 1 / -1; }
+.tokenActions { display: flex; grid-column: 1 / -1; justify-content: flex-start; }
 .primaryAction { background: var(--accent); border-radius: 8px; box-shadow: 0 8px 18px rgba(22,119,255,.18); color: white; display: inline-flex; font-weight: 800; min-height: 40px; padding: 10px 14px; text-decoration: none; white-space: nowrap; }
 .primaryAction:hover { background: var(--accent-strong); color: white; }
 .steps { color: var(--muted); line-height: 1.7; margin: 0; padding-left: 20px; }
@@ -51,4 +66,4 @@
 .enterToggle { align-items: center; color: var(--muted); display: inline-flex; font-size: 13px; font-weight: 700; gap: 8px; justify-self: start; }
 .enterToggle input { accent-color: var(--accent); height: 15px; width: 15px; }
 .chatError { color: #b42318; font-size: 13px; font-weight: 700; margin: 0; }
-@media (max-width: 920px) { .grid, .settingsGrid, .kanban, .leadHero, .inviteComposer { grid-template-columns: 1fr; } }
+@media (max-width: 920px) { .grid, .settingsGrid, .kanban, .leadHero, .inviteComposer, .extensionAccess { grid-template-columns: 1fr; } .accessStatus { justify-items: start; } }

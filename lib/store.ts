@@ -317,12 +317,14 @@ export async function recordAiUsage(type: "ai_analyzed" | "message_generated" = 
   writeDb(db);
 }
 
-export async function saveLeadAction(leadId: string, action: string) {
+export async function saveLeadAction(leadId: string, action: string, metadata: Record<string, unknown> = {}) {
+  const message = sanitizeText(metadata.message);
   if (hasSupabase()) {
     const supabase = getSupabaseServerClient();
     const status = action === "message_copied" ? "copied" : action === "invite_likely_sent" ? "invite_likely_sent" : action === "invite_confirmed_if_detected" ? "invite_sent" : action === "skipped" ? "skip" : undefined;
     if (status) await supabase?.from("leads").update({ status, updated_at: now() }).eq("id", leadId);
-    await supabase?.from("activities").insert({ workspace_id: workspaceId, lead_id: leadId, type: action });
+    if (message) await supabase?.from("generated_messages").insert({ workspace_id: workspaceId, lead_id: leadId, message_type: action === "invite_likely_sent" ? "invite_used" : "invite", body: message, copied_at: action === "message_copied" ? now() : null });
+    await supabase?.from("activities").insert({ workspace_id: workspaceId, lead_id: leadId, type: action, metadata });
     return;
   }
   const db = readDb();
@@ -332,6 +334,7 @@ export async function saveLeadAction(leadId: string, action: string) {
     if (action === "invite_likely_sent") lead.status = "invite_likely_sent";
     if (action === "invite_confirmed_if_detected") lead.status = "invite_sent";
     if (action === "skipped") lead.status = "skip";
+    if (message) lead.generatedMessage = message;
     lead.updatedAt = now();
   }
   db.activities.unshift({ label: `${action.replaceAll("_", " ")}${lead ? `: ${lead.name}` : ""}`, time: "Just now", type: action, leadId: lead?.id ?? leadId, createdAt: now() });

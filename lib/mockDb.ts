@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { verifyExtensionToken } from "@/lib/extensionTokens";
 
 export const extensionAuthHeader = "x-reachlyst-extension-token";
 
-export function requireExtensionToken(request: Request) {
+export async function requireExtensionToken(request: Request) {
   const token = request.headers.get(extensionAuthHeader) ?? "";
-  if (!token || token.length < 12) {
-    return { ok: false as const, response: NextResponse.json({ error: "Missing or invalid extension token" }, { status: 401 }) };
+  const auth = await verifyExtensionToken(token);
+  if (!auth.ok) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: auth.error, access: "access" in auth ? auth.access : undefined }, { status: auth.status })
+    };
   }
-  return { ok: true as const, token };
+  return { ok: true as const, token, auth };
 }
 
 export async function readJson<T extends z.ZodTypeAny>(request: Request, schema: T) {

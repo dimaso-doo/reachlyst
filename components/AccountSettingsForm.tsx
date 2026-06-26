@@ -74,8 +74,8 @@ export function AccountSettingsForm() {
 
         <Card>
           <h2>Extension</h2>
-          <p>Chrome extension access is handled automatically. Open the extension and click Start or Stop.</p>
-          <p>Current API: https://reachlyst.com</p>
+          <p>Chrome extension access is controlled by your billing status and extension token.</p>
+          <p>Generate or copy your token from Dashboard or Chrome Extension.</p>
         </Card>
       </section>
 

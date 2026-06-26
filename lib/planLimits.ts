@@ -23,17 +23,17 @@ export const planCatalog: Record<BillingPlanKey, {
     name: "Free",
     price: "$0",
     priceEnv: "",
-    summary: "Try the Chrome extension and see how Reachlyst fits your Sales Navigator workflow.",
+    summary: "Create an account, view the dashboard, and upgrade when you are ready to use the Chrome extension.",
     cta: "Start free",
     features: [
-      "Chrome extension trial",
-      "2 Sales Navigator searches",
-      "100 saved leads",
-      "25 AI invite suggestions"
+      "Dashboard preview",
+      "Billing setup",
+      "No Chrome extension token",
+      "Upgrade to activate AI invite chat"
     ],
     addOns: ["Upgrade when you need more leads, AI suggestions, or inbox sync."],
-    limits: { searches: 2, leads: 100, monthlyAiSuggestions: 25, seats: 1 },
-    included: { extensionSync: true, aiScoring: true, inviteGeneration: true, inboxSync: false, teamSeats: false }
+    limits: { searches: 0, leads: 0, monthlyAiSuggestions: 0, seats: 1 },
+    included: { extensionSync: false, aiScoring: false, inviteGeneration: false, inboxSync: false, teamSeats: false }
   },
   growth: {
     name: "Growth",

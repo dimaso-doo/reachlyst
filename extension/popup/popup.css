@@ -77,6 +77,32 @@ p {
   grid-template-columns: 1fr 1fr;
 }
 
+.tokenField {
+  color: #9fb0c7;
+  display: grid;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 7px;
+  text-transform: uppercase;
+}
+
+.tokenField textarea {
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 12px;
+  color: #f8fbff;
+  font: 700 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  min-height: 74px;
+  outline: none;
+  padding: 10px;
+  resize: vertical;
+}
+
+.tokenField textarea:focus {
+  border-color: rgba(96, 165, 250, .78);
+  box-shadow: 0 0 0 4px rgba(22, 119, 255, .18);
+}
+
 button {
   background: #1677ff;
   border: 1px solid rgba(147, 197, 253, .54);
@@ -102,4 +128,9 @@ button:disabled {
 #stop {
   background: rgba(255, 255, 255, .08);
   border-color: rgba(255, 255, 255, .14);
+}
+
+.verify {
+  background: rgba(96, 165, 250, .14);
+  border-color: rgba(147, 197, 253, .34);
 }

@@ -13,7 +13,7 @@ export default function PricingPage() {
         <div className="container">
           <span className={styles.eyebrow}>Pricing</span>
           <h1>Simple pricing for LinkedIn lead workflows.</h1>
-          <p>Try the extension for free. Upgrade when you want more leads, inbox sync, and higher AI usage.</p>
+          <p>Start with the dashboard. Upgrade to activate the Chrome extension, AI invite chat, and usage-based outreach logging.</p>
         </div>
       </section>
       <section className={styles.pricing}>

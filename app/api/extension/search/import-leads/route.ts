@@ -17,7 +17,7 @@ const leadSchema = z.object({
 const schema = z.object({ searchId: z.string(), leads: z.array(leadSchema) });
 
 export async function POST(request: Request) {
-  const auth = requireExtensionToken(request);
+  const auth = await requireExtensionToken(request);
   if (!auth.ok) return auth.response;
   const body = await readJson(request, schema);
   const feature = await requirePlanFeature("extensionSync");

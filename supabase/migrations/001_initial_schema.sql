@@ -5,7 +5,7 @@ create type activity_type as enum ('search_detected','lead_imported','ai_analyze
 create type sender_type as enum ('user','lead','unknown');
 create type message_source as enum ('linkedin_messages','sales_inbox');
 
-create table profiles (id uuid primary key references auth.users(id) on delete cascade, email text, full_name text, avatar_url text, created_at timestamptz default now());
+create table profiles (id uuid primary key references auth.users(id) on delete cascade, email text, full_name text, avatar_url text, marketing_email_consent boolean not null default false, marketing_email_consent_at timestamptz, created_at timestamptz default now());
 create table workspaces (id uuid primary key default gen_random_uuid(), name text not null, owner_id uuid references profiles(id), created_at timestamptz default now());
 create table workspace_members (workspace_id uuid references workspaces(id) on delete cascade, user_id uuid references profiles(id) on delete cascade, role text not null default 'member', created_at timestamptz default now(), primary key (workspace_id, user_id));
 create table subscriptions (id uuid primary key default gen_random_uuid(), workspace_id uuid references workspaces(id) on delete cascade, stripe_customer_id text, stripe_subscription_id text, plan text not null default 'starter', status text not null default 'inactive', current_period_end timestamptz, created_at timestamptz default now());

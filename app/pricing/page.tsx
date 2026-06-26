@@ -20,26 +20,25 @@ export default function PricingPage() {
         <div className="container">
           <div className={styles.planGrid}>{plans.map((plan) => <Card className={plan.key === "growth" ? styles.featuredPlan : ""} key={plan.key}>
             <h3>{plan.name}</h3>
-            <strong>{plan.price}{plan.key === "growth" ? <span>/mo</span> : null}</strong>
+            <strong>{plan.price}<span>/mo</span></strong>
             <p className={styles.planSummary}>{plan.summary}</p>
             <div className={styles.limitList}>
-              <p><b>{formatLimit(plan.limits.searches)}</b> searches</p>
-              <p><b>{formatLimit(plan.limits.leads)}</b> leads</p>
-              <p><b>{formatLimit(plan.limits.monthlyAiSuggestions)}</b> AI suggestions/mo</p>
-              <p><b>{formatLimit(plan.limits.seats)}</b> seat{plan.limits.seats > 1 ? "s" : ""}</p>
+              <p><b>{formatLimit(plan.limits.searches)}</b> active search workflows</p>
+              <p><b>{formatLimit(plan.limits.leads)}</b> lead scans/mo</p>
+              <p><b>{formatLimit(plan.limits.monthlyAiSuggestions)}</b> AI replies/mo</p>
+              <p><b>{formatLimit(plan.limits.seats)}</b> workspace user{plan.limits.seats > 1 ? "s" : ""}</p>
             </div>
             {plan.features.map((feature) => <p key={feature}>✓ {feature}</p>)}
-            <p>{plan.included.inboxSync ? "✓ Read-only message sync" : "Upgrade for read-only message sync"}</p>
-            <Button href={plan.key === "free" ? "/signup" : "/app/billing"} variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button>
+            <Button href="/app/billing" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button>
           </Card>)}</div>
           <Card className={styles.addOns}>
             <span className={styles.eyebrow}>Add-ons</span>
             <h2>Buy more only when volume grows.</h2>
-            <p>Growth includes enough capacity for a real outbound workflow. When you need more, add lead packs, AI suggestion packs, or seats without changing the whole account.</p>
+            <p>Growth includes enough capacity for a real Sales Navigator workflow. When you need more, add lead scan packs, AI reply packs, or workspace users without changing the whole account.</p>
             <div>
               <span>Extra lead packs</span>
-              <span>Extra AI suggestions</span>
-              <span>Additional seats</span>
+              <span>Extra AI replies</span>
+              <span>Additional users</span>
             </div>
           </Card>
         </div>

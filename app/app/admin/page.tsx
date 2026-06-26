@@ -13,20 +13,6 @@ function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100);
 }
 
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("en-US").format(value);
-}
-
-function customerAge(value?: string) {
-  if (!value) return "Unknown";
-  const days = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000));
-  if (days < 1) return "Today";
-  if (days < 60) return `${days} days`;
-  const months = Math.floor(days / 30);
-  if (months < 24) return `${months} months`;
-  return `${Math.floor(months / 12)} years`;
-}
-
 export default async function SuperAdminPage() {
   if (!(await canAccessSuperAdmin())) redirect("/app/dashboard");
 
@@ -36,9 +22,38 @@ export default async function SuperAdminPage() {
     <header className={styles.header}>
       <div>
         <span>Super Admin</span>
-        <h1>Users</h1>
+        <h1>Dashboard</h1>
       </div>
     </header>
+
+    <section className={styles.statsGrid}>
+      <Card>
+        <span>Monthly revenue</span>
+        <strong>{formatMoney(snapshot.stats.monthlyRevenueCents)}</strong>
+      </Card>
+      <Card>
+        <span>Monthly costs</span>
+        <strong>{formatMoney(snapshot.stats.monthlyCostsCents)}</strong>
+      </Card>
+      <Card>
+        <span>Monthly profit</span>
+        <strong>{formatMoney(snapshot.stats.monthlyProfitCents)}</strong>
+      </Card>
+    </section>
+
+    <Card className={styles.topSubscribers}>
+      <div className={styles.tableHeader}>
+        <h2>Top subscribers</h2>
+        <span>{snapshot.stats.users} users total</span>
+      </div>
+      <div className={styles.subscriberList}>
+        {snapshot.topSubscribers.map((user) => <div key={user.id}>
+          <div><strong>{user.name}</strong><small>{user.email}</small></div>
+          <Badge tone={user.status === "active" || user.status === "trialing" ? "good" : user.status === "local" ? "blue" : "neutral"}>{user.plan ?? "free"}</Badge>
+          <span>{formatMoney(user.paidSoFarCents)} paid</span>
+        </div>)}
+      </div>
+    </Card>
 
     <Card className={styles.table}>
       <div className={styles.tableHeader}>
@@ -46,24 +61,15 @@ export default async function SuperAdminPage() {
         <span>{snapshot.users.length} total</span>
       </div>
       <table>
-        <thead><tr><th>User</th><th>Plan</th><th>Customer age</th><th>Money spent</th><th>Resources</th><th>Last active</th></tr></thead>
+        <thead><tr><th>User</th><th>Workspace</th><th>Current plan</th><th>Status</th><th>Paid so far</th><th>Package until</th></tr></thead>
         <tbody>
           {snapshot.users.map((user) => <tr key={user.id}>
-            <td><strong>{user.name}</strong><small>{user.email}</small><small>{user.workspace ?? "No workspace"} · {user.role ?? "member"}</small></td>
-            <td><Badge tone={user.status === "active" ? "good" : user.status === "local" ? "blue" : "neutral"}>{user.plan ?? "free"} · {user.status ?? "inactive"}</Badge>{user.currentPeriodEnd ? <small>Renews {formatDate(user.currentPeriodEnd)}</small> : null}</td>
-            <td><strong>{customerAge(user.createdAt)}</strong><small>Since {formatDate(user.createdAt)}</small></td>
-            <td><strong>{formatMoney(user.moneySpentCents)}</strong></td>
-            <td>
-              <div className={styles.resourceList}>
-                <span>{formatNumber(user.searches)} searches</span>
-                <span>{formatNumber(user.leads)} leads</span>
-                <span>{formatNumber(user.aiSuggestions)} AI suggestions</span>
-                <span>{formatNumber(user.messagesSynced)} synced messages</span>
-                <span>{formatNumber(user.aiTokens)} AI tokens</span>
-                <span>{formatNumber(user.extensionTokens)} extension sessions</span>
-              </div>
-            </td>
-            <td>{formatDate(user.lastSignInAt ?? user.createdAt)}</td>
+            <td><strong>{user.name}</strong><small>{user.email}</small></td>
+            <td>{user.workspace ?? "No workspace"}</td>
+            <td><Badge tone={user.status === "active" || user.status === "trialing" ? "good" : user.status === "local" ? "blue" : "neutral"}>{user.plan ?? "free"}</Badge></td>
+            <td>{user.status ?? "inactive"}</td>
+            <td><strong>{formatMoney(user.paidSoFarCents)}</strong></td>
+            <td>{formatDate(user.currentPeriodEnd)}</td>
           </tr>)}
         </tbody>
       </table>

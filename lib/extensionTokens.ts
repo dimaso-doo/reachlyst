@@ -62,7 +62,7 @@ export async function getExtensionAccessState(): Promise<ExtensionAccessState> {
   const subscription = await getWorkspaceSubscription();
   const plan = normalizePlan(subscription?.plan);
   const status = subscription?.status ?? (process.env.NODE_ENV === "production" ? "inactive" : "local_dev");
-  const isPaid = activeSubscriptionStatus(subscription?.status) && plan === "growth";
+  const isPaid = activeSubscriptionStatus(subscription?.status) && plan !== "free";
 
   if (hasSupabase()) {
     const supabase = getSupabaseServerClient();
@@ -111,6 +111,11 @@ export async function createExtensionToken(name = "Chrome Extension") {
 
   if (hasSupabase()) {
     const supabase = getSupabaseServerClient();
+    await supabase
+      ?.from("extension_tokens")
+      .update({ revoked_at: now() })
+      .eq("workspace_id", workspaceId)
+      .is("revoked_at", null);
     await supabase?.from("extension_tokens").insert({
       workspace_id: workspaceId,
       token_hash: tokenHash,
@@ -118,6 +123,9 @@ export async function createExtensionToken(name = "Chrome Extension") {
     });
   } else {
     const db = readLocalTokens();
+    db.tokens.forEach((item) => {
+      if (!item.revokedAt) item.revokedAt = now();
+    });
     db.tokens.unshift({
       id: `tok_${randomBytes(8).toString("hex")}`,
       hash: tokenHash,

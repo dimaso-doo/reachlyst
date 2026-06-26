@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAuthClient } from "@/lib/supabaseAuth";
 
 export async function GET(request: Request) {
+  const requestUrl = new URL(request.url);
   const supabase = await getSupabaseAuthClient();
   if (!supabase) {
     return NextResponse.redirect(new URL("/login?error=supabase-auth-not-configured", request.url));
@@ -19,5 +20,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login?error=google-oauth-not-configured", request.url));
   }
 
-  return NextResponse.redirect(data.url);
+  const response = NextResponse.redirect(data.url);
+  response.cookies.set("reachlyst_marketing_consent", requestUrl.searchParams.get("marketing_consent") === "1" ? "1" : "0", {
+    httpOnly: true,
+    maxAge: 60 * 10,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
+  });
+  return response;
 }

@@ -20,6 +20,13 @@
 .pending { color: #8b97a6; }
 .muted { opacity: .45; }
 .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.extensionSetupGrid { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.extensionSetupGrid section { padding: 22px; }
+.extensionSetupGrid h2 { font-size: 16px; margin: 0 0 12px; }
+.extensionSetupGrid p { color: var(--muted); line-height: 1.55; margin: 0; }
+.videoTutorial { display: grid; gap: 12px; }
+.videoTutorial div { align-items: center; aspect-ratio: 16 / 10; background: linear-gradient(135deg, #07111f, #162033); border-radius: 8px; color: white; display: flex; justify-content: center; }
+.videoTutorial div span { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; font-size: 12px; font-weight: 900; padding: 8px 11px; }
 .grid section { padding: 22px; }
 .grid p { color: var(--muted); line-height: 1.55; overflow-wrap: anywhere; }
 .grid h2 { font-size: 16px; margin: 0 0 12px; }
@@ -28,9 +35,11 @@
 .formGrid { display: grid; gap: 12px; }
 .formGrid label { color: var(--muted); display: grid; font-size: 12px; font-weight: 900; gap: 6px; text-transform: uppercase; }
 .formGrid input, .formGrid textarea { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.4; min-height: 42px; padding: 10px 12px; text-transform: none; }
+.formGrid input[readonly] { background: #eef4fb; color: #5b6b80; cursor: default; }
 .formGrid textarea { min-height: 90px; resize: vertical; }
 .settingsActions { align-items: center; display: flex; gap: 12px; }
 .settingsActions button { background: var(--accent); border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 900; min-height: 42px; padding: 0 16px; }
+.settingsActions button:hover { background: var(--accent-strong); color: white; }
 .settingsActions span { color: #147c6c; font-weight: 900; }
 .extensionAccess { align-items: center; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) auto; padding: 22px; }
 .extensionAccess h2 { margin: 0 0 6px; }
@@ -66,4 +75,4 @@
 .enterToggle { align-items: center; color: var(--muted); display: inline-flex; font-size: 13px; font-weight: 700; gap: 8px; justify-self: start; }
 .enterToggle input { accent-color: var(--accent); height: 15px; width: 15px; }
 .chatError { color: #b42318; font-size: 13px; font-weight: 700; margin: 0; }
-@media (max-width: 920px) { .grid, .settingsGrid, .kanban, .leadHero, .inviteComposer, .extensionAccess { grid-template-columns: 1fr; } .accessStatus { justify-items: start; } }
+@media (max-width: 920px) { .grid, .extensionSetupGrid, .settingsGrid, .kanban, .leadHero, .inviteComposer, .extensionAccess { grid-template-columns: 1fr; } .accessStatus { justify-items: start; } }

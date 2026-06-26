@@ -1,32 +1,25 @@
 import { Badge, Button, Card } from "@/components/ui";
-import { ExtensionTokenPanel } from "@/components/ExtensionTokenPanel";
 import { getPlanSnapshot } from "@/lib/entitlements";
-import { getExtensionAccessState } from "@/lib/extensionTokens";
 import { formatLimit } from "@/lib/planLimits";
 import { getStripePriceId, getWorkspaceSubscription, plans } from "@/lib/stripe";
 import styles from "../../marketing.module.css";
 
 export default async function BillingPage() {
   const subscription = await getWorkspaceSubscription();
-  const [snapshot, extensionAccess] = await Promise.all([getPlanSnapshot(), getExtensionAccessState()]);
+  const snapshot = await getPlanSnapshot();
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
+  const trialDaysLeft = subscription?.status === "trialing" && subscription.current_period_end
+    ? Math.max(0, Math.ceil((new Date(subscription.current_period_end).getTime() - Date.now()) / 86400000))
+    : null;
+  const billingStatus = trialDaysLeft !== null ? `Trial: ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left` : subscription?.status === "active" ? "Active subscription" : subscription?.status ?? "No active plan";
 
-  return <div>
-    <h1>Billing</h1>
-    <p>Manage the Reachlyst subscription for this workspace.</p>
-    <p><Badge tone={subscription?.status === "active" ? "good" : "blue"}>{snapshot.config.name} plan</Badge> <Badge tone={subscription?.status === "active" ? "good" : "blue"}>{subscription?.status ?? "Demo mode"}</Badge></p>
-    <ExtensionTokenPanel initialAccess={extensionAccess} />
-    <Card className={styles.extensionInstallCard}>
-      <h2>Chrome extension</h2>
-      <p>Download the extension, load it in Chrome, paste your token, then use Reachlyst inside Sales Navigator.</p>
-      <a href="/reachlyst-extension.zip" download>Download extension</a>
-    </Card>
-    <Card className={styles.billingUsage}>
-      <h2>Current usage</h2>
-      <p>{snapshot.usage.searches} / {formatLimit(snapshot.config.limits.searches)} searches</p>
-      <p>{snapshot.usage.leads} / {formatLimit(snapshot.config.limits.leads)} leads</p>
-      <p>{snapshot.usage.monthlyAiSuggestions} / {formatLimit(snapshot.config.limits.monthlyAiSuggestions)} AI suggestions this month</p>
-      <p>{snapshot.config.included.inboxSync ? "Read-only inbox sync included" : "Read-only inbox sync requires Pro"}</p>
+  return <div className={styles.billingOnlyPlans}>
+    <Card className={styles.billingStatusCard}>
+      <div>
+        <span>Current plan</span>
+        <h1>{snapshot.config.name}</h1>
+      </div>
+      <Badge tone={trialDaysLeft !== null ? "warn" : subscription?.status === "active" ? "good" : "blue"}>{billingStatus}</Badge>
     </Card>
     <div className={styles.billingPlanGrid}>
       {plans.map((plan) => {
@@ -34,25 +27,22 @@ export default async function BillingPage() {
         const current = snapshot.plan === plan.key && subscription?.status !== "canceled";
         return <Card key={plan.key}>
           <h2>{plan.name}</h2>
-          <strong>{plan.price}{plan.key === "growth" ? <span>/mo</span> : null}</strong>
+          <strong>{plan.price}<span>/mo</span></strong>
           <p className={styles.planSummary}>{plan.summary}</p>
           <div className={styles.limitList}>
             <p><b>{formatLimit(plan.limits.searches)}</b> searches</p>
-            <p><b>{formatLimit(plan.limits.leads)}</b> leads</p>
-            <p><b>{formatLimit(plan.limits.monthlyAiSuggestions)}</b> AI suggestions/mo</p>
-            <p><b>{formatLimit(plan.limits.seats)}</b> seat{plan.limits.seats > 1 ? "s" : ""}</p>
+            <p><b>{formatLimit(plan.limits.leads)}</b> lead scans/mo</p>
+            <p><b>{formatLimit(plan.limits.monthlyAiSuggestions)}</b> AI replies/mo</p>
+            <p><b>{formatLimit(plan.limits.seats)}</b> workspace user{plan.limits.seats > 1 ? "s" : ""}</p>
           </div>
           {plan.features.map((feature) => <p key={feature}>{feature}</p>)}
-          {plan.key === "free" ? <Button href="/app/dashboard" variant={current ? "secondary" : "ghost"}>{current ? "Current plan" : "Use Free"}</Button> : <form action="/api/stripe/checkout" method="post">
+          <form action="/api/stripe/checkout" method="post">
             <input name="plan" type="hidden" value={plan.key} />
             <Button type="submit" variant={current ? "secondary" : "primary"}>{current ? "Current plan" : `Choose ${plan.name}`}</Button>
-          </form>}
-          {plan.key !== "free" && (!stripeConfigured || !configured) ? <small>Stripe price not configured yet.</small> : null}
+          </form>
+          {!stripeConfigured || !configured ? <small>Stripe price not configured yet.</small> : null}
         </Card>;
       })}
     </div>
-    <form action="/api/stripe/portal" method="post">
-      <Button type="submit" variant="secondary">Manage or cancel subscription</Button>
-    </form>
   </div>;
 }

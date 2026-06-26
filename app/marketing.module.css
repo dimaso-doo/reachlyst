@@ -120,7 +120,7 @@
 .stars { color: #fbbf24; font-size: 13px; font-weight: 900; margin: 18px 0 10px; }
 .stars span { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; color: white; display: inline-flex; font-size: 11px; margin-left: 8px; padding: 3px 8px; }
 .pricing { padding: 98px 0; }
-.planGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.planGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .planGrid strong { display: block; font-size: 38px; margin: 8px 0 18px; }
 .planGrid strong span { color: rgba(255,255,255,.56); font-size: 15px; margin-left: 4px; }
 .featuredPlan { border-color: rgba(96,165,250,.55) !important; box-shadow: 0 24px 80px rgba(22,119,255,.18); transform: translateY(-8px); }
@@ -137,7 +137,10 @@
 .extensionInstallCard p { color: var(--muted); line-height: 1.55; }
 .extensionInstallCard a { background: var(--accent); border-radius: 8px; color: white; display: inline-flex; font-weight: 900; min-height: 42px; padding: 10px 14px; text-decoration: none; }
 .extensionInstallCard a:hover { background: var(--accent-strong); }
-.billingPlanGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 24px; }
+.billingStatusCard { align-items: center; display: flex; justify-content: space-between; margin-bottom: 16px; padding: 22px; }
+.billingStatusCard span { color: #0958d9; display: block; font-size: 12px; font-weight: 900; letter-spacing: .02em; margin-bottom: 8px; text-transform: uppercase; }
+.billingStatusCard h1 { color: var(--ink); font-size: 30px; line-height: 1; margin: 0; }
+.billingPlanGrid { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 24px; }
 .billingPlanGrid section { background: white; border-color: var(--line); color: var(--ink); padding: 22px; }
 .billingPlanGrid h2 { margin-top: 0; }
 .billingPlanGrid strong { color: var(--ink); display: block; font-size: 36px; margin: 8px 0 18px; }

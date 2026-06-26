@@ -36,6 +36,7 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
 
     setToken(data.token);
     setAccess(data.access);
+    window.dispatchEvent(new Event("reachlyst:extension-status"));
     setLoading(false);
   }
 
@@ -50,20 +51,20 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
     <Card className={styles.extensionAccess}>
       <div>
         <h2>Extension access</h2>
-        <p>Generate a token after the Growth subscription is active. Paste it into the Chrome extension once.</p>
+        <p>Use one workspace token for the Chrome extension. Generating a new token replaces the previous active token.</p>
       </div>
 
       <div className={styles.accessStatus}>
         <span data-active={access.isPaid ? "true" : "false"}>{access.isPaid ? "Active" : "Billing required"}</span>
         <small>{access.plan} plan · {access.status}</small>
-        <small>{access.tokenCount} active token{access.tokenCount === 1 ? "" : "s"}</small>
+        <small>{access.tokenCount > 0 ? "Workspace token configured" : "No workspace token yet"}</small>
       </div>
 
       {token ? (
         <div className={styles.tokenBox}>
-          <label>New extension token<input readOnly value={token} /></label>
+          <label>Workspace token<input readOnly value={token} /></label>
           <button onClick={copyToken} type="button">{copied ? "Copied" : "Copy token"}</button>
-          <small>Keep this token private. It is shown only once.</small>
+          <small>Keep this token private. It is shown only once, so copy it into the extension now.</small>
         </div>
       ) : null}
 
@@ -71,7 +72,7 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
 
       <div className={styles.tokenActions}>
         {access.isPaid ? (
-          <button disabled={loading} onClick={generateToken} type="button">{loading ? "Generating..." : "Generate extension token"}</button>
+          <button disabled={loading} onClick={generateToken} type="button">{loading ? "Generating..." : access.tokenCount > 0 ? "Generate new token" : "Generate workspace token"}</button>
         ) : (
           <Button href="/app/billing">Open billing</Button>
         )}

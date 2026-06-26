@@ -51,8 +51,8 @@ const faqs = [
   ["Does Reachlyst send LinkedIn messages for me?", "No. Reachlyst helps you prepare, score, copy, and track outreach. You still decide what to send and when."],
   ["How does the Chrome extension work?", "It runs on Sales Navigator and LinkedIn messaging pages, reads visible information, and syncs it to your Reachlyst workspace."],
   ["Can I train AI for a specific search?", "Yes. Each search can have its own AI context, target customer notes, tone, and message direction."],
-  ["What is included in the Free plan?", "Free lets you test the extension with limited searches, saved leads, and AI invite suggestions."],
-  ["What happens when I need more leads?", "Growth includes a larger monthly allowance, and the product is structured for add-on packs as volume increases."],
+  ["Which package should I start with?", "Starter is enough for one person testing a focused Sales Navigator workflow. Growth is better for consistent weekly prospecting."],
+  ["What happens when I need more volume?", "Growth and Scale include larger monthly allowances, and the product is structured for add-on packs as volume increases."],
   ["Can the dashboard replace my CRM?", "Reachlyst is designed as a Sales Navigator workflow layer. It can keep prospecting organized before leads move to your CRM."],
   ["Does Reachlyst work for agencies?", "Yes. Agencies can keep different searches, lead statuses, invite copy, and replies separated by campaign."],
   ["Why use this instead of a spreadsheet?", "Reachlyst keeps the lead, search context, AI suggestion, status, and message history together without manual spreadsheet cleanup."]
@@ -124,7 +124,7 @@ export default function HomePage() {
       <section className={styles.pricing}>
         <div className="container">
           <div className={styles.sectionIntro}><span>Pricing</span><h2>Start free. Upgrade when your lead volume grows.</h2></div>
-          <div className={styles.planGrid}>{plans.map((plan) => <Card className={plan.key === "growth" ? styles.featuredPlan : ""} key={plan.key}><h3>{plan.name}</h3><strong>{plan.price}{plan.key === "growth" ? <span>/mo</span> : null}</strong><p className={styles.planSummary}>{plan.summary}</p>{plan.features.map((feature) => <p key={feature}>✓ {feature}</p>)}<Button href={plan.key === "free" ? "/signup" : "/pricing"} variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button></Card>)}</div>
+          <div className={styles.planGrid}>{plans.map((plan) => <Card className={plan.key === "growth" ? styles.featuredPlan : ""} key={plan.key}><h3>{plan.name}</h3><strong>{plan.price}<span>/mo</span></strong><p className={styles.planSummary}>{plan.summary}</p>{plan.features.map((feature) => <p key={feature}>✓ {feature}</p>)}<Button href="/pricing" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button></Card>)}</div>
         </div>
       </section>
       <section className={styles.faq}>

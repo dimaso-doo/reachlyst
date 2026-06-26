@@ -1,5 +1,5 @@
 import { Button, Card } from "@/components/ui";
-import { GoogleIcon } from "@/components/GoogleIcon";
+import { AuthMarketingConsent } from "@/components/AuthMarketingConsent";
 import styles from "../auth.module.css";
 
 const authErrors: Record<string, string> = {
@@ -13,5 +13,5 @@ export default async function LoginPage({ searchParams }: { searchParams?: Promi
   const params = await searchParams;
   const error = params?.error ? authErrors[params.error] : null;
   const showDemo = params?.demo === "1" || process.env.SHOW_DEMO_LOGIN === "true";
-  return <main className={styles.auth}><Card><div className={styles.brand}>Reachlyst</div><h1>Log in</h1><p>Continue to your Sales Navigator outreach workspace.</p>{error ? <div className={styles.authError}>{error}</div> : null}<a className={styles.googleButton} href="/api/auth/google"><GoogleIcon />Log in with Google</a><div className={styles.divider}><span>or</span></div><form><input placeholder="Email" defaultValue="" /><input placeholder="Password" type="password" defaultValue="" /><Button href="/app/dashboard">Log in with email</Button></form>{showDemo ? <div className={styles.demoBox}><strong>Private demos</strong><span>Workspace demo: demo@reachlyst.local</span><a href="/api/demo-login?role=workspace_owner">Open workspace demo</a><span>Super admin demo: admin@reachlyst.local</span><a href="/api/demo-login?role=super_admin">Open super admin demo</a></div> : null}<p className={styles.switch}>No account? <a href="/signup">Sign up</a></p></Card></main>;
+  return <main className={styles.auth}><Card><div className={styles.brand}><img alt="Reachlyst" src="/reachlyst-logo-r-blue.png" /></div><h1>Log in</h1><p>Continue to your Sales Navigator outreach workspace.</p>{error ? <div className={styles.authError}>{error}</div> : null}<form><input placeholder="Email" defaultValue="" /><input placeholder="Password" type="password" defaultValue="" /><Button href="/app/dashboard">Log in with email</Button></form><div className={styles.divider}><span>or</span></div><AuthMarketingConsent action="Log in" />{showDemo ? <div className={styles.demoBox}><strong>Private demos</strong><span>Workspace demo: demo@reachlyst.local</span><a href="/api/demo-login?role=workspace_owner">Open workspace demo</a><span>Super admin demo: admin@reachlyst.local</span><a href="/api/demo-login?role=super_admin">Open super admin demo</a></div> : null}<p className={styles.switch}>No account? <a href="/signup">Sign up</a></p></Card></main>;
 }

@@ -6,8 +6,8 @@ export default function SettingsPage() {
     <div className={styles.page}>
       <header>
         <div>
-          <h1>Account settings</h1>
-          <p>Profile, workspace, extension, and outreach defaults.</p>
+          <h1>Profile</h1>
+          <p>Basic account and workspace details. AI behavior now lives in AI Playbook.</p>
         </div>
       </header>
 

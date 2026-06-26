@@ -12,6 +12,7 @@ let isMutatingReachlystUi = false;
 let reachlystRunTimer;
 let activeSearchPlaybook = null;
 let selectedLead = null;
+const SALES_NAV_PAGE_SIZE = 25;
 
 async function getSettings() {
   const values = await chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS));
@@ -54,10 +55,15 @@ function setStatus(message, tone = "neutral") {
   if (!status) {
     status = document.createElement("aside");
     status.className = "reachlyst-status";
+    status.innerHTML = '<span class="reachlyst-status-loader" aria-hidden="true"></span><strong></strong>';
     document.body.append(status);
   }
   status.dataset.tone = tone;
-  status.textContent = message;
+  status.querySelector("strong").textContent = message;
+}
+
+function setFetchStatus(count) {
+  setStatus(`Fetched: ${count}/${SALES_NAV_PAGE_SIZE}`, "loading");
 }
 
 function removeReachlystUi() {
@@ -491,7 +497,7 @@ async function runSalesNavigator() {
 
   if (/login|checkpoint/.test(location.href)) return showLinkedInNotice();
 
-  setStatus("Reachlyst: reading visible Sales Navigator leads...");
+  setFetchStatus(0);
   const detected = await reachlystApi("/api/extension/search/detect", {
     method: "POST",
     body: JSON.stringify({ url: location.href, title: document.title })
@@ -507,7 +513,7 @@ async function runSalesNavigator() {
 
   await reportParser("sales_search", parsed.leads.length, parsed.failures);
   const attached = attachLeadButtons(hydratedLeads);
-  setStatus(`Reachlyst: ${parsed.leads.length} visible leads found · ${attached} buttons ready`, attached ? "good" : "warn");
+  setFetchStatus(parsed.leads.length);
 }
 
 async function reportParser(pageType, extractedCount, failures) {

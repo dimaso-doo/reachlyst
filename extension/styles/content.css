@@ -429,22 +429,46 @@
 }
 
 .reachlyst-status {
-  background: #172033;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 999px;
-  box-shadow: 0 14px 40px rgba(23,32,51,.18);
-  color: white;
+  align-items: center;
+  background: #07111f;
+  border: 1px solid rgba(147, 197, 253, .2);
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(7, 17, 31, .24), 0 0 0 1px rgba(255, 255, 255, .05);
+  color: #f8fbff;
+  display: inline-flex;
   font: 900 12px/1 Inter, system-ui, sans-serif;
-  left: 18px;
-  padding: 10px 13px;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 12px;
   position: fixed;
-  top: 88px;
+  right: 18px;
+  top: 18px;
   z-index: 2147483647;
 }
 
-.reachlyst-status[data-tone="good"] { background: #147c6c; }
-.reachlyst-status[data-tone="warn"] { background: #8b5609; }
-.reachlyst-status[data-tone="danger"] { background: #9d2636; }
+.reachlyst-status-loader {
+  animation: reachlyst-spin .72s linear infinite;
+  border: 2px solid rgba(159, 176, 199, .34);
+  border-radius: 50%;
+  border-top-color: #1677ff;
+  height: 16px;
+  width: 16px;
+}
+
+.reachlyst-status strong {
+  color: #f8fbff;
+  font: 900 12px/1 Inter, system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.reachlyst-status[data-tone="warn"] .reachlyst-status-loader { border-top-color: #f59e0b; }
+.reachlyst-status[data-tone="danger"] .reachlyst-status-loader { border-top-color: #ef4444; }
+
+@keyframes reachlyst-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 640px) {
   .reachlyst-floating-chat {
@@ -462,5 +486,10 @@
   .reachlyst-lead-button[data-floating="true"] {
     margin: 8px 0 0 72px;
     position: static;
+  }
+
+  .reachlyst-status {
+    right: 12px;
+    top: 12px;
   }
 }

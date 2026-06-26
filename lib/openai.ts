@@ -186,21 +186,27 @@ export async function adviseOnSearch(input: SearchAdvisorInput) {
 function fallbackLeadInviteChat(input: LeadInviteChatInput) {
   const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
   const base = input.lead.currentMessage || fallbackInviteMessage(input.lead);
-  if (!latest.trim()) return `Here is a clean starting point:\n\n${base}`;
+  const wantsSerbian = /[čćžšđ]|srpsk|bosansk|hrvatsk|poruk|poziv|krać|krac|toplij|direktnij|napiš|napis|može|moze|lead|osob/i.test(latest);
+  if (!latest.trim()) return wantsSerbian ? `Evo čistog početka:\n\n${base}` : `Here is a clean starting point:\n\n${base}`;
 
-  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow/i.test(latest)) {
-    return "I can only help polish LinkedIn invite and outreach copy for this lead.";
+  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|poruk|poziv|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez/i.test(latest)) {
+    return wantsSerbian
+      ? "Mogu da pomognem samo oko LinkedIn invite i outreach poruke za ovaj lead."
+      : "I can only help polish LinkedIn invite and outreach copy for this lead.";
   }
 
-  if (/short|shorter|concise/i.test(latest)) {
+  if (/short|shorter|concise|krać|krac/i.test(latest)) {
     return base.replace(/Thought it made sense to connect\.?/i, "Open to connecting?").slice(0, 180);
   }
 
-  if (/direct|simple/i.test(latest)) {
-    return `Hi ${input.lead.name.split(" ")[0]}, came across your profile${input.lead.company ? ` at ${input.lead.company}` : ""}. Thought it made sense to connect.`;
+  if (/direct|simple|direkt|jednostavn/i.test(latest)) {
+    const message = `Hi ${input.lead.name.split(" ")[0]}, came across your profile${input.lead.company ? ` at ${input.lead.company}` : ""}. Thought it made sense to connect.`;
+    return wantsSerbian ? `Može, direktnija verzija:\n\n${message}` : message;
   }
 
-  return `Try this version:\n\n${base}\n\nIt stays specific, calm, and safe for a manual LinkedIn invite.`;
+  return wantsSerbian
+    ? `Probaj ovu verziju:\n\n${base}\n\nOstaje kratko, mirno i spremno za ručno slanje na LinkedIn-u.`
+    : `Try this version:\n\n${base}\n\nIt stays specific, calm, and safe for a manual LinkedIn invite.`;
 }
 
 export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
@@ -215,9 +221,9 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           role: "system",
           content: [
             "You are Reachlyst AI. Help polish a LinkedIn connection invite for one visible lead.",
-            "Always answer in English.",
+            "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
             "Stay strictly in scope: invite copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
-            "If the user asks for anything else, refuse briefly and bring them back to improving the invite.",
+            "If the user asks for anything else, refuse briefly in the user's language and bring them back to improving the invite.",
             "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
             "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",
             "Avoid hype, flattery, emojis, exclamation marks, and phrases like admire, love, excited, partnership, collaboration, discuss, learn more, or share insights."

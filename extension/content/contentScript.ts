@@ -190,7 +190,7 @@ function ensureFloatingChat() {
       <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat">×</button>
     </div>
     <div class="reachlyst-chat-thread"></div>
-    <textarea class="reachlyst-chat-input" rows="3" placeholder="Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
+    <textarea class="reachlyst-chat-input" rows="3" placeholder="Write in any language. Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
     <div class="reachlyst-chat-actions">
       <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
       <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Send</button>
@@ -236,6 +236,92 @@ function openFloatingChat(lead) {
   chat.querySelector(".reachlyst-chat-input").focus();
 }
 
+function visibleActionControl(element, card) {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element.closest(".reachlyst-lead-button, .reachlyst-floating-chat")) return false;
+  const rect = element.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  if (rect.left < cardRect.left + cardRect.width * 0.52) return false;
+
+  const label = [
+    element.textContent || "",
+    element.getAttribute("aria-label") || "",
+    element.getAttribute("title") || ""
+  ].join(" ").replace(/\s+/g, " ").trim().toLowerCase();
+  const href = element.getAttribute("href") || "";
+  if (/\/sales\/lead\/|\/in\//.test(href)) return false;
+
+  return /more|actions|message|send message|save|saved|connect|overflow|ellipsis|list/.test(label)
+    || (element.tagName === "BUTTON" && rect.width <= 180 && rect.height <= 64);
+}
+
+function actionControlsIn(container, card) {
+  return Array.from(container.querySelectorAll('button, a[role="button"], [role="button"]'))
+    .filter((control) => visibleActionControl(control, card));
+}
+
+function directChildWithin(container, element) {
+  let child = element;
+  while (child.parentElement && child.parentElement !== container) {
+    child = child.parentElement;
+  }
+  return child.parentElement === container ? child : element;
+}
+
+function controlLabel(element) {
+  return [
+    element.textContent || "",
+    element.getAttribute("aria-label") || "",
+    element.getAttribute("title") || ""
+  ].join(" ").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function actionClusterFor(control, card) {
+  let node = control.parentElement;
+  while (node && node !== card) {
+    const controls = actionControlsIn(node, card);
+    if (controls.length >= 2 && controls.length <= 8) return node;
+    node = node.parentElement;
+  }
+  return control.parentElement;
+}
+
+function findLeadActionsContainer(card) {
+  const controls = actionControlsIn(card, card);
+  const prioritized = controls.sort((a, b) => {
+    const aLabel = controlLabel(a);
+    const bLabel = controlLabel(b);
+    const score = (label) => /more|actions|overflow|ellipsis/.test(label) ? 0 : /message|send message/.test(label) ? 1 : /save|saved/.test(label) ? 2 : 3;
+    return score(aLabel) - score(bLabel) || a.getBoundingClientRect().left - b.getBoundingClientRect().left;
+  });
+  const primary = prioritized[0];
+  return primary ? actionClusterFor(primary, card) : null;
+}
+
+function placeLeadButton(card, button) {
+  const container = findLeadActionsContainer(card);
+  if (container) {
+    const controls = actionControlsIn(container, card).filter((control) => control !== button);
+    const moreControl = controls.find((control) => /more|actions|overflow|ellipsis/.test(controlLabel(control)));
+    const nextControl = controls.find((control) => /message|send message|save|saved/.test(controlLabel(control))) || controls[0] || null;
+
+    if (moreControl) {
+      directChildWithin(container, moreControl).after(button);
+    } else if (nextControl) {
+      container.insertBefore(button, directChildWithin(container, nextControl));
+    } else {
+      container.append(button);
+    }
+    button.dataset.floating = "false";
+    return;
+  }
+
+  if (getComputedStyle(card).position === "static") card.style.position = "relative";
+  if (button.parentElement !== card) card.append(button);
+  button.dataset.floating = "true";
+}
+
 function ensureLeadButton(anchor, lead) {
   const card = leadCardFromAnchor(anchor);
   if (!card) return null;
@@ -243,7 +329,6 @@ function ensureLeadButton(anchor, lead) {
   let button = card.querySelector(`.reachlyst-lead-button[data-reachlyst-key="${key}"]`) || card.querySelector(".reachlyst-lead-button");
   if (!button) {
     isMutatingReachlystUi = true;
-    if (getComputedStyle(card).position === "static") card.style.position = "relative";
     button = document.createElement("button");
     button.className = "reachlyst-lead-button";
     button.type = "button";
@@ -254,9 +339,11 @@ function ensureLeadButton(anchor, lead) {
       event.stopPropagation();
       openFloatingChat(button.reachlystLead);
     });
-    card.append(button);
     queueMicrotask(() => { isMutatingReachlystUi = false; });
   }
+  isMutatingReachlystUi = true;
+  placeLeadButton(card, button);
+  queueMicrotask(() => { isMutatingReachlystUi = false; });
   button.dataset.reachlystKey = key;
   button.reachlystLead = lead;
   button.title = `Open Reachlyst chat for ${lead.name}`;

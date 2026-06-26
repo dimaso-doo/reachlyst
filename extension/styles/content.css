@@ -1,19 +1,24 @@
 .reachlyst-lead-button {
+  align-items: center;
   background: #1677ff;
   border: 1px solid #0a66c2;
   border-radius: 50%;
-  box-shadow: 0 8px 18px rgba(22, 119, 255, .18);
+  box-shadow: 0 6px 14px rgba(22, 119, 255, .16);
   color: white;
   cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 34px;
   font: 900 14px/1 Inter, system-ui, sans-serif;
   height: 34px;
+  justify-content: center;
+  margin: 0 8px;
+  min-height: 34px;
+  min-width: 34px;
   padding: 0;
-  position: absolute;
-  right: 154px;
-  top: 17px;
+  position: relative;
   transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
   width: 34px;
-  z-index: 20;
+  z-index: 1;
 }
 
 .reachlyst-lead-button:hover {
@@ -22,21 +27,28 @@
   transform: translateY(-1px);
 }
 
+.reachlyst-lead-button[data-floating="true"] {
+  margin: 0;
+  position: absolute;
+  right: 210px;
+  top: 17px;
+  z-index: 20;
+}
+
 .reachlyst-floating-chat {
-  background: #f8fbff;
-  border: 1px solid #d8e5fb;
-  border-radius: 16px;
-  bottom: 30px;
-  box-shadow: 0 26px 80px rgba(15, 23, 42, .24);
+  background: white;
+  border: 1px solid #b7cff5;
+  border-radius: 18px;
+  bottom: 34px;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, .28), 0 0 0 1px rgba(22, 119, 255, .06);
   color: #172033;
-  display: grid;
-  gap: 10px;
-  max-height: min(680px, calc(100vh - 44px));
+  display: flex;
+  flex-direction: column;
+  max-height: min(660px, calc(100vh - 76px));
   overflow: hidden;
-  padding: 14px;
   position: fixed;
-  right: 42px;
-  width: 410px;
+  right: 76px;
+  width: min(430px, calc(100vw - 112px));
   z-index: 2147483647;
 }
 
@@ -52,9 +64,12 @@
 
 .reachlyst-chat-top {
   align-items: center;
+  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  border-bottom: 1px solid #dce8f9;
   display: grid;
   gap: 10px;
   grid-template-columns: auto 1fr auto;
+  padding: 14px;
 }
 
 .reachlyst-r {
@@ -104,15 +119,16 @@
 }
 
 .reachlyst-chat-thread {
-  background: white;
-  border: 1px solid #e1e9f5;
-  border-radius: 12px;
+  background: #f8fbff;
+  border: 0;
+  border-bottom: 1px solid #e2ebf8;
+  border-radius: 0;
   display: grid;
   gap: 8px;
-  max-height: 270px;
-  min-height: 150px;
+  max-height: 310px;
+  min-height: 210px;
   overflow: auto;
-  padding: 10px;
+  padding: 14px;
 }
 
 .reachlyst-message-row {
@@ -125,7 +141,7 @@
   border-radius: 10px;
   font: 700 12px/1.45 Inter, system-ui, sans-serif;
   margin: 0;
-  max-width: 92%;
+  max-width: 88%;
   padding: 9px 10px;
   white-space: pre-wrap;
 }
@@ -193,11 +209,12 @@
   color: #172033;
   display: block;
   font: 700 12px/1.45 Inter, system-ui, sans-serif;
-  min-height: 76px;
+  margin: 14px 14px 0;
+  min-height: 84px;
   outline: none;
   padding: 10px;
   resize: vertical;
-  width: 100%;
+  width: calc(100% - 28px);
 }
 
 .reachlyst-chat-input:focus {
@@ -210,6 +227,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
+  padding: 12px 14px 0;
 }
 
 .reachlyst-button {
@@ -256,6 +274,7 @@
   color: #607086;
   font: 800 11px/1.35 Inter, system-ui, sans-serif;
   margin: 0;
+  padding: 0 14px 14px;
 }
 
 .reachlyst-status {
@@ -277,15 +296,15 @@
 .reachlyst-status[data-tone="danger"] { background: #9d2636; }
 
 @media (max-width: 640px) {
-  .reachlyst-lead-button {
-    position: static;
-    margin: 8px 0 0 72px;
-  }
-
   .reachlyst-floating-chat {
     bottom: 12px;
     left: 12px;
     right: 12px;
     width: auto;
+  }
+
+  .reachlyst-lead-button[data-floating="true"] {
+    margin: 8px 0 0 72px;
+    position: static;
   }
 }

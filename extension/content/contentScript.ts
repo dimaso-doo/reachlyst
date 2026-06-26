@@ -154,16 +154,23 @@ function renderThread(chat, lead) {
   if (!thread) return;
   thread.innerHTML = "";
   state.messages.slice(-10).forEach((message) => {
-    const item = document.createElement("p");
-    item.className = message.role === "user" ? "reachlyst-chat-user" : "reachlyst-chat-assistant";
-    item.textContent = message.content;
-    thread.append(item);
+    const row = document.createElement("div");
+    row.className = message.role === "user" ? "reachlyst-message-row reachlyst-message-user" : "reachlyst-message-row reachlyst-message-assistant";
+    const bubble = document.createElement("p");
+    bubble.textContent = message.content;
+    row.append(bubble);
+    if (message.role === "assistant") {
+      const copyButton = document.createElement("button");
+      copyButton.className = "reachlyst-copy-message";
+      copyButton.type = "button";
+      copyButton.title = "Copy this AI message";
+      copyButton.setAttribute("aria-label", "Copy this AI message");
+      copyButton.addEventListener("click", () => copyAiMessage(lead, message.content, copyButton));
+      row.append(copyButton);
+    }
+    thread.append(row);
   });
   thread.scrollTop = thread.scrollHeight;
-}
-
-function latestInviteForLead(lead) {
-  return chatStateForLead(lead).latestInvite || "";
 }
 
 function ensureFloatingChat() {
@@ -186,9 +193,8 @@ function ensureFloatingChat() {
     <textarea class="reachlyst-chat-input" rows="3" placeholder="Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
     <div class="reachlyst-chat-actions">
       <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
-      <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Ask AI</button>
-      <button class="reachlyst-button reachlyst-button-secondary" data-action="copy" type="button">Copy latest</button>
-      <button class="reachlyst-button reachlyst-button-secondary" data-action="invited" type="button">Mark invited</button>
+      <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Send</button>
+      <label class="reachlyst-enter-toggle"><input data-role="sendOnEnter" type="checkbox" /> Send on Enter</label>
     </div>
     <p class="reachlyst-chat-status"></p>
   `;
@@ -202,19 +208,17 @@ function bindFloatingChat(chat) {
   const closeButton = chat.querySelector('[data-action="close"]');
   const generateButton = chat.querySelector('[data-action="generate"]');
   const sendButton = chat.querySelector('[data-action="send"]');
-  const copyButton = chat.querySelector('[data-action="copy"]');
-  const invitedButton = chat.querySelector('[data-action="invited"]');
   const input = chat.querySelector(".reachlyst-chat-input");
+  const sendOnEnter = chat.querySelector('[data-role="sendOnEnter"]');
 
   closeButton.addEventListener("click", () => {
     chat.hidden = true;
   });
   generateButton.addEventListener("click", () => selectedLead && generateInvite(selectedLead, chat, generateButton));
   sendButton.addEventListener("click", () => selectedLead && sendLeadChat(selectedLead, chat, sendButton));
-  copyButton.addEventListener("click", () => selectedLead && copyLatestInvite(selectedLead, chat, copyButton));
-  invitedButton.addEventListener("click", () => selectedLead && markLeadInvited(selectedLead, chat, invitedButton));
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && selectedLead) {
+    const shouldSend = event.key === "Enter" && selectedLead && ((sendOnEnter.checked && !event.shiftKey) || event.metaKey || event.ctrlKey);
+    if (shouldSend) {
       event.preventDefault();
       sendLeadChat(selectedLead, chat, sendButton);
     }
@@ -243,7 +247,8 @@ function ensureLeadButton(anchor, lead) {
     button = document.createElement("button");
     button.className = "reachlyst-lead-button";
     button.type = "button";
-    button.textContent = "Reachlyst AI";
+    button.textContent = "R";
+    button.setAttribute("aria-label", "Open Reachlyst AI");
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -319,30 +324,19 @@ async function sendLeadChat(lead, chat, button) {
   state.messages.push({ role: "assistant", content: result.reply });
   renderThread(chat, lead);
   if (status) status.textContent = "Suggestion saved in Reachlyst usage log.";
-  button.textContent = "Ask AI";
+  button.textContent = "Send";
 }
 
-async function copyLatestInvite(lead, chat, button) {
-  const status = chat.querySelector(".reachlyst-chat-status");
-  const message = latestInviteForLead(lead);
-  if (!message) {
-    if (status) status.textContent = "Generate an invite first.";
-    return;
-  }
+async function copyAiMessage(lead, message, button) {
   await navigator.clipboard.writeText(message);
+  chatStateForLead(lead).latestInvite = message;
   await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) });
-  button.textContent = "Copied";
-  if (status) status.textContent = "Copied. Paste and send manually in LinkedIn.";
-  setTimeout(() => { button.textContent = "Copy latest"; }, 1400);
-}
-
-async function markLeadInvited(lead, chat, button) {
-  const status = chat.querySelector(".reachlyst-chat-status");
-  button.textContent = "Saving";
-  await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "invite_likely_sent", message: latestInviteForLead(lead) }) });
-  button.textContent = "Invited";
-  if (status) status.textContent = "Marked as manually invited in Reachlyst.";
-  setTimeout(() => { button.textContent = "Mark invited"; }, 1400);
+  button.dataset.copied = "true";
+  button.title = "Copied";
+  setTimeout(() => {
+    button.dataset.copied = "false";
+    button.title = "Copy this AI message";
+  }, 1400);
 }
 
 async function runSalesNavigator() {

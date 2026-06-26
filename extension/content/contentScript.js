@@ -115,8 +115,8 @@ function firstName(name) {
   return String(name || "").split(" ")[0] || "there";
 }
 
-function leadSubtitle(lead) {
-  return [lead.title, lead.company, lead.location].filter(Boolean).join(" · ");
+function leadCompanyLine(lead) {
+  return String(lead.company || "").trim() || "Company not found";
 }
 
 function leadPayload(lead, extra = {}) {
@@ -161,6 +161,7 @@ function renderThread(chat, lead) {
       const copyButton = document.createElement("button");
       copyButton.className = "reachlyst-copy-message";
       copyButton.type = "button";
+      copyButton.textContent = "Copy";
       copyButton.title = "Copy this AI message";
       copyButton.setAttribute("aria-label", "Copy this AI message");
       copyButton.addEventListener("click", () => copyAiMessage(lead, message.content, copyButton));
@@ -190,7 +191,6 @@ function ensureChatControls(chat) {
     minimizeButton.className = "reachlyst-minimize";
     minimizeButton.dataset.action = "minimize";
     minimizeButton.type = "button";
-    minimizeButton.textContent = "Minimize";
     minimizeButton.title = "Minimize";
     minimizeButton.setAttribute("aria-label", "Minimize Reachlyst chat");
     actions.prepend(minimizeButton);
@@ -218,8 +218,8 @@ function ensureFloatingChat() {
         <small data-role="leadMeta">Select a lead to start.</small>
       </div>
       <div class="reachlyst-chat-window-actions">
-        <button class="reachlyst-minimize" data-action="minimize" type="button" aria-label="Minimize Reachlyst chat" title="Minimize">Minimize</button>
-        <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat" title="Close">×</button>
+        <button class="reachlyst-minimize" data-action="minimize" type="button" aria-label="Minimize Reachlyst chat" title="Minimize"></button>
+        <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat" title="Close"></button>
       </div>
     </div>
     <div class="reachlyst-chat-thread"></div>
@@ -227,7 +227,7 @@ function ensureFloatingChat() {
     <div class="reachlyst-chat-actions">
       <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
       <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Send</button>
-      <label class="reachlyst-enter-toggle"><input data-role="sendOnEnter" type="checkbox" /> Send on Enter</label>
+      <label class="reachlyst-enter-toggle"><span>Send on Enter</span><input data-role="sendOnEnter" type="checkbox" /><span class="reachlyst-switch" aria-hidden="true"></span></label>
     </div>
     <p class="reachlyst-chat-status"></p>
   `;
@@ -253,7 +253,6 @@ function bindFloatingChat(chat) {
   minimizeButton.addEventListener("click", () => {
     const isMinimized = chat.dataset.minimized === "true";
     chat.dataset.minimized = isMinimized ? "false" : "true";
-    minimizeButton.textContent = isMinimized ? "Minimize" : "Expand";
     minimizeButton.title = isMinimized ? "Minimize" : "Expand";
     minimizeButton.setAttribute("aria-label", isMinimized ? "Minimize Reachlyst chat" : "Expand Reachlyst chat");
   });
@@ -275,12 +274,11 @@ function openFloatingChat(lead) {
   chat.dataset.minimized = "false";
   const minimizeButton = chat.querySelector('[data-action="minimize"]');
   if (minimizeButton) {
-    minimizeButton.textContent = "Minimize";
     minimizeButton.title = "Minimize";
     minimizeButton.setAttribute("aria-label", "Minimize Reachlyst chat");
   }
   chat.querySelector('[data-role="leadName"]').textContent = lead.name;
-  chat.querySelector('[data-role="leadMeta"]').textContent = leadSubtitle(lead) || "Sales Navigator lead";
+  chat.querySelector('[data-role="leadMeta"]').textContent = leadCompanyLine(lead);
   chat.querySelector(".reachlyst-chat-status").textContent = "Chat is tied to this selected lead.";
   renderThread(chat, lead);
   chat.querySelector(".reachlyst-chat-input").focus();
@@ -452,12 +450,14 @@ async function copyAiMessage(lead, message, button) {
   const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
   if (status) status.textContent = "Copied message to clipboard.";
   button.dataset.copied = "true";
+  button.textContent = "Copied";
   button.title = "Copied";
   button.setAttribute("aria-label", "Copied");
   showCopiedToast();
   reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) }).catch(() => undefined);
   setTimeout(() => {
     button.dataset.copied = "false";
+    button.textContent = "Copy";
     button.title = "Copy this AI message";
     button.setAttribute("aria-label", "Copy this AI message");
   }, 1400);

@@ -138,14 +138,49 @@
   font: 900 18px/1 Inter, system-ui, sans-serif;
   height: 30px;
   justify-content: center;
+  padding: 0;
+  position: relative;
   width: 30px;
 }
 
-.reachlyst-minimize {
+.reachlyst-minimize::before {
+  background: #172033;
   border-radius: 999px;
-  font: 900 11px/1 Inter, system-ui, sans-serif;
-  padding: 0 10px;
-  width: auto;
+  content: "";
+  height: 2px;
+  width: 12px;
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::before,
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::after {
+  background: #172033;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  width: 12px;
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::after {
+  transform: rotate(90deg);
+}
+
+.reachlyst-close::before,
+.reachlyst-close::after {
+  background: #172033;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  width: 13px;
+}
+
+.reachlyst-close::before {
+  transform: rotate(45deg);
+}
+
+.reachlyst-close::after {
+  transform: rotate(-45deg);
 }
 
 .reachlyst-close:hover,
@@ -205,10 +240,15 @@
   background: white;
   border: 1px solid #d8e7ff;
   border-radius: 8px;
+  color: transparent;
   cursor: pointer;
   flex: 0 0 auto;
+  font: 900 11px/1 Inter, system-ui, sans-serif;
   height: 28px;
+  overflow: hidden;
+  padding: 0;
   position: relative;
+  transition: width .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
   width: 28px;
 }
 
@@ -240,28 +280,16 @@
 
 .reachlyst-copy-message[data-copied="true"]::before,
 .reachlyst-copy-message[data-copied="true"]::after {
-  border-color: #147c6c;
+  display: none;
 }
 
 .reachlyst-copy-message[data-copied="true"] {
   background: #e9fff7;
   border-color: #71d8bd;
   box-shadow: 0 8px 18px rgba(20, 124, 108, .18);
-}
-
-.reachlyst-copy-message[data-copied="true"]::before {
-  border-color: #147c6c;
-  border-radius: 0;
-  border-width: 0 2px 2px 0;
-  height: 13px;
-  left: 10px;
-  top: 5px;
-  transform: rotate(45deg);
-  width: 7px;
-}
-
-.reachlyst-copy-message[data-copied="true"]::after {
-  display: none;
+  color: #147c6c;
+  padding: 0 9px;
+  width: 58px;
 }
 
 .reachlyst-copy-toast {
@@ -346,15 +374,51 @@
   color: #607086;
   display: inline-flex;
   font: 800 11px/1 Inter, system-ui, sans-serif;
-  gap: 6px;
+  gap: 8px;
   min-height: 34px;
   padding-left: 3px;
 }
 
 .reachlyst-enter-toggle input {
-  accent-color: #1677ff;
-  height: 14px;
-  width: 14px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
+.reachlyst-switch {
+  background: #c9d3e1;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(23, 32, 51, .08);
+  cursor: pointer;
+  display: inline-flex;
+  height: 20px;
+  position: relative;
+  transition: background .16s ease, box-shadow .16s ease;
+  width: 36px;
+}
+
+.reachlyst-switch::before {
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(23, 32, 51, .2);
+  content: "";
+  height: 16px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  transition: transform .16s ease;
+  width: 16px;
+}
+
+.reachlyst-enter-toggle input:checked + .reachlyst-switch {
+  background: #1677ff;
+  box-shadow: inset 0 0 0 1px rgba(10, 102, 194, .18);
+}
+
+.reachlyst-enter-toggle input:checked + .reachlyst-switch::before {
+  transform: translateX(16px);
 }
 
 .reachlyst-chat-status {

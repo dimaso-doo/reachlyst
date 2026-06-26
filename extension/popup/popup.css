@@ -1,9 +1,105 @@
-body { color: #17201b; font-family: Inter, system-ui, sans-serif; margin: 0; width: 320px; }
-main { display: grid; gap: 12px; padding: 18px; }
-h1 { margin: 0; }
-p { color: #61706a; margin: 0; }
-input { border: 1px solid #dfe7e2; border-radius: 8px; min-height: 38px; padding: 0 10px; }
-select, textarea { border: 1px solid #dfe7e2; border-radius: 8px; padding: 8px 10px; }
-textarea { min-height: 74px; resize: vertical; }
-label { color: #17201b; display: grid; font-size: 12px; font-weight: 800; gap: 6px; }
-button { background: #147c6c; border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 800; min-height: 38px; }
+body {
+  background: #07111f;
+  color: #f8fbff;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  width: 320px;
+}
+
+main {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.brand {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.brand span {
+  align-items: center;
+  background: #1677ff;
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(22, 119, 255, .36);
+  display: inline-flex;
+  font-size: 21px;
+  font-weight: 900;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+h1 {
+  font-size: 20px;
+  line-height: 1;
+  margin: 0;
+}
+
+p {
+  color: #9fb0c7;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.state {
+  align-items: center;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 14px;
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+}
+
+.state span {
+  background: #f59e0b;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, .16);
+  height: 10px;
+  width: 10px;
+}
+
+.state[data-running="true"] span {
+  background: #22c55e;
+  box-shadow: 0 0 0 6px rgba(34, 197, 94, .16);
+}
+
+.state strong {
+  font-size: 14px;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+button {
+  background: #1677ff;
+  border: 1px solid rgba(147, 197, 253, .54);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 900;
+  min-height: 46px;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 16px 30px rgba(22, 119, 255, .32);
+  transform: translateY(-1px) scale(1.02);
+}
+
+button:disabled {
+  cursor: default;
+  opacity: .45;
+}
+
+#stop {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .14);
+}

@@ -4,15 +4,23 @@ declare function parseVisibleMessages(root?: ParentNode): { messages: any[]; fai
 
 const EXTENSION_VERSION = "0.1.0";
 const PARSER_VERSION = "2026.06.25";
+const DEFAULT_SETTINGS = {
+  reachlystApiBase: "https://reachlyst.com",
+  reachlystToken: "reachlyst-browser-session",
+  reachlystUseCase: "sales_outreach",
+  reachlystIcp: "Sales Navigator leads that match the active Reachlyst search playbook.",
+  reachlystTone: "Professional, concise, human, non-spammy",
+  reachlystEnabled: false
+};
 
 async function getSettings() {
-  return chrome.storage.sync.get(["reachlystApiBase", "reachlystToken"]);
+  const values = await chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS));
+  return { ...DEFAULT_SETTINGS, ...values };
 }
 
 async function api(path: string, init: RequestInit = {}) {
   const settings = await getSettings();
-  if (!settings.reachlystToken) throw new Error("Missing Reachlyst extension token");
-  return fetch(`${settings.reachlystApiBase || "http://localhost:3000"}${path}`, {
+  return fetch(`${settings.reachlystApiBase}${path}`, {
     ...init,
     headers: { "content-type": "application/json", "x-reachlyst-extension-token": settings.reachlystToken, ...(init.headers || {}) }
   });
@@ -65,6 +73,8 @@ function openLeadPanel(lead: any) {
 }
 
 async function runSalesNavigator() {
+  const settings = await getSettings();
+  if (!settings.reachlystEnabled) return;
   if (!/linkedin\.com\/sales/.test(location.href)) return;
   if (/login|checkpoint/.test(location.href)) return showLoginNotice();
   const detected = await api("/api/extension/search/detect", { method: "POST", body: JSON.stringify({ url: location.href, title: document.title }) }).then((r) => r.json());
@@ -78,6 +88,8 @@ async function runSalesNavigator() {
 }
 
 async function runMessages() {
+  const settings = await getSettings();
+  if (!settings.reachlystEnabled) return;
   if (!/linkedin\.com\/messaging/.test(location.href)) return;
   const parsed = parseVisibleMessages();
   await api("/api/extension/messages/sync-thread", { method: "POST", body: JSON.stringify({ source: "linkedin_messages", threadUrl: location.href, messages: parsed.messages }) });

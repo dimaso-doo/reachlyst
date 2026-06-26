@@ -119,9 +119,9 @@ Implemented routes:
 4. Choose "Load unpacked".
 5. Select the `extension` folder.
 6. Open the Reachlyst extension popup.
-7. Set API base to `http://localhost:3000`.
-8. Paste an extension token from the Reachlyst settings page.
-9. Manually open LinkedIn Sales Navigator or LinkedIn Messaging.
+7. Manually open LinkedIn Sales Navigator or LinkedIn Messaging.
+8. Click Start to scan the visible page.
+9. Click Stop whenever you want Reachlyst paused.
 
 The extension never asks for LinkedIn credentials and never stores LinkedIn credentials.
 

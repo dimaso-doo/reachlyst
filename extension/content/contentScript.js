@@ -1,5 +1,13 @@
 const EXTENSION_VERSION = "0.1.0";
 const PARSER_VERSION = "2026.06.25";
+const DEFAULT_SETTINGS = {
+  reachlystApiBase: "https://reachlyst.com",
+  reachlystToken: "reachlyst-browser-session",
+  reachlystUseCase: "sales_outreach",
+  reachlystIcp: "Sales Navigator leads that match the active Reachlyst search playbook.",
+  reachlystTone: "Professional, concise, human, non-spammy",
+  reachlystEnabled: false
+};
 const analyzedLeads = new Map();
 const inFlightAnalyses = new Set();
 const regenerationCounts = new Map();
@@ -8,12 +16,17 @@ let isMutatingReachlystUi = false;
 let activeSearchPlaybook = null;
 
 async function getSettings() {
-  return chrome.storage.sync.get(["reachlystApiBase", "reachlystToken", "reachlystUseCase", "reachlystIcp", "reachlystTone"]);
+  const values = await chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS));
+  return { ...DEFAULT_SETTINGS, ...values };
+}
+
+async function reachlystIsEnabled() {
+  const settings = await getSettings();
+  return settings.reachlystEnabled === true;
 }
 
 async function reachlystApi(path, init = {}) {
   const settings = await getSettings();
-  if (!settings.reachlystToken) throw new Error("Missing Reachlyst extension token");
   const proxied = await chrome.runtime.sendMessage({
     type: "reachlyst_api",
     path,
@@ -39,6 +52,11 @@ function setStatus(message, tone = "neutral") {
   }
   status.dataset.tone = tone;
   status.textContent = message;
+}
+
+function removeReachlystUi() {
+  clearTimeout(reachlystRunTimer);
+  document.querySelectorAll(".reachlyst-status, .reachlyst-panel, .reachlyst-inline").forEach((element) => element.remove());
 }
 
 function showLoginNotice() {
@@ -280,14 +298,13 @@ async function regenerateInviteMessage(lead, button) {
 }
 
 async function runSalesNavigator() {
+  if (!(await reachlystIsEnabled())) {
+    removeReachlystUi();
+    return;
+  }
   if (!/linkedin\.com\/sales/.test(location.href)) return;
   setStatus("Reachlyst: scanning Sales Navigator...");
   if (/login|checkpoint/.test(location.href)) return showLoginNotice();
-  const settings = await getSettings();
-  if (!settings.reachlystToken) {
-    setStatus("Reachlyst: add extension token in the popup", "warn");
-    return;
-  }
   const detected = await reachlystApi("/api/extension/search/detect", { method: "POST", body: JSON.stringify({ url: location.href, title: document.title }) }).then((r) => r.json());
   activeSearchPlaybook = detected.aiPlaybook || null;
   const parsed = parseSalesNavigatorLeads();
@@ -299,6 +316,10 @@ async function runSalesNavigator() {
 }
 
 async function runMessages() {
+  if (!(await reachlystIsEnabled())) {
+    removeReachlystUi();
+    return;
+  }
   if (!/linkedin\.com\/messaging/.test(location.href)) return;
   setStatus("Reachlyst: syncing visible messages...");
   const parsed = parseVisibleMessages();
@@ -312,9 +333,13 @@ async function reportParser(pageType, extractedCount, failures) {
 }
 
 let reachlystRunTimer;
-function scheduleReachlystRun() {
+async function scheduleReachlystRun() {
   if (isMutatingReachlystUi) return;
   clearTimeout(reachlystRunTimer);
+  if (!(await reachlystIsEnabled())) {
+    removeReachlystUi();
+    return;
+  }
   reachlystRunTimer = setTimeout(() => {
     runSalesNavigator().catch((error) => setStatus(`Reachlyst: ${error.message}`, "danger"));
     runMessages().catch((error) => setStatus(`Reachlyst: ${error.message}`, "danger"));
@@ -322,6 +347,26 @@ function scheduleReachlystRun() {
 }
 
 scheduleReachlystRun();
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "reachlyst_stop") {
+    removeReachlystUi();
+    sendResponse({ ok: true });
+    return false;
+  }
+
+  if (message?.type === "reachlyst_start") {
+    scheduleReachlystRun();
+    sendResponse({ ok: true });
+    return false;
+  }
+
+  return false;
+});
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "sync" || !changes.reachlystEnabled) return;
+  if (changes.reachlystEnabled.newValue) scheduleReachlystRun();
+  else removeReachlystUi();
+});
 new MutationObserver((mutations) => {
   if (mutations.every((mutation) => {
     const target = mutation.target;

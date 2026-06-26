@@ -72,6 +72,22 @@
   padding: 14px;
 }
 
+.reachlyst-floating-chat[data-minimized="true"] {
+  bottom: 34px;
+  width: min(360px, calc(100vw - 112px));
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-chat-thread,
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-chat-input,
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-chat-actions,
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-chat-status {
+  display: none;
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-chat-top {
+  border-bottom: 0;
+}
+
 .reachlyst-r {
   align-items: center;
   background: #1677ff;
@@ -104,7 +120,14 @@
   white-space: nowrap;
 }
 
-.reachlyst-close {
+.reachlyst-chat-window-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.reachlyst-close,
+.reachlyst-minimize {
   align-items: center;
   background: #edf4ff;
   border: 1px solid #cddcff;
@@ -116,6 +139,16 @@
   height: 30px;
   justify-content: center;
   width: 30px;
+}
+
+.reachlyst-minimize {
+  font-size: 16px;
+}
+
+.reachlyst-close:hover,
+.reachlyst-minimize:hover {
+  background: #ddecff;
+  transform: translateY(-1px);
 }
 
 .reachlyst-chat-thread {
@@ -176,6 +209,11 @@
   width: 28px;
 }
 
+.reachlyst-copy-message:hover {
+  background: #f3f8ff;
+  border-color: #a9ccff;
+}
+
 .reachlyst-copy-message::before,
 .reachlyst-copy-message::after {
   border: 1.8px solid #1677ff;
@@ -200,6 +238,27 @@
 .reachlyst-copy-message[data-copied="true"]::before,
 .reachlyst-copy-message[data-copied="true"]::after {
   border-color: #147c6c;
+}
+
+.reachlyst-copy-message[data-copied="true"] {
+  background: #e9fff7;
+  border-color: #71d8bd;
+  box-shadow: 0 8px 18px rgba(20, 124, 108, .18);
+}
+
+.reachlyst-copy-message[data-copied="true"]::before {
+  border-color: #147c6c;
+  border-radius: 0;
+  border-width: 0 2px 2px 0;
+  height: 13px;
+  left: 10px;
+  top: 5px;
+  transform: rotate(45deg);
+  width: 7px;
+}
+
+.reachlyst-copy-message[data-copied="true"]::after {
+  display: none;
 }
 
 .reachlyst-chat-input {

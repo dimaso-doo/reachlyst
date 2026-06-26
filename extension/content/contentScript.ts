@@ -187,7 +187,10 @@ function ensureFloatingChat() {
         <strong data-role="leadName">Reachlyst AI</strong>
         <small data-role="leadMeta">Select a lead to start.</small>
       </div>
-      <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat">×</button>
+      <div class="reachlyst-chat-window-actions">
+        <button class="reachlyst-minimize" data-action="minimize" type="button" aria-label="Minimize Reachlyst chat" title="Minimize">−</button>
+        <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat" title="Close">×</button>
+      </div>
     </div>
     <div class="reachlyst-chat-thread"></div>
     <textarea class="reachlyst-chat-input" rows="3" placeholder="Write in any language. Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
@@ -206,6 +209,7 @@ function ensureFloatingChat() {
 
 function bindFloatingChat(chat) {
   const closeButton = chat.querySelector('[data-action="close"]');
+  const minimizeButton = chat.querySelector('[data-action="minimize"]');
   const generateButton = chat.querySelector('[data-action="generate"]');
   const sendButton = chat.querySelector('[data-action="send"]');
   const input = chat.querySelector(".reachlyst-chat-input");
@@ -213,6 +217,13 @@ function bindFloatingChat(chat) {
 
   closeButton.addEventListener("click", () => {
     chat.hidden = true;
+  });
+  minimizeButton.addEventListener("click", () => {
+    const isMinimized = chat.dataset.minimized === "true";
+    chat.dataset.minimized = isMinimized ? "false" : "true";
+    minimizeButton.textContent = isMinimized ? "−" : "□";
+    minimizeButton.title = isMinimized ? "Minimize" : "Expand";
+    minimizeButton.setAttribute("aria-label", isMinimized ? "Minimize Reachlyst chat" : "Expand Reachlyst chat");
   });
   generateButton.addEventListener("click", () => selectedLead && generateInvite(selectedLead, chat, generateButton));
   sendButton.addEventListener("click", () => selectedLead && sendLeadChat(selectedLead, chat, sendButton));
@@ -229,6 +240,13 @@ function openFloatingChat(lead) {
   selectedLead = lead;
   const chat = ensureFloatingChat();
   chat.hidden = false;
+  chat.dataset.minimized = "false";
+  const minimizeButton = chat.querySelector('[data-action="minimize"]');
+  if (minimizeButton) {
+    minimizeButton.textContent = "−";
+    minimizeButton.title = "Minimize";
+    minimizeButton.setAttribute("aria-label", "Minimize Reachlyst chat");
+  }
   chat.querySelector('[data-role="leadName"]').textContent = lead.name;
   chat.querySelector('[data-role="leadMeta"]').textContent = leadSubtitle(lead) || "Sales Navigator lead";
   chat.querySelector(".reachlyst-chat-status").textContent = "Chat is tied to this selected lead.";
@@ -259,14 +277,6 @@ function visibleActionControl(element, card) {
 function actionControlsIn(container, card) {
   return Array.from(container.querySelectorAll('button, a[role="button"], [role="button"]'))
     .filter((control) => visibleActionControl(control, card));
-}
-
-function directChildWithin(container, element) {
-  let child = element;
-  while (child.parentElement && child.parentElement !== container) {
-    child = child.parentElement;
-  }
-  return child.parentElement === container ? child : element;
 }
 
 function controlLabel(element) {
@@ -302,17 +312,7 @@ function findLeadActionsContainer(card) {
 function placeLeadButton(card, button) {
   const container = findLeadActionsContainer(card);
   if (container) {
-    const controls = actionControlsIn(container, card).filter((control) => control !== button);
-    const moreControl = controls.find((control) => /more|actions|overflow|ellipsis/.test(controlLabel(control)));
-    const nextControl = controls.find((control) => /message|send message|save|saved/.test(controlLabel(control))) || controls[0] || null;
-
-    if (moreControl) {
-      directChildWithin(container, moreControl).after(button);
-    } else if (nextControl) {
-      container.insertBefore(button, directChildWithin(container, nextControl));
-    } else {
-      container.append(button);
-    }
+    container.append(button);
     button.dataset.floating = "false";
     return;
   }
@@ -418,11 +418,15 @@ async function copyAiMessage(lead, message, button) {
   await navigator.clipboard.writeText(message);
   chatStateForLead(lead).latestInvite = message;
   await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) });
+  const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
+  if (status) status.textContent = "Copied message to clipboard.";
   button.dataset.copied = "true";
   button.title = "Copied";
+  button.setAttribute("aria-label", "Copied");
   setTimeout(() => {
     button.dataset.copied = "false";
     button.title = "Copy this AI message";
+    button.setAttribute("aria-label", "Copy this AI message");
   }, 1400);
 }
 

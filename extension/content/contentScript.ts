@@ -173,9 +173,41 @@ function renderThread(chat, lead) {
   thread.scrollTop = thread.scrollHeight;
 }
 
+function ensureChatControls(chat) {
+  const header = chat.querySelector(".reachlyst-chat-top");
+  if (!header) return;
+
+  let actions = chat.querySelector(".reachlyst-chat-window-actions");
+  let closeButton = chat.querySelector('[data-action="close"]');
+  let minimizeButton = chat.querySelector('[data-action="minimize"]');
+
+  if (!actions) {
+    actions = document.createElement("div");
+    actions.className = "reachlyst-chat-window-actions";
+    header.append(actions);
+  }
+
+  if (!minimizeButton) {
+    minimizeButton = document.createElement("button");
+    minimizeButton.className = "reachlyst-minimize";
+    minimizeButton.dataset.action = "minimize";
+    minimizeButton.type = "button";
+    minimizeButton.textContent = "Minimize";
+    minimizeButton.title = "Minimize";
+    minimizeButton.setAttribute("aria-label", "Minimize Reachlyst chat");
+    actions.prepend(minimizeButton);
+  }
+
+  if (closeButton && closeButton.parentElement !== actions) actions.append(closeButton);
+}
+
 function ensureFloatingChat() {
   let chat = document.querySelector(".reachlyst-floating-chat");
-  if (chat) return chat;
+  if (chat) {
+    ensureChatControls(chat);
+    bindFloatingChat(chat);
+    return chat;
+  }
 
   isMutatingReachlystUi = true;
   chat = document.createElement("aside");
@@ -188,7 +220,7 @@ function ensureFloatingChat() {
         <small data-role="leadMeta">Select a lead to start.</small>
       </div>
       <div class="reachlyst-chat-window-actions">
-        <button class="reachlyst-minimize" data-action="minimize" type="button" aria-label="Minimize Reachlyst chat" title="Minimize">−</button>
+        <button class="reachlyst-minimize" data-action="minimize" type="button" aria-label="Minimize Reachlyst chat" title="Minimize">Minimize</button>
         <button class="reachlyst-close" data-action="close" type="button" aria-label="Close Reachlyst chat" title="Close">×</button>
       </div>
     </div>
@@ -208,6 +240,8 @@ function ensureFloatingChat() {
 }
 
 function bindFloatingChat(chat) {
+  if (chat.dataset.reachlystBound === "true") return;
+  chat.dataset.reachlystBound = "true";
   const closeButton = chat.querySelector('[data-action="close"]');
   const minimizeButton = chat.querySelector('[data-action="minimize"]');
   const generateButton = chat.querySelector('[data-action="generate"]');
@@ -221,7 +255,7 @@ function bindFloatingChat(chat) {
   minimizeButton.addEventListener("click", () => {
     const isMinimized = chat.dataset.minimized === "true";
     chat.dataset.minimized = isMinimized ? "false" : "true";
-    minimizeButton.textContent = isMinimized ? "−" : "□";
+    minimizeButton.textContent = isMinimized ? "Minimize" : "Expand";
     minimizeButton.title = isMinimized ? "Minimize" : "Expand";
     minimizeButton.setAttribute("aria-label", isMinimized ? "Minimize Reachlyst chat" : "Expand Reachlyst chat");
   });
@@ -243,7 +277,7 @@ function openFloatingChat(lead) {
   chat.dataset.minimized = "false";
   const minimizeButton = chat.querySelector('[data-action="minimize"]');
   if (minimizeButton) {
-    minimizeButton.textContent = "−";
+    minimizeButton.textContent = "Minimize";
     minimizeButton.title = "Minimize";
     minimizeButton.setAttribute("aria-label", "Minimize Reachlyst chat");
   }
@@ -417,16 +451,32 @@ async function sendLeadChat(lead, chat, button) {
 async function copyAiMessage(lead, message, button) {
   await navigator.clipboard.writeText(message);
   chatStateForLead(lead).latestInvite = message;
-  await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) });
   const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
   if (status) status.textContent = "Copied message to clipboard.";
   button.dataset.copied = "true";
   button.title = "Copied";
   button.setAttribute("aria-label", "Copied");
+  showCopiedToast();
+  reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied", message }) }).catch(() => undefined);
   setTimeout(() => {
     button.dataset.copied = "false";
     button.title = "Copy this AI message";
     button.setAttribute("aria-label", "Copy this AI message");
+  }, 1400);
+}
+
+function showCopiedToast() {
+  let toast = document.querySelector(".reachlyst-copy-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "reachlyst-copy-toast";
+    document.body.append(toast);
+  }
+  toast.textContent = "Copied";
+  toast.dataset.visible = "true";
+  clearTimeout(showCopiedToast.timer);
+  showCopiedToast.timer = setTimeout(() => {
+    toast.dataset.visible = "false";
   }, 1400);
 }
 

@@ -10,6 +10,7 @@ export type AiLeadInput = {
   tone?: string;
   useCase?: string;
   previousMessage?: string;
+  instruction?: string;
   variant?: number;
   limit?: number;
 };
@@ -44,6 +45,12 @@ function fallbackAnalysis(input: AiLeadInput, reason: string) {
 }
 
 function fallbackInviteMessage(input: AiLeadInput) {
+  if (input.instruction && input.previousMessage) {
+    if (/short|shorter|concise/i.test(input.instruction)) return input.previousMessage.replace(/Thought it made sense to connect\.?/i, "Open to connecting?").slice(0, input.limit ?? 180);
+    if (/direct|simple/i.test(input.instruction)) return `Hi ${input.name.split(" ")[0]}, came across your profile${input.company ? ` at ${input.company}` : ""}. Thought it made sense to connect.`.slice(0, input.limit ?? 280);
+    if (/warmer|friendly/i.test(input.instruction)) return `Hi ${input.name.split(" ")[0]}, saw your work${input.company ? ` at ${input.company}` : ""}. Thought it would be good to connect here.`.slice(0, input.limit ?? 280);
+    return input.previousMessage.slice(0, input.limit ?? 280);
+  }
   const first = input.name.split(" ")[0];
   const templates = [
     `Hi ${first}, noticed your work${input.company ? ` at ${input.company}` : ""}. Thought it made sense to connect.`,

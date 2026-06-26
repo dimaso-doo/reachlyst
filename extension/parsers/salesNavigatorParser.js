@@ -47,6 +47,13 @@ function inferReachlystLocation(lines, name) {
   return candidates.find((line) => /area|united states|canada|kingdom|germany|france|serbia|greater|metro|metropolitan|california|new york|texas|florida|illinois|boston|chicago|los angeles|san francisco|miami|austin|denver|seattle/i.test(line));
 }
 
+function inferReachlystAbout(lines) {
+  const about = lines.find((line) => /^About:/i.test(line));
+  if (about) return about.replace(/^About:\s*/i, "").trim();
+  const fallback = lines.find((line) => line.length > 90 && !/experience:|saved|recent posts|mutual connections/i.test(line));
+  return fallback || "";
+}
+
 function parseSalesNavigatorLeads(root = document) {
   const failures = [];
   const anchors = Array.from(root.querySelectorAll('a[href*="/sales/lead/"], a[href*="/in/"]'));
@@ -72,6 +79,7 @@ function parseSalesNavigatorLeads(root = document) {
       title: reachlystText(card?.querySelector('[aria-label*="title" i], [data-anonymize="job-title"]')) || inferred.title,
       company: reachlystText(card?.querySelector('[aria-label*="company" i], [data-anonymize="company-name"]')) || inferred.company,
       location: reachlystText(card?.querySelector('[aria-label*="location" i]')) || inferReachlystLocation(visibleLines, name),
+      about: inferReachlystAbout(visibleLines),
       snippet: flatWords.slice(0, 40).join(" ")
     });
   }

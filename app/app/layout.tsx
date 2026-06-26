@@ -12,7 +12,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <nav className={styles.navGroup} aria-label="Primary">
         <Link href="/app/dashboard">Dashboard</Link>
         <Link href="/app/searches">Searches</Link>
-        <Link className={styles.subLink} href="/app/searches?new=1">Add new search</Link>
         {showSuperAdmin ? <Link href="/app/admin">Super Admin</Link> : null}
       </nav>
       <div className={styles.sidebarSpacer} />
@@ -20,13 +19,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <span>Chrome Extension</span>
         <small>Download and install guide</small>
       </Link>
-      <div className={styles.member}>
+      <Link className={styles.member} href="/app/settings">
         <span aria-hidden="true">{demo.isSuperAdmin ? "A" : "P"}</span>
         <div>
           <strong>{demo.name}</strong>
           <small>{demo.isSuperAdmin ? "Super admin demo" : "Workspace owner"}</small>
         </div>
-      </div>
+      </Link>
       <Link className={styles.logoutLink} href="/api/demo-logout">Log out</Link>
     </aside>
     <main>{children}</main>

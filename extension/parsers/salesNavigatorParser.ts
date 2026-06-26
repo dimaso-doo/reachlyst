@@ -50,6 +50,12 @@ function inferLocation(visibleLines: string[], name: string) {
   return candidates.find((line) => /area|united states|canada|kingdom|germany|france|serbia|greater|metro|metropolitan|california|new york|texas|florida|illinois|boston|chicago|los angeles|san francisco|miami|austin|denver|seattle/i.test(line));
 }
 
+function inferAbout(visibleLines: string[]) {
+  const about = visibleLines.find((line) => /^About:/i.test(line));
+  if (about) return about.replace(/^About:\s*/i, "").trim();
+  return visibleLines.find((line) => line.length > 90 && !/experience:|saved|recent posts|mutual connections/i.test(line));
+}
+
 export function parseSalesNavigatorLeads(root: ParentNode = document): { leads: ExtensionLead[]; failures: string[] } {
   const failures: string[] = [];
   const anchors = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[href*="/sales/lead/"], a[href*="/in/"]'));
@@ -76,6 +82,7 @@ export function parseSalesNavigatorLeads(root: ParentNode = document): { leads: 
       title: text(card?.querySelector('[aria-label*="title" i], [data-anonymize="job-title"]')) || inferred.title,
       company: text(card?.querySelector('[aria-label*="company" i], [data-anonymize="company-name"]')) || inferred.company,
       location: text(card?.querySelector('[aria-label*="location" i]')) || inferLocation(visibleLines, name),
+      about: inferAbout(visibleLines),
       snippet: flatWords.slice(0, 40).join(" ")
     });
   }

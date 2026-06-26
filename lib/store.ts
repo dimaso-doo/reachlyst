@@ -15,6 +15,7 @@ type LeadRecord = {
   title?: string;
   company?: string;
   location?: string;
+  snippet?: string;
   linkedinUrl?: string;
   salesNavigatorUrl?: string;
   normalizedLinkedInUrl: string;
@@ -136,6 +137,7 @@ async function getSupabaseDashboardData(): Promise<DashboardData> {
       title: lead.title,
       company: lead.company,
       location: lead.location,
+      snippet: lead.snippet,
       linkedinUrl: lead.linkedin_url,
       salesNavigatorUrl: lead.sales_navigator_url,
       normalizedLinkedInUrl: lead.normalized_linkedin_url,
@@ -226,7 +228,7 @@ export async function importLeads(searchId: string, rawLeads: Array<Record<strin
     if (!name) continue;
     const normalizedLinkedInUrl = normalizeLinkedInUrl(String(raw.linkedinUrl ?? raw.salesNavigatorUrl ?? name));
     const existing = db.leads.find((lead) => lead.normalizedLinkedInUrl === normalizedLinkedInUrl);
-    const record: LeadRecord = { id: existing?.id ?? `lead-${Math.abs(hash(normalizedLinkedInUrl))}`, name, title: sanitizeText(raw.title) || existing?.title, company: sanitizeText(raw.company) || existing?.company, location: sanitizeText(raw.location) || existing?.location, linkedinUrl: sanitizeText(raw.linkedinUrl) || existing?.linkedinUrl, salesNavigatorUrl: sanitizeText(raw.salesNavigatorUrl) || existing?.salesNavigatorUrl, normalizedLinkedInUrl, status: existing?.status ?? "new", campaignIds: Array.from(new Set([...(existing?.campaignIds ?? []), searchId])), campaign: campaign?.name ?? existing?.campaign, aiReason: existing?.aiReason, aiConfidence: existing?.aiConfidence, generatedMessage: existing?.generatedMessage, updatedAt: now() };
+    const record: LeadRecord = { id: existing?.id ?? `lead-${Math.abs(hash(normalizedLinkedInUrl))}`, name, title: sanitizeText(raw.title) || existing?.title, company: sanitizeText(raw.company) || existing?.company, location: sanitizeText(raw.location) || existing?.location, snippet: sanitizeText(raw.about ?? raw.snippet) || existing?.snippet, linkedinUrl: sanitizeText(raw.linkedinUrl) || existing?.linkedinUrl, salesNavigatorUrl: sanitizeText(raw.salesNavigatorUrl) || existing?.salesNavigatorUrl, normalizedLinkedInUrl, status: existing?.status ?? "new", campaignIds: Array.from(new Set([...(existing?.campaignIds ?? []), searchId])), campaign: campaign?.name ?? existing?.campaign, aiReason: existing?.aiReason, aiConfidence: existing?.aiConfidence, generatedMessage: existing?.generatedMessage, updatedAt: now() };
     if (existing) db.leads[db.leads.indexOf(existing)] = record;
     else db.leads.unshift(record);
     imported.push(record);
@@ -251,7 +253,7 @@ async function importSupabaseLeads(searchId: string, rawLeads: Array<Record<stri
     const lead = { id, workspace_id: workspaceId, normalized_linkedin_url: normalized, linkedin_url: sanitizeText(raw.linkedinUrl) || null, sales_navigator_url: sanitizeText(raw.salesNavigatorUrl) || null, name, title: sanitizeText(raw.title) || null, company: sanitizeText(raw.company) || null, location: sanitizeText(raw.location) || null, updated_at: now() };
     await supabase.from("leads").upsert(lead, { onConflict: "workspace_id,normalized_linkedin_url" });
     await supabase.from("lead_campaigns").upsert({ lead_id: id, search_campaign_id: searchId }, { onConflict: "lead_id,search_campaign_id" });
-    imported.push({ id, name, title: lead.title ?? undefined, company: lead.company ?? undefined, location: lead.location ?? undefined, linkedinUrl: lead.linkedin_url ?? undefined, salesNavigatorUrl: lead.sales_navigator_url ?? undefined, normalizedLinkedInUrl: normalized, status: "new", campaignIds: [searchId], updatedAt: lead.updated_at });
+    imported.push({ id, name, title: lead.title ?? undefined, company: lead.company ?? undefined, location: lead.location ?? undefined, snippet: sanitizeText(raw.about ?? raw.snippet) || undefined, linkedinUrl: lead.linkedin_url ?? undefined, salesNavigatorUrl: lead.sales_navigator_url ?? undefined, normalizedLinkedInUrl: normalized, status: "new", campaignIds: [searchId], updatedAt: lead.updated_at });
   }
   if (imported.length) await supabase.from("activities").insert({ workspace_id: workspaceId, search_campaign_id: searchId, type: "lead_imported", metadata: { count: imported.length } });
   await supabase.from("search_campaigns").update({ last_synced_at: now() }).eq("id", searchId);

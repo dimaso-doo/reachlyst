@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
 const analyzedLeads = new Map();
 const inFlightAnalyses = new Set();
 const regenerationCounts = new Map();
+const syncedMessageKeys = new Set();
 const MAX_ANALYSES_PER_SCAN = 8;
 let isMutatingReachlystUi = false;
 let activeSearchPlaybook = null;
@@ -56,7 +57,7 @@ function setStatus(message, tone = "neutral") {
 
 function removeReachlystUi() {
   clearTimeout(reachlystRunTimer);
-  document.querySelectorAll(".reachlyst-status, .reachlyst-panel, .reachlyst-inline").forEach((element) => element.remove());
+  document.querySelectorAll(".reachlyst-status, .reachlyst-panel, .reachlyst-inline, .reachlyst-side-badge").forEach((element) => element.remove());
 }
 
 function showLoginNotice() {
@@ -91,19 +92,39 @@ function ensureInlineControls(anchor, lead) {
     controls.className = "reachlyst-inline";
     controls.dataset.reachlystKey = key;
     controls.innerHTML = `
-      <span class="reachlyst-badge" data-status="new">New</span>
-      <span class="reachlyst-message">Generating invite...</span>
-      <button class="reachlyst-button" data-action="copy" title="Copy suggested invite. You paste and send manually.">Copy</button>
-      <button class="reachlyst-button reachlyst-button-secondary" data-action="regenerate" title="Generate a new suggested invite">Regenerate</button>
+      <div class="reachlyst-inline-header">
+        <span class="reachlyst-badge" data-status="new" title="AI fit reason will appear here after analysis.">New</span>
+        <span class="reachlyst-reason">Waiting for AI fit reason...</span>
+      </div>
+      <label class="reachlyst-suggestion">
+        <span>Suggested invite</span>
+        <textarea class="reachlyst-message" readonly rows="2">Generating invite...</textarea>
+      </label>
+      <div class="reachlyst-actions">
+        <button class="reachlyst-button" data-action="copy" title="Copy suggested invite. You paste and send manually.">Copy</button>
+        <button class="reachlyst-button reachlyst-button-secondary" data-action="regenerate" title="Generate a new suggested invite">Regenerate</button>
+        <button class="reachlyst-button reachlyst-button-secondary" data-action="ask" title="Ask AI to polish this lead's message">Ask AI</button>
+        <button class="reachlyst-button reachlyst-button-secondary" data-action="invited" title="Log this lead as manually invited">Mark invited</button>
+      </div>
+      <div class="reachlyst-mini-chat" hidden>
+        <textarea data-role="prompt" rows="2" placeholder="Ask AI to make it shorter, warmer, more direct, or adjust the angle..."></textarea>
+        <button class="reachlyst-button" data-action="sendPrompt">Send</button>
+        <p class="reachlyst-chat-status"></p>
+      </div>
     `;
     card.append(controls);
+    ensureSideBadge(anchor, "Not invited");
     queueMicrotask(() => { isMutatingReachlystUi = false; });
   }
   controls.dataset.reachlystKey = key;
   controls.reachlystLead = lead;
+  ensureSideBadge(anchor, outreachLabelForLead(lead));
 
   const copyButton = controls.querySelector('[data-action="copy"]');
   const regenerateButton = controls.querySelector('[data-action="regenerate"]');
+  const askButton = controls.querySelector('[data-action="ask"]');
+  const promptButton = controls.querySelector('[data-action="sendPrompt"]');
+  const invitedButton = controls.querySelector('[data-action="invited"]');
   if (!copyButton.dataset.bound) {
     copyButton.dataset.bound = "true";
     copyButton.addEventListener("click", () => copyInviteMessage(controls.reachlystLead, copyButton));
@@ -112,21 +133,41 @@ function ensureInlineControls(anchor, lead) {
     regenerateButton.dataset.bound = "true";
     regenerateButton.addEventListener("click", () => regenerateInviteMessage(controls.reachlystLead, regenerateButton));
   }
+  if (!askButton.dataset.bound) {
+    askButton.dataset.bound = "true";
+    askButton.addEventListener("click", () => {
+      const chat = controls.querySelector(".reachlyst-mini-chat");
+      if (chat) chat.hidden = !chat.hidden;
+    });
+  }
+  if (!promptButton.dataset.bound) {
+    promptButton.dataset.bound = "true";
+    promptButton.addEventListener("click", () => askAiForLeadMessage(controls.reachlystLead, controls, promptButton));
+  }
+  if (!invitedButton.dataset.bound) {
+    invitedButton.dataset.bound = "true";
+    invitedButton.addEventListener("click", () => markLeadInvited(controls.reachlystLead, invitedButton));
+  }
   return controls;
 }
 
-function addBadge(anchor, status = "New", lead) {
+function addBadge(anchor, status = "New", lead, reason = "") {
   const controls = lead ? ensureInlineControls(anchor, lead) : leadCardFromAnchor(anchor);
   const existing = controls?.querySelector(".reachlyst-badge");
+  const reasonEl = controls?.querySelector(".reachlyst-reason");
+  const title = reason || (status === "New" ? "AI has not analyzed this lead yet." : `AI marked this lead as ${status}.`);
   if (existing) {
     existing.textContent = status;
     existing.dataset.status = status.toLowerCase().replace(/\s+/g, "_");
+    existing.title = title;
+    if (reasonEl) reasonEl.textContent = reason || "No AI reason yet.";
     return existing;
   }
   const badge = document.createElement("span");
   badge.className = "reachlyst-badge";
   badge.dataset.status = status.toLowerCase().replace(/\s+/g, "_");
   badge.textContent = status;
+  badge.title = title;
   isMutatingReachlystUi = true;
   anchor.insertAdjacentElement("afterend", badge);
   queueMicrotask(() => { isMutatingReachlystUi = false; });
@@ -152,6 +193,10 @@ function sameLead(anchor, lead) {
   return href === lead.salesNavigatorUrl || href === lead.linkedinUrl || name === lead.name;
 }
 
+function sameLeadRecord(a, b) {
+  return leadKey(a) === leadKey(b) || (a.name && b.name && a.name === b.name);
+}
+
 function savedLeadResult(lead) {
   return analyzedLeads.get(leadKey(lead)) || null;
 }
@@ -164,7 +209,7 @@ function savedLeadLabel(lead) {
 function restoreLeadUi(lead) {
   const result = savedLeadResult(lead);
   if (!result) return false;
-  updateLeadBadge(lead, fitLabel(result.fit));
+  updateLeadBadge(lead, fitLabel(result.fit), result.reason);
   updateLeadMessage(lead, result.suggestedConnectionMessage);
   return true;
 }
@@ -190,9 +235,9 @@ function attachLeadControls(leads) {
   return usedCards.size;
 }
 
-function updateLeadBadge(lead, status) {
+function updateLeadBadge(lead, status, reason = "") {
   const anchor = leadAnchors().find((candidate) => sameLead(candidate, lead));
-  if (anchor) addBadge(anchor, status, lead);
+  if (anchor) addBadge(anchor, status, lead, reason);
 }
 
 function updateLeadMessage(lead, message) {
@@ -201,9 +246,46 @@ function updateLeadMessage(lead, message) {
   const controls = ensureInlineControls(anchor, lead);
   const messageEl = controls?.querySelector(".reachlyst-message");
   if (messageEl) {
-    messageEl.textContent = message || "No suggestion yet";
+    if ("value" in messageEl) messageEl.value = message || "No suggestion yet";
+    else messageEl.textContent = message || "No suggestion yet";
     messageEl.title = message || "";
   }
+}
+
+function currentLeadMessage(lead) {
+  const anchor = leadAnchors().find((candidate) => sameLead(candidate, lead));
+  const controls = anchor ? ensureInlineControls(anchor, lead) : null;
+  const messageEl = controls?.querySelector(".reachlyst-message");
+  if (!messageEl) return "";
+  return "value" in messageEl ? messageEl.value : messageEl.textContent || "";
+}
+
+function ensureSideBadge(anchor, label = "Not invited") {
+  const card = leadCardFromAnchor(anchor);
+  if (!card) return null;
+  if (getComputedStyle(card).position === "static") card.style.position = "relative";
+  let badge = card.querySelector(".reachlyst-side-badge");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "reachlyst-side-badge";
+    card.append(badge);
+  }
+  badge.textContent = label;
+  badge.dataset.status = label.toLowerCase().replace(/\s+/g, "_");
+  badge.title = `Reachlyst outreach status: ${label}`;
+  return badge;
+}
+
+function updateSideBadge(lead, label) {
+  const anchor = leadAnchors().find((candidate) => sameLead(candidate, lead));
+  if (anchor) ensureSideBadge(anchor, label);
+}
+
+function outreachLabelForLead(lead) {
+  const status = lead.status || "";
+  if (status === "copied") return "Copied";
+  if (/invite|connected|message|follow|replied/.test(status)) return "Invited";
+  return "Not invited";
 }
 
 function leadKey(lead) {
@@ -246,7 +328,7 @@ async function analyzeLeadInline(lead) {
     const response = await reachlystApi("/api/extension/ai/analyze", { method: "POST", body: JSON.stringify(await leadPayload(lead)) });
     const result = await response.json();
     analyzedLeads.set(key, result);
-    updateLeadBadge(lead, fitLabel(result.fit));
+    updateLeadBadge(lead, fitLabel(result.fit), result.reason);
     updateLeadMessage(lead, result.suggestedConnectionMessage);
   } catch (error) {
     updateLeadBadge(lead, "New");
@@ -276,6 +358,7 @@ async function copyInviteMessage(lead, button) {
   const message = result?.suggestedConnectionMessage || `Hi ${lead.name.split(" ")[0]}, noticed your work${lead.company ? ` at ${lead.company}` : ""}. Thought it would be useful to connect.`;
   await navigator.clipboard.writeText(message);
   await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "message_copied" }) });
+  updateSideBadge(lead, "Copied");
   button.textContent = "Copied";
   setTimeout(() => { button.textContent = "Copy"; }, 1400);
 }
@@ -297,6 +380,38 @@ async function regenerateInviteMessage(lead, button) {
   button.textContent = "Regenerate";
 }
 
+async function askAiForLeadMessage(lead, controls, button) {
+  const prompt = controls.querySelector('[data-role="prompt"]');
+  const status = controls.querySelector(".reachlyst-chat-status");
+  const instruction = prompt?.value?.trim();
+  if (!instruction) {
+    if (status) status.textContent = "Write what you want AI to change.";
+    return;
+  }
+  const key = leadKey(lead);
+  const current = analyzedLeads.get(key) || {};
+  button.textContent = "Thinking";
+  if (status) status.textContent = "AI is polishing this invite...";
+  const response = await reachlystApi("/api/extension/ai/generate-message", {
+    method: "POST",
+    body: JSON.stringify(await leadPayload(lead, { instruction, previousMessage: currentLeadMessage(lead) || current.suggestedConnectionMessage }))
+  });
+  const result = await response.json();
+  analyzedLeads.set(key, { ...current, suggestedConnectionMessage: result.message });
+  updateLeadMessage(lead, result.message);
+  if (prompt) prompt.value = "";
+  if (status) status.textContent = "Saved to Reachlyst suggestions.";
+  button.textContent = "Send";
+}
+
+async function markLeadInvited(lead, button) {
+  button.textContent = "Saving";
+  await reachlystApi("/api/extension/leads/action", { method: "POST", body: JSON.stringify({ leadId: lead.id || lead.name, action: "invite_likely_sent" }) });
+  updateSideBadge(lead, "Invited");
+  button.textContent = "Invited";
+  setTimeout(() => { button.textContent = "Mark invited"; }, 1400);
+}
+
 async function runSalesNavigator() {
   if (!(await reachlystIsEnabled())) {
     removeReachlystUi();
@@ -308,10 +423,11 @@ async function runSalesNavigator() {
   const detected = await reachlystApi("/api/extension/search/detect", { method: "POST", body: JSON.stringify({ url: location.href, title: document.title }) }).then((r) => r.json());
   activeSearchPlaybook = detected.aiPlaybook || null;
   const parsed = parseSalesNavigatorLeads();
-  await reachlystApi("/api/extension/search/import-leads", { method: "POST", body: JSON.stringify({ searchId: detected.id, leads: parsed.leads }) });
+  const imported = await reachlystApi("/api/extension/search/import-leads", { method: "POST", body: JSON.stringify({ searchId: detected.id, leads: parsed.leads }) }).then((r) => r.json());
+  const hydratedLeads = parsed.leads.map((lead) => ({ ...lead, ...(imported.leads || []).find((item) => sameLeadRecord(item, lead)) }));
   await reportParser("sales_search", parsed.leads.length, parsed.failures);
-  const attached = attachLeadControls(parsed.leads);
-  autoAnalyzeVisibleLeads(parsed.leads);
+  const attached = attachLeadControls(hydratedLeads);
+  autoAnalyzeVisibleLeads(hydratedLeads);
   setStatus(`Reachlyst: ${parsed.leads.length} visible leads found · ${attached} tagged`, attached ? "good" : "warn");
 }
 
@@ -323,9 +439,15 @@ async function runMessages() {
   if (!/linkedin\.com\/messaging/.test(location.href)) return;
   setStatus("Reachlyst: syncing visible messages...");
   const parsed = parseVisibleMessages();
-  await reachlystApi("/api/extension/messages/sync-thread", { method: "POST", body: JSON.stringify({ source: "linkedin_messages", threadUrl: location.href, messages: parsed.messages }) });
+  const newMessages = parsed.messages.filter((message) => {
+    const key = `${location.href}|${message.senderType}|${message.body}`.slice(0, 1200);
+    if (syncedMessageKeys.has(key)) return false;
+    syncedMessageKeys.add(key);
+    return true;
+  });
+  if (newMessages.length) await reachlystApi("/api/extension/messages/sync-thread", { method: "POST", body: JSON.stringify({ source: "linkedin_messages", threadUrl: location.href, messages: newMessages }) });
   await reportParser("linkedin_messages", parsed.messages.length, parsed.failures);
-  setStatus(`Reachlyst: ${parsed.messages.length} visible messages found`, parsed.messages.length ? "good" : "warn");
+  setStatus(`Reachlyst: ${parsed.messages.length} visible messages found · ${newMessages.length} new`, parsed.messages.length ? "good" : "warn");
 }
 
 async function reportParser(pageType, extractedCount, failures) {
@@ -374,3 +496,4 @@ new MutationObserver((mutations) => {
   })) return;
   scheduleReachlystRun();
 }).observe(document.body, { childList: true, subtree: true });
+document.addEventListener("scroll", () => scheduleReachlystRun(), true);

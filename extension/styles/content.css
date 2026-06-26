@@ -1,73 +1,169 @@
 .reachlyst-inline {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  background: #f8fbff;
+  border: 1px solid #d9e6fb;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
   clear: both;
-  margin: 8px 0 0 0;
-  max-width: 100%;
-  padding: 4px 0 0 0;
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  max-width: min(760px, calc(100% - 148px));
+  padding: 10px;
   width: 100%;
 }
-.reachlyst-badge {
+
+.reachlyst-inline *,
+.reachlyst-inline *::before,
+.reachlyst-inline *::after {
+  box-sizing: border-box;
+}
+
+.reachlyst-inline-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reachlyst-badge,
+.reachlyst-side-badge {
   background: #e4ebff;
   border: 1px solid #cbd7ff;
   border-radius: 999px;
   color: #294da8;
   display: inline-flex;
   flex: 0 0 auto;
-  font: 800 10px/1 Inter, system-ui, sans-serif;
+  font: 900 10px/1 Inter, system-ui, sans-serif;
   letter-spacing: 0;
-  padding: 4px 6px;
+  padding: 4px 7px;
+  white-space: nowrap;
 }
+
+.reachlyst-side-badge {
+  position: absolute;
+  right: 112px;
+  top: 18px;
+  z-index: 10;
+}
+
+.reachlyst-side-badge[data-status="copied"] {
+  background: #eef4ff;
+  border-color: #cbdcff;
+  color: #2454b8;
+}
+
+.reachlyst-side-badge[data-status="invited"] {
+  background: #dff5eb;
+  border-color: #a7e2ca;
+  color: #096448;
+}
+
 .reachlyst-badge[data-status="good_fit"] {
   background: #dff5eb;
   border-color: #a7e2ca;
   color: #096448;
 }
+
 .reachlyst-badge[data-status="analyzing"] {
   background: #edf2ef;
   border-color: #cfd9d3;
   color: #41504a;
 }
+
 .reachlyst-badge[data-status="maybe"] {
   background: #fff1d7;
   border-color: #f2cd88;
   color: #8b5609;
 }
+
 .reachlyst-badge[data-status="skip"] {
   background: #ffe3e6;
   border-color: #f3a8b2;
   color: #9d2636;
 }
-.reachlyst-button {
-  background: #147c6c;
-  border: 0;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  flex: 0 0 auto;
-  font: 800 10px/1 Inter, system-ui, sans-serif;
-  padding: 6px 8px;
-}
-.reachlyst-button-secondary {
-  background: #edf2ef;
-  color: #17201b;
-}
-.reachlyst-message {
-  background: #f7faf8;
-  border: 1px solid #dfe7e2;
-  border-radius: 6px;
-  color: #17201b;
-  display: inline-block;
-  flex: 1 1 420px;
-  font: 500 11px/1.35 Inter, system-ui, sans-serif;
-  max-width: min(760px, 100%);
+
+.reachlyst-reason {
+  color: #4a5a6d;
+  display: block;
+  font: 700 11px/1.35 Inter, system-ui, sans-serif;
+  min-width: 0;
   overflow: hidden;
-  padding: 5px 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.reachlyst-suggestion {
+  display: grid;
+  gap: 5px;
+}
+
+.reachlyst-suggestion > span {
+  color: #1677ff;
+  font: 900 10px/1 Inter, system-ui, sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.reachlyst-message,
+.reachlyst-mini-chat textarea {
+  background: white;
+  border: 1px solid #cddcf0;
+  border-radius: 8px;
+  color: #17201b;
+  display: block;
+  font: 600 12px/1.45 Inter, system-ui, sans-serif;
+  min-height: 54px;
+  padding: 8px 10px;
+  resize: vertical;
+  width: 100%;
+}
+
+.reachlyst-message {
+  cursor: text;
+}
+
+.reachlyst-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reachlyst-button {
+  background: #1677ff;
+  border: 1px solid #9cc5ff;
+  border-radius: 7px;
+  color: white;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: 900 10px/1 Inter, system-ui, sans-serif;
+  padding: 7px 9px;
+}
+
+.reachlyst-button-secondary {
+  background: #edf4ff;
+  border-color: #cddcff;
+  color: #17201b;
+}
+
+.reachlyst-mini-chat {
+  background: #eef5ff;
+  border: 1px solid #d2e3ff;
+  border-radius: 8px;
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+}
+
+.reachlyst-mini-chat[hidden] {
+  display: none;
+}
+
+.reachlyst-chat-status {
+  color: #4a5a6d;
+  font: 700 11px/1.35 Inter, system-ui, sans-serif;
+  margin: 0;
+}
+
 .reachlyst-status {
   background: #17201b;
   border: 1px solid rgba(255,255,255,.16);
@@ -81,6 +177,7 @@
   top: 88px;
   z-index: 2147483647;
 }
+
 .reachlyst-status[data-tone="good"] { background: #147c6c; }
 .reachlyst-status[data-tone="warn"] { background: #8b5609; }
 .reachlyst-status[data-tone="danger"] { background: #9d2636; }

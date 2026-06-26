@@ -11,6 +11,7 @@ const leadSchema = z.object({
   location: z.string().optional(),
   linkedinUrl: z.string().optional(),
   salesNavigatorUrl: z.string().optional(),
+  about: z.string().optional(),
   snippet: z.string().optional()
 });
 const schema = z.object({ searchId: z.string(), leads: z.array(leadSchema) });

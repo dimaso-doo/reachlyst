@@ -21,5 +21,6 @@ export type ExtensionLead = {
   location?: string;
   linkedinUrl?: string;
   salesNavigatorUrl?: string;
+  about?: string;
   snippet?: string;
 };

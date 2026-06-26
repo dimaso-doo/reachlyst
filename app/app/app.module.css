@@ -1,9 +1,10 @@
 .shell { background: #f5f7fb; display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
 .logo { color: white !important; font-size: 22px; font-weight: 900 !important; letter-spacing: 0; margin-bottom: 22px; text-decoration: none; }
-.member { align-items: center; border-top: 1px solid #dfe5ec; display: flex; gap: 10px; margin-top: 14px; padding-top: 14px; }
+.member { align-items: center; border-top: 1px solid #dfe5ec; display: flex; gap: 10px; margin-top: 14px; padding-top: 14px; text-decoration: none; }
 .member > span { align-items: center; background: var(--accent); border-radius: 50%; color: white; display: inline-flex; font-weight: 900; height: 38px; justify-content: center; width: 38px; }
 .member strong, .member small { display: block; line-height: 1.2; }
-.member { border-color: rgba(255,255,255,.12); color: white; }
+.member { border-color: rgba(255,255,255,.12); color: white; transition: background .16s ease, transform .16s ease; }
+.member:hover { background: rgba(255,255,255,.08); color: white; transform: translateY(-1px); }
 .member small { color: rgba(255,255,255,.62); font-size: 12px; }
 .logoutLink { color: rgba(255,255,255,.55) !important; font-size: 13px; margin-top: 6px; }
 .logoutLink:hover { background: rgba(255,255,255,.08) !important; color: white !important; }

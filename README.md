@@ -146,6 +146,12 @@ pnpm test:extension
 pnpm build
 ```
 
+## Cognee development memory
+
+Cognee is configured as a Codex MCP memory server for Reachlyst development context.
+
+See `docs/cognee.md` and `docs/reachlyst-cognee-seed.md`.
+
 ## GitHub repository
 
 Requested repository:

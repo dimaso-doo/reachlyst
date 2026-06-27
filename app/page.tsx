@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRef } from "react";
 import { Button, Card } from "@/components/ui";
 import { plans } from "@/lib/stripe";
-import styles from "./marketing.module.css";
 
 const workflow = [
   { icon: "/chrome-icon.svg", title: "Install the Chrome extension", body: "Open Reachlyst beside your normal prospecting flow and keep the helper available while you research." },
@@ -64,90 +63,117 @@ export default function HomePage() {
   const planeY = useTransform(scrollYProgress, [0, 1], ["0%", "86%"]);
 
   return (
-    <main className="pageShell">
+    <main className="pageShell bg-[#050a18]">
       <Header />
-      <section className={styles.hero}>
-        <div className="container">
-          <motion.div className={styles.heroCopy} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <span className={styles.eyebrow}>AI Sales Navigator helper</span>
-            <h1>Turn LinkedIn leads into a clean outreach workflow.</h1>
-            <p className={styles.lede}>Reachlyst uses AI to qualify Sales Navigator leads, generate better invite copy, and track where every prospect stands.</p>
-            <div className={styles.actions}><Button href="/signup">Start free</Button></div>
+      <section className="bg-[radial-gradient(circle_at_72%_12%,rgba(22,119,255,.28)_0,transparent_33%),linear-gradient(180deg,#050a18,#08111f)] px-0 py-20 text-white sm:py-28">
+        <div className="container grid gap-10">
+          <motion.div className="mx-auto max-w-[980px] text-center" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">AI Sales Navigator helper</span>
+            <h1 className="mx-auto my-5 max-w-[980px] text-5xl font-extrabold leading-[.95] tracking-normal sm:text-7xl lg:text-8xl">Turn LinkedIn leads into a clean outreach workflow.</h1>
+            <p className="mx-auto max-w-[760px] text-xl leading-relaxed text-white/70 sm:text-[22px]">Reachlyst uses AI to qualify Sales Navigator leads, generate better invite copy, and track where every prospect stands.</p>
+            <div className="mt-7 flex justify-center"><Button href="/signup">Start free</Button></div>
           </motion.div>
-          <motion.div className={styles.videoFrame} initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
-            <div className={styles.videoTop}><span /><span /><span /><strong>Reachlyst demo</strong></div>
-            <div className={styles.videoBody}>
-              <div className={styles.playButton}>▶</div>
-              <Card><h3>Agency owners</h3><strong>62 leads</strong><p>21 good fits · 16 invited · 5 replies</p></Card>
-              <Card><h3>Suggested invite</h3><p>Hi Maya, noticed your work at Bright Pipeline. Thought it made sense to connect.</p></Card>
+          <motion.div className="mx-auto w-full max-w-[1080px] overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,.32)]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
+            <div className="flex h-[42px] items-center gap-2 bg-white/10 px-3.5"><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><strong className="ml-2 text-xs font-extrabold text-white/70">Reachlyst demo</strong></div>
+            <div className="relative grid min-h-[420px] gap-3.5 bg-[linear-gradient(145deg,rgba(11,18,32,.96),rgba(15,23,42,.88))] p-5 md:min-h-[500px] md:grid-cols-[1.2fr_.8fr] md:p-7">
+              <div className="absolute left-1/2 top-1/2 z-[2] flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent pl-1 text-2xl text-white shadow-[0_18px_50px_rgba(22,119,255,.45)]">▶</div>
+              <Card className="self-end p-6 text-ink md:row-span-2 md:min-h-[280px]"><h3 className="text-xl font-extrabold">Agency owners</h3><strong className="mt-5 block text-5xl">62 leads</strong><p className="mt-3 font-bold text-muted">21 good fits · 16 invited · 5 replies</p></Card>
+              <Card className="p-6 text-ink"><h3 className="text-xl font-extrabold">Suggested invite</h3><p className="mt-3 font-bold leading-7 text-muted">Hi Maya, noticed your work at Bright Pipeline. Thought it made sense to connect.</p></Card>
             </div>
           </motion.div>
-          <motion.div className={styles.aiStrip} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .5 }}>
-            {aiHighlights.map(([number, title, body], index) => <motion.div className={styles.aiBox} key={title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .06 }}>
-              <small>{number}</small>
-              <strong>{title}</strong>
-              <p>{body}</p>
+          <motion.div className="relative mx-auto grid w-full max-w-[1080px] gap-3.5 overflow-hidden rounded-2xl border border-blue-200/20 bg-[linear-gradient(120deg,rgba(96,165,250,.16),rgba(255,255,255,.055)_38%,rgba(34,211,238,.11)),repeating-linear-gradient(90deg,rgba(255,255,255,.04)_0_1px,transparent_1px_56px)] p-3.5 shadow-[0_30px_90px_rgba(0,0,0,.24)] before:pointer-events-none before:absolute before:inset-0 before:animate-aiSweep before:bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,.12)_42%,rgba(96,165,250,.18)_50%,transparent_64%)] md:grid-cols-4" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .5 }}>
+            {aiHighlights.map(([number, title, body], index) => <motion.div className="relative z-[1] min-h-[168px] animate-aiFloat rounded-xl border border-white/10 bg-[#050a18]/60 p-5 transition hover:-translate-y-1.5 hover:border-blue-300/50 hover:shadow-[0_18px_52px_rgba(22,119,255,.18)]" style={{ animationDelay: `${index * .8}s` }} key={title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .06 }}>
+              <small className="mb-5 block text-xs font-black uppercase tracking-[.1em] text-blue-300">{number}</small>
+              <strong className="block text-xl font-extrabold leading-tight text-white">{title}</strong>
+              <p className="mt-3 text-sm font-semibold leading-6 text-white/65">{body}</p>
             </motion.div>)}
           </motion.div>
         </div>
       </section>
-      <section className={styles.band}>
+      <section className="border-y border-white/10 bg-[#08111f] py-24 text-white sm:py-28">
         <div className="container">
-          <div className={styles.sectionIntro}><span>How it works</span><h2>From Sales Navigator search to tracked outreach.</h2></div>
-          <div className={styles.workflowWrap} ref={workflowRef}>
-            <div className={styles.flightLine} />
-            <motion.div className={styles.paperPlane} style={{ top: planeY }}><img alt="" src="/paper-plane.svg" /></motion.div>
-            <div className={styles.workflow}>{workflow.map((item, index) => <motion.div className={styles.workflowItem} key={item.title} initial={{ opacity: 0, y: 34, scale: .97 }} whileInView={{ opacity: 1, y: -8, scale: 1.018 }} viewport={{ once: false, margin: "-80px" }} transition={{ delay: index * .08, duration: .55 }} whileHover={{ scale: 1.018, y: -8 }}>
-              <Card>
-                <div className={styles.flowTop}><span className={styles.flowIcon}><img alt="" src={item.icon} /></span><em>0{index + 1}</em></div>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
+          <SectionIntro eyebrow="How it works" title="From Sales Navigator search to tracked outreach." />
+          <div className="relative mt-12" ref={workflowRef}>
+            <div className="absolute bottom-7 left-7 top-7 w-0.5 rounded-full bg-[linear-gradient(180deg,transparent,rgba(96,165,250,.55),rgba(96,165,250,.16),transparent)] md:left-1/2 md:-translate-x-1/2" />
+            <motion.div className="absolute left-0 z-[2] flex h-14 w-14 items-center justify-center rounded-full border border-blue-300/30 bg-blue-300/10 shadow-[0_16px_46px_rgba(22,119,255,.25)] md:left-[calc(50%_-_28px)]" style={{ top: planeY }}><img className="h-8 w-8 rotate-90" alt="" src="/paper-plane.svg" /></motion.div>
+            <div className="relative z-[1] grid gap-14">{workflow.map((item, index) => <motion.div className="flex justify-end md:even:justify-end md:odd:justify-start" key={item.title} initial={{ opacity: 0, y: 34, scale: .97 }} whileInView={{ opacity: 1, y: -8, scale: 1.018 }} viewport={{ once: false, margin: "-80px" }} transition={{ delay: index * .08, duration: .55 }} whileHover={{ scale: 1.018, y: -8 }}>
+              <Card className="min-h-[300px] w-[calc(100%_-_72px)] border-blue-300/20 bg-white/10 p-8 text-white shadow-[0_24px_90px_rgba(0,0,0,.18)] transition hover:border-blue-300/50 hover:shadow-[0_28px_100px_rgba(22,119,255,.18)] md:w-[min(520px,calc(50%_-_54px))]">
+                <div className="flex items-center justify-between"><span className="flex h-[72px] w-[72px] items-center justify-center rounded-[18px] border border-blue-300/30 bg-accent/10"><img className="max-h-11 max-w-11 object-contain" alt="" src={item.icon} /></span><em className="not-italic font-black text-white/40">0{index + 1}</em></div>
+                <h3 className="mt-10 text-3xl font-extrabold leading-tight">{item.title}</h3>
+                <p className="mt-3 text-[17px] font-semibold leading-7 text-white/65">{item.body}</p>
               </Card>
             </motion.div>)}</div>
           </div>
         </div>
       </section>
-      <section className={styles.testimonials}>
+      <section className="relative max-h-[780px] overflow-hidden border-b border-white/10 bg-[#08111f] py-24 text-white before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-[2] before:h-[72px] before:bg-[linear-gradient(180deg,#08111f,transparent)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[2] after:h-[72px] after:bg-[linear-gradient(0deg,#08111f,transparent)]">
         <div className="container">
-          <h2>For teams turning LinkedIn lists into pipeline</h2>
-          <div className={styles.reviewMarquee}>
-            {[reviews.slice(0, 11), reviews.slice(10).concat(reviews.slice(0, 3))].map((row, rowIndex) => <div className={`${styles.reviewTrack} ${rowIndex === 1 ? styles.reviewTrackReverse : ""}`} key={rowIndex}>
-              {[...row, ...row].map(([name, role, quote, avatar], index) => <Card className={styles.reviewCard} key={`${name}-${rowIndex}-${index}`}>
-                <div className={styles.reviewHead}><img alt="" src={avatar} /><div><strong>{name}</strong><span>{role}</span></div></div>
-                <div className={styles.stars}>★★★★★ <span>Google</span></div>
-                <p>“{quote}”</p>
+          <h2 className="text-4xl font-extrabold leading-tight sm:text-5xl">For teams turning LinkedIn lists into pipeline</h2>
+          <div className="mt-10 grid gap-6 overflow-hidden py-5 pb-24 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]" style={{ marginInline: "calc((100vw - min(1160px, calc(100vw - 40px))) / -2)" }}>
+            {[reviews.slice(0, 11), reviews.slice(10).concat(reviews.slice(0, 3))].map((row, rowIndex) => <div className={`flex w-max gap-4 animate-reviewDrift ${rowIndex === 1 ? "[animation-direction:reverse] mt-3" : ""}`} key={rowIndex}>
+              {[...row, ...row].map(([name, role, quote, avatar], index) => <Card className={`min-h-[230px] flex-[0_0_330px] border-white/10 bg-white/10 p-5 text-white ${index % 3 === 2 ? "-translate-y-4" : ""} ${index % 4 === 3 ? "translate-y-3" : ""}`} key={`${name}-${rowIndex}-${index}`}>
+                <div className="flex items-center gap-3"><img className="h-11 w-11 rounded-full object-cover" alt="" src={avatar} /><div><strong className="block font-extrabold">{name}</strong><span className="mt-0.5 block text-xs font-semibold text-white/55">{role}</span></div></div>
+                <div className="my-4 text-xs font-black text-amber-300">★★★★★ <span className="ml-2 inline-flex rounded-full border border-white/10 bg-white/10 px-2 py-1 text-[11px] text-white">Google</span></div>
+                <p className="font-semibold leading-6 text-white/65">"{quote}"</p>
               </Card>)}
             </div>)}
           </div>
         </div>
       </section>
-      <section className={styles.pricing}>
+      <section className="border-b border-white/10 bg-[#08111f] py-24 text-white">
         <div className="container">
-          <div className={styles.sectionIntro}><span>Pricing</span><h2>Start free. Upgrade when your lead volume grows.</h2></div>
-          <div className={styles.planGrid}>{plans.map((plan) => <Card className={plan.key === "growth" ? styles.featuredPlan : ""} key={plan.key}><h3>{plan.name}</h3><strong>{plan.price}<span>/mo</span></strong><p className={styles.planSummary}>{plan.summary}</p>{plan.features.map((feature) => <p key={feature}>✓ {feature}</p>)}<Button href="/pricing" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button></Card>)}</div>
+          <SectionIntro eyebrow="Pricing" title="Start free. Upgrade when your lead volume grows." />
+          <div className="grid gap-4 md:grid-cols-3">{plans.map((plan) => <PlanCard key={plan.key} plan={plan} />)}</div>
         </div>
       </section>
-      <section className={styles.faq}>
-        <div className="container">
-          <div className={styles.faqIntro}>
-            <span className={styles.eyebrow}>FAQ</span>
-            <h2>Questions before you try Reachlyst?</h2>
-            <p>A quick pass through how the helper, extension, AI, and pricing fit together.</p>
+      <section className="border-t border-white/10 bg-[#050a18] py-24 text-white sm:py-28">
+        <div className="container grid gap-12 lg:grid-cols-[.85fr_1.15fr] lg:gap-16">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">FAQ</span>
+            <h2 className="my-5 text-4xl font-extrabold leading-tight sm:text-6xl">Questions before you try Reachlyst?</h2>
+            <p className="max-w-md text-lg font-semibold leading-8 text-white/65">A quick pass through how the helper, extension, AI, and pricing fit together.</p>
           </div>
-          <div className={styles.accordion}>
-            {faqs.map(([question, answer], index) => <details key={question} open={index === 0}>
-              <summary><span>{question}</span><i /></summary>
-              <p>{answer}</p>
+          <div className="grid gap-3">
+            {faqs.map(([question, answer], index) => <details className="group overflow-hidden rounded-lg border border-white/10 bg-white/5 transition hover:scale-[1.01] hover:border-blue-300/40 hover:shadow-[0_18px_60px_rgba(22,119,255,.1)]" key={question} open={index === 0}>
+              <summary className="flex min-h-[72px] cursor-pointer list-none items-center justify-between px-5 text-lg font-extrabold [&::-webkit-details-marker]:hidden"><span>{question}</span><i className="relative h-8 w-8 rounded-full border border-blue-300/40 transition before:absolute before:left-1/2 before:top-1/2 before:h-0.5 before:w-3 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-blue-300 after:absolute after:left-1/2 after:top-1/2 after:h-3 after:w-0.5 after:-translate-x-1/2 after:-translate-y-1/2 after:rounded-full after:bg-blue-300 group-open:rotate-180 group-open:bg-blue-300/20 group-open:after:opacity-0" /></summary>
+              <p className="-mt-1 px-5 pb-5 font-semibold leading-7 text-white/65">{answer}</p>
             </details>)}
           </div>
         </div>
       </section>
-      <section className={styles.finalCta}><div className="container"><span>Ready when your next Sales Navigator search is.</span><h2>Give your LinkedIn lead workflow a real workspace.</h2><Button href="/signup">Create workspace</Button></div></section>
-      <footer className={styles.footer}><div className="container"><Link className={styles.logo} href="/"><img alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><nav><Link href="/pricing">Pricing</Link><Link href="/features">Features</Link><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms</Link><Link href="/blog">Blog</Link></nav></div></footer>
+      <section className="bg-[radial-gradient(circle_at_50%_0,rgba(22,119,255,.32),transparent_42%),linear-gradient(180deg,#08111f,#050a18)] py-28 text-center text-white">
+        <div className="container"><span className="mb-3 block text-xs font-black uppercase tracking-[.08em] text-blue-300">Ready when your next Sales Navigator search is.</span><h2 className="mx-auto mb-7 max-w-[940px] text-5xl font-extrabold leading-none sm:text-7xl">Give your LinkedIn lead workflow a real workspace.</h2><Button href="/signup">Create workspace</Button></div>
+      </section>
+      <Footer />
     </main>
   );
 }
 
 function Header() {
-  return <nav className={styles.nav}><div className="container"><Link className={styles.logo} href="/"><img alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><div><Link href="/features">Features</Link><Link href="/pricing">Pricing</Link><Link href="/login">Login</Link><Button href="/signup">Sign up</Button></div></div></nav>;
+  return <nav className="sticky top-0 z-10 border-b border-white/10 bg-[#050a18]"><div className="container flex min-h-[72px] flex-col items-start gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0"><Logo /><div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-extrabold text-white/70"><Link className="transition hover:scale-[1.025] hover:text-white" href="/features">Features</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/pricing">Pricing</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/login">Login</Link><Button href="/signup">Sign up</Button></div></div></nav>;
+}
+
+function Footer() {
+  return <footer className="border-t border-white/10 bg-[#050a18] py-7 text-white/70"><div className="container flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"><Logo /><nav className="flex flex-wrap gap-4 text-sm font-bold"><Link className="hover:text-white" href="/pricing">Pricing</Link><Link className="hover:text-white" href="/features">Features</Link><Link className="hover:text-white" href="/privacy">Privacy Policy</Link><Link className="hover:text-white" href="/terms">Terms</Link><Link className="hover:text-white" href="/blog">Blog</Link></nav></div></footer>;
+}
+
+function Logo() {
+  return <Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link>;
+}
+
+function SectionIntro({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return <div className="mb-6 max-w-[720px]"><span className="mb-2 block text-xs font-black uppercase tracking-[.08em] text-blue-300">{eyebrow}</span><h2 className="m-0 text-3xl font-extrabold leading-tight sm:text-5xl">{title}</h2></div>;
+}
+
+function PlanCard({ plan }: { plan: (typeof plans)[number] }) {
+  const isFeatured = plan.key === "growth";
+  return <Card className={`border-white/10 bg-white/5 p-5 text-white ${isFeatured ? "-translate-y-2 border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`}>
+    <h3 className="text-xl font-extrabold">{plan.name}</h3>
+    <strong className="my-4 block text-4xl font-extrabold">{plan.price}<span className="ml-1 text-sm text-white/55">/mo</span></strong>
+    <p className="min-h-[52px] font-bold leading-6 text-white/80">{plan.summary}</p>
+    <div className="mt-5 grid gap-2">
+      {plan.features.map((feature) => <p className="m-0 font-semibold leading-6 text-white/65" key={feature}>✓ {feature}</p>)}
+    </div>
+    <div className="mt-5"><Button href="/pricing" variant={isFeatured ? "primary" : "secondary"}>{plan.cta}</Button></div>
+  </Card>;
 }

@@ -23,6 +23,25 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+      },
+      keyframes: {
+        reviewDrift: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" }
+        },
+        aiSweep: {
+          "0%": { transform: "translateX(-100%)" },
+          "48%, 100%": { transform: "translateX(100%)" }
+        },
+        aiFloat: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" }
+        }
+      },
+      animation: {
+        reviewDrift: "reviewDrift 54s linear infinite",
+        aiSweep: "aiSweep 8s linear infinite",
+        aiFloat: "aiFloat 7s ease-in-out infinite"
       }
     }
   },

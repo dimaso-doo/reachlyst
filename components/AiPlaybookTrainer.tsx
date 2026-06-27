@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import styles from "@/app/app/ai-playbook.module.css";
 
 type Message = {
   role: "assistant" | "user";
@@ -89,37 +88,38 @@ export function AiPlaybookTrainer() {
   }
 
   return (
-    <section className={styles.trainer}>
-      <header className={styles.hero}>
+    <section className="grid gap-5">
+      <header className="grid gap-5 rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-reachlyst md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
         <div>
-          <span className={styles.eyebrow}>AI Playbook</span>
-          <h1>Train Reachlyst for your Sales Navigator workflow</h1>
-          <p>Your AI Playbook controls how Reachlyst understands leads and writes manual message suggestions inside the extension.</p>
+          <span className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-accent-strong">AI Playbook</span>
+          <h1 className="max-w-3xl text-3xl font-extrabold leading-tight text-ink">Train Reachlyst for your Sales Navigator workflow</h1>
+          <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-muted">Your AI Playbook controls how Reachlyst understands leads and writes manual message suggestions inside the extension.</p>
         </div>
-        <span className={ready ? styles.readyPill : styles.trainingPill}>{ready ? "Ready" : "Not trained yet"}</span>
+        <span className={`inline-flex whitespace-nowrap rounded-full px-3 py-2 text-xs font-extrabold ${ready ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{ready ? "Ready" : "Not trained yet"}</span>
       </header>
 
-      <div className={styles.chatPanel}>
-        <div className={styles.chatTop}>
-          <span className={styles.avatar}>R</span>
+      <div className="grid overflow-hidden rounded-lg border border-blue-100 bg-white shadow-reachlyst">
+        <div className="flex items-center gap-3 border-b border-blue-100 bg-blue-50/60 px-5 py-4">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-lg font-extrabold text-white shadow-[0_10px_22px_rgba(22,119,255,.24)]">R</span>
           <div>
-            <strong>Reachlyst AI</strong>
-            <small>{ready ? "AI Playbook is ready. You can refine it anytime." : "Answer the questions below to train your playbook."}</small>
+            <strong className="block text-base font-extrabold text-ink">Reachlyst AI</strong>
+            <small className="mt-0.5 block text-sm font-semibold text-muted">{ready ? "AI Playbook is ready. You can refine it anytime." : "Answer the questions below to train your playbook."}</small>
           </div>
         </div>
 
-        <div className={styles.thread}>
+        <div className="grid max-h-[min(520px,calc(100vh-390px))] min-h-[360px] gap-3 overflow-auto bg-slate-50 p-5 max-md:max-h-none max-md:min-h-80">
           {messages.map((message, index) => (
-            <p className={message.role === "user" ? styles.userMessage : styles.assistantMessage} key={`${message.role}-${index}`}>
-              <strong>{message.role === "user" ? "You" : "Reachlyst AI"}</strong>
+            <p className={`m-0 max-w-3xl rounded-lg border p-4 text-sm font-semibold leading-6 whitespace-pre-wrap ${message.role === "user" ? "justify-self-end border-blue-200 bg-blue-50 text-ink" : "justify-self-start border-blue-100 bg-white text-slate-700"}`} key={`${message.role}-${index}`}>
+              <strong className={`mb-1 block text-xs font-extrabold ${message.role === "user" ? "text-ink" : "text-accent-strong"}`}>{message.role === "user" ? "You" : "Reachlyst AI"}</strong>
               {message.content}
             </p>
           ))}
           <div ref={endRef} />
         </div>
 
-        <div className={styles.composer}>
+        <div className="grid gap-3 border-t border-blue-100 bg-white px-5 pb-3 pt-4 md:grid-cols-[minmax(0,1fr)_auto]">
           <textarea
+            className="min-h-24 resize-y rounded-lg border border-blue-100 p-3 text-sm font-semibold leading-6 text-ink outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey && (sendOnEnter || event.metaKey || event.ctrlKey)) {
@@ -130,16 +130,16 @@ export function AiPlaybookTrainer() {
             placeholder="Tell me what you offer, who you target, who to exclude, and what tone your messages should use..."
             value={draft}
           />
-          <button disabled={!draft.trim()} onClick={sendMessage} type="button">Send</button>
+          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={!draft.trim()} onClick={sendMessage} type="button">Send</button>
         </div>
 
-        <div className={styles.footerActions}>
-          <label className={styles.switchLabel}>
+        <div className="flex items-center justify-between gap-3 bg-white px-5 pb-5 max-md:grid">
+          <label className="inline-flex items-center gap-2 text-sm font-extrabold text-muted">
             <span>Send on Enter</span>
-            <input checked={sendOnEnter} onChange={(event) => setSendOnEnter(event.target.checked)} type="checkbox" />
-            <span className={styles.switch} aria-hidden="true" />
+            <input className="peer sr-only" checked={sendOnEnter} onChange={(event) => setSendOnEnter(event.target.checked)} type="checkbox" />
+            <span className="relative inline-flex h-5 w-9 rounded-full bg-slate-300 shadow-inner transition peer-checked:bg-accent after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true" />
           </label>
-          <button className={styles.saveButton} disabled={!messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
+          <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={!messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
             {ready ? "Update AI Playbook" : "Save AI Playbook"}
           </button>
         </div>

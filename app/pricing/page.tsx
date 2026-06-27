@@ -6,7 +6,7 @@ import { plans } from "@/lib/stripe";
 
 export default function PricingPage() {
   return (
-    <main className="pageShell bg-[#050a18]">
+    <main className="pageShell min-w-0 bg-[#050a18]">
       <MarketingNav />
       <section className="bg-[radial-gradient(circle_at_78%_8%,rgba(22,119,255,.26)_0,transparent_32%),#050a18] py-20 text-white sm:pb-14 sm:pt-28">
         <div className="container">
@@ -15,7 +15,7 @@ export default function PricingPage() {
           <p className="max-w-[620px] text-xl font-semibold leading-8 text-white/70">Start with the dashboard. Upgrade to activate the Chrome extension, AI invite chat, and usage-based outreach logging.</p>
         </div>
       </section>
-      <section className="border-y border-white/10 bg-[#08111f] py-20 text-white sm:py-24">
+      <section className="min-w-0 border-y border-white/10 bg-[#08111f] py-20 text-white sm:py-24">
         <div className="container">
           <div className="grid gap-4 lg:grid-cols-3">
             {plans.map((plan) => <Card className={`!border-white/10 !bg-white/5 p-5 !text-white ${plan.key === "growth" ? "-translate-y-2 !border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`} key={plan.key}>
@@ -31,7 +31,10 @@ export default function PricingPage() {
               <div className="grid gap-2">
                 {plan.features.map((feature) => <p className="m-0 font-semibold leading-6 text-white/65" key={feature}>✓ {feature}</p>)}
               </div>
-              <div className="mt-5"><Button href="/app/billing" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button></div>
+              <form className="mt-5" action="/api/stripe/checkout" method="post">
+                <input name="plan" type="hidden" value={plan.key} />
+                <Button type="submit" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button>
+              </form>
             </Card>)}
           </div>
           <Card className="mt-5 !border-white/10 !bg-white/5 p-7 !text-white">
@@ -46,10 +49,15 @@ export default function PricingPage() {
           </Card>
         </div>
       </section>
+      <MarketingFooter />
     </main>
   );
 }
 
 function MarketingNav() {
   return <nav className="sticky top-0 z-10 border-b border-white/10 bg-[#050a18]"><div className="container flex min-h-[72px] flex-col items-start gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0"><Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-extrabold text-white/70"><Link className="transition hover:scale-[1.025] hover:text-white" href="/features">Features</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/pricing">Pricing</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/login">Login</Link><Button href="/signup">Sign up</Button></div></div></nav>;
+}
+
+function MarketingFooter() {
+  return <footer className="border-t border-white/10 bg-[#050a18] py-8 text-white/70"><div className="container flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between"><Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold"><Link className="hover:text-white" href="/pricing">Pricing</Link><Link className="hover:text-white" href="/features">Features</Link><Link className="hover:text-white" href="/privacy">Privacy Policy</Link><Link className="hover:text-white" href="/terms">Terms</Link><Link className="hover:text-white" href="/blog">Blog</Link></nav></div></footer>;
 }

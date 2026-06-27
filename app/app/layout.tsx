@@ -6,10 +6,34 @@ import { canAccessSuperAdmin } from "@/lib/superAdmin";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [showSuperAdmin, demo] = await Promise.all([canAccessSuperAdmin(), getDemoSession()]);
+  const homeHref = showSuperAdmin ? "/app/admin" : "/app/dashboard";
 
   return <div className="min-h-screen bg-paper">
-    <aside className="fixed left-0 top-0 z-20 flex h-screen w-[252px] flex-col gap-1 border-r border-slate-950 bg-slate-950 px-4 py-5 text-white max-[820px]:static max-[820px]:h-auto max-[820px]:w-auto max-[820px]:px-4 max-[820px]:py-3">
-      <Link className="mb-5 inline-flex w-fit items-center p-0" href={showSuperAdmin ? "/app/admin" : "/app/dashboard"}><img alt="Reachlyst" className="h-8 w-auto" src="/reachlyst-logo-blue.png" /></Link>
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950 px-4 py-3 text-white shadow-[0_12px_32px_rgba(15,23,42,.18)] min-[821px]:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <Link className="inline-flex items-center p-0" href={homeHref}><img alt="Reachlyst" className="h-8 w-auto" src="/reachlyst-logo-blue.png" /></Link>
+        <details className="group relative">
+          <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition hover:bg-white/10 [&::-webkit-details-marker]:hidden" aria-label="Open navigation">
+            <span className="grid gap-1.5"><i className="block h-0.5 w-5 rounded-full bg-current" /><i className="block h-0.5 w-5 rounded-full bg-current" /><i className="block h-0.5 w-5 rounded-full bg-current" /></span>
+          </summary>
+          <div className="absolute right-0 mt-3 w-[min(320px,calc(100vw-32px))] rounded-xl border border-white/10 bg-slate-950 p-3 shadow-[0_24px_70px_rgba(0,0,0,.35)]">
+            <nav className="grid gap-1" aria-label="Mobile primary">
+              {showSuperAdmin ? <Link className="rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white" href="/app/admin">Dashboard</Link> : <AppSidebarNav />}
+            </nav>
+            <Link className="mt-3 flex items-center gap-2.5 rounded-lg border-t border-white/10 px-3 pt-3 text-white transition hover:bg-white/10" href="/app/settings">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-extrabold text-white" aria-hidden="true">{demo.isSuperAdmin ? "A" : "P"}</span>
+              <div>
+                <strong className="block text-sm font-extrabold leading-tight">{demo.name}</strong>
+                <small className="block text-xs font-semibold leading-tight text-white/60">{demo.isSuperAdmin ? "Super admin demo" : "Workspace owner"}</small>
+              </div>
+            </Link>
+            <Link className="mt-1 block rounded-lg px-3 py-2 text-sm font-bold text-white/55 transition hover:bg-white/10 hover:text-white" href="/api/demo-logout">Log out</Link>
+          </div>
+        </details>
+      </div>
+    </header>
+    <aside className="fixed left-0 top-0 z-20 flex h-screen w-[252px] flex-col gap-1 border-r border-slate-950 bg-slate-950 px-4 py-5 text-white max-[820px]:hidden">
+      <Link className="mb-5 inline-flex w-fit items-center p-0" href={homeHref}><img alt="Reachlyst" className="h-8 w-auto" src="/reachlyst-logo-blue.png" /></Link>
       <nav className="grid gap-1" aria-label="Primary">
         {showSuperAdmin ? <Link className="rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white" href="/app/admin">Dashboard</Link> : <AppSidebarNav />}
       </nav>
@@ -23,6 +47,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </Link>
       <Link className="mt-1 rounded-lg px-3 py-2 text-sm font-bold text-white/55 transition hover:bg-white/10 hover:text-white" href="/api/demo-logout">Log out</Link>
     </aside>
-    <main className="ml-[252px] flex min-h-screen justify-center overflow-auto px-8 py-7 max-[820px]:ml-0 max-[820px]:px-4 max-[820px]:py-5"><div className="w-full max-w-[1180px]">{children}</div></main>
+    <main className="ml-[252px] flex min-h-screen justify-center overflow-auto px-8 py-7 max-[820px]:ml-0 max-[820px]:min-h-[calc(100vh-65px)] max-[820px]:px-4 max-[820px]:py-5"><div className="w-full max-w-[1180px]">{children}</div></main>
   </div>;
 }

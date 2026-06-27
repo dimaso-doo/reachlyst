@@ -20,6 +20,29 @@ export COGNEE_API_KEY="your-cognee-api-key"
 
 The Cloud API connection has been verified against the `default_dataset`, and the Reachlyst memory seed has been stored as a Cognee session entry.
 
+The Cognee Codex plugin has also been installed:
+
+```bash
+codex features enable hooks
+codex plugin marketplace add topoteretes/cognee-integrations --ref main
+codex plugin add cognee@cognee
+```
+
+Local plugin configuration lives outside the repository:
+
+```bash
+~/.cognee-plugin/config.json
+~/.cognee-plugin/api_key.json
+```
+
+The plugin statusline reports:
+
+```text
+cognee: agent_sessions · cloud
+```
+
+The plugin's `remember` script has been verified against Cognee Cloud and returns `{"ok": true}`.
+
 ## Codex MCP config
 
 Cognee has been added to the global Codex config:
@@ -36,6 +59,8 @@ Codex reads this from:
 ```
 
 After starting Cognee, restart Codex Desktop or reload the MCP tools so the `cognee` tools become available in new sessions.
+
+Note: the installed Cognee Codex plugin does not rely on MCP. It uses Codex hooks and Cognee Cloud HTTP calls. The MCP entry can remain for future local MCP use, but the active memory integration is the plugin.
 
 ## Start Cognee MCP
 

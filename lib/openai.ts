@@ -30,6 +30,10 @@ export type SearchAdvisorInput = {
   messages: SearchAdvisorMessage[];
 };
 
+export type AiPlaybookChatInput = {
+  messages: SearchAdvisorMessage[];
+};
+
 export type LeadInviteChatInput = {
   lead: AiLeadInput & { currentMessage?: string; status?: string };
   messages: SearchAdvisorMessage[];
@@ -71,6 +75,81 @@ function openAiErrorReason(error: unknown) {
     return "OpenAI quota or billing is not active, so Reachlyst used fallback scoring.";
   }
   return "OpenAI was unavailable, so Reachlyst used fallback scoring.";
+}
+
+function playbookMemory(messages: SearchAdvisorMessage[]) {
+  return messages
+    .filter((message) => message.role === "user")
+    .map((message) => message.content.trim())
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
+  const memory = playbookMemory(input.messages);
+  const lower = memory.toLowerCase();
+  const hasOffer = /sell|offer|provide|help|we do|service|product|agency|software|consult|support|website|marketing|sales|seo|ppc|development|outreach/i.test(memory);
+  const hasIcp = /target|ideal|lead|icp|founder|owner|ceo|head|director|agency|saas|b2b|industry|company|employees|location/i.test(memory);
+  const hasExclusions = /exclude|avoid|skip|not|wrong|bad fit|student|recruiter|enterprise|small|freelancer/i.test(memory);
+  const hasTone = /tone|voice|direct|friendly|professional|warm|short|concise|premium|casual|formal/i.test(memory);
+  const hasMessages = /invite|message|reply|follow|connection|cta|ask|call|demo|audit|intro/i.test(memory);
+
+  const summary = [
+    "Here is the working AI Playbook so far:",
+    "",
+    `Offer: ${hasOffer ? "captured from your notes" : "not clear yet"}`,
+    `Ideal leads: ${hasIcp ? "partly defined" : "not clear yet"}`,
+    `Bad-fit leads: ${hasExclusions ? "partly defined" : "not clear yet"}`,
+    `Tone: ${hasTone ? "partly defined" : "not clear yet"}`,
+    `Invite/reply goal: ${hasMessages ? "partly defined" : "not clear yet"}`
+  ].join("\n");
+
+  const missing = [
+    !hasOffer ? "what you sell and the concrete outcome you create" : "",
+    !hasIcp ? "the exact roles, industries, company sizes, and countries you want" : "",
+    !hasExclusions ? "who Reachlyst should mark as Skip" : "",
+    !hasTone ? "the tone and words to avoid" : "",
+    !hasMessages ? "what invites and accepted-connection replies should ask for" : ""
+  ].filter(Boolean);
+
+  if (!memory.trim()) {
+    return "Let us build the Playbook properly. Start with what you sell, who buys it, who is a bad fit, and what a good first LinkedIn message should achieve.";
+  }
+
+  if (lower.includes("save") || lower.includes("ready")) {
+    return `${summary}\n\nBefore saving, I would tighten one thing: ${missing[0] ?? "give me 2-3 examples of leads you would definitely want and 2-3 you would skip"}.`;
+  }
+
+  return `${summary}\n\nNext question: ${missing[0] ?? "send me 2 good-fit examples and 2 bad-fit examples, and I will turn this into precise Good fit / Maybe / Skip rules plus default invite and reply styles."}`;
+}
+
+export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
+  if (!process.env.OPENAI_API_KEY) return fallbackAiPlaybookReply(input);
+
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: [
+            "You are Reachlyst AI Playbook trainer.",
+            "Always answer in English.",
+            "Your job is to have a real discovery conversation and convert the user's business context into practical rules for the Reachlyst extension.",
+            "Focus on: offer, ICP, good-fit signals, maybe-fit signals, skip/disqualifier rules, target roles, industries, company size, geography, tone, words to avoid, connection invite rules, accepted-connection reply rules, follow-up style, CTA, and examples.",
+            "Do not give generic encouragement. Each reply must either summarize concrete conclusions or ask the single most useful next question.",
+            "When enough information exists, provide a compact Playbook draft with sections: Offer, Good fit, Maybe, Skip, Invite style, Reply style, Follow-up style, Default message types, Missing information.",
+            "Keep it concise and actionable. Do not mention automation, scraping, auto-connect, auto-send, or credential storage."
+          ].join(" ")
+        },
+        ...input.messages.map((message) => ({ role: message.role, content: message.content }))
+      ]
+    });
+    return response.choices[0]?.message.content ?? fallbackAiPlaybookReply(input);
+  } catch {
+    return fallbackAiPlaybookReply(input);
+  }
 }
 
 export async function analyzeLead(input: AiLeadInput) {

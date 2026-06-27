@@ -149,3 +149,13 @@ docs/reachlyst-cognee-seed.md
 ```
 
 Once Cognee is running, ingest that file into the default Reachlyst dataset or ask Codex to remember it through Cognee.
+
+## Extended conversation memory
+
+The broader product and engineering decision log from the Reachlyst build conversation lives in:
+
+```bash
+docs/reachlyst-conversation-memory.md
+```
+
+It has been sent to Cognee Cloud as a `remember/entry` session item for the `default_dataset`. A direct file upload was attempted first; Cognee stored the uploaded file but returned a server-side file lookup error during indexing, so the stable session-entry path was used.

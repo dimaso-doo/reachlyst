@@ -16,17 +16,18 @@ const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
 
 const welcomeMessage = `Welcome. I am your personal assistant for Sales Navigator leads.
 
-To train Reachlyst for your extension, tell me what you do, which leads you want to find, and what kind of manual messages you want me to generate.
+I will help you build the rules Reachlyst uses inside the extension: who is a good lead, who should be skipped, what invite style to use, and how replies should sound when someone accepts your connection.
 
-Start with a simple answer to these questions:
+Start anywhere. The fastest path is to answer these:
 
 1. What do you sell or offer?
-2. Who is your ideal lead by role, industry, company size, and location?
-3. Which leads should I exclude?
-4. What tone should your messages use: professional, friendly, direct, premium, short, or another style?
-5. What should the message ask for: a soft connection, permission to share more, a quick reply, or another CTA?
+2. Who is a perfect lead by role, industry, company size, and location?
+3. Who is not relevant and should be marked Skip?
+4. What signals make someone worth messaging?
+5. What should invites and accepted-connection replies ask for?
+6. What tone and words should Reachlyst avoid?
 
-After that, I will turn it into your AI Playbook and suggest default message types for Reachlyst.`;
+I will ask follow-up questions until the Playbook is specific enough to guide invite suggestions, reply suggestions, and lead-fit analysis.`;
 
 function buildPlaybookReply(input: string) {
   return `Great. I captured this as your first AI Playbook draft:
@@ -58,6 +59,7 @@ export function AiPlaybookTrainer() {
   const [draft, setDraft] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const [sendOnEnter, setSendOnEnter] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -94,16 +96,35 @@ export function AiPlaybookTrainer() {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
-  function sendMessage() {
+  async function sendMessage() {
     const content = draft.trim();
-    if (!content) return;
-    setMessages((current) => [...current, { role: "user", content }, { role: "assistant", content: buildPlaybookReply(content) }]);
+    if (!content || thinking) return;
+    const nextMessages: Message[] = [...messages, { role: "user", content }];
+    setMessages(nextMessages);
     setDraft("");
+    setThinking(true);
+    try {
+      const response = await fetch("/api/ai-playbook/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: nextMessages.slice(-24) })
+      });
+      if (!response.ok) throw new Error("Unable to chat about AI Playbook");
+      const data = (await response.json()) as { reply?: string };
+      setMessages((current) => [...current, { role: "assistant", content: data.reply || buildPlaybookReply(content) }]);
+    } catch {
+      setMessages((current) => [...current, { role: "assistant", content: buildPlaybookReply(content) }]);
+    } finally {
+      setThinking(false);
+    }
   }
 
   async function savePlaybook() {
-    const latestUserMessage = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
-    if (latestUserMessage) window.localStorage.setItem(PLAYBOOK_NOTES_KEY, latestUserMessage);
+    const userNotes = messages.filter((message) => message.role === "user").map((message) => message.content.trim()).filter(Boolean).join("\n\n");
+    const assistantSummary = messages.filter((message) => message.role === "assistant").at(-1)?.content.trim() ?? "";
+    const latestUserMessage = [userNotes, assistantSummary ? `Latest AI Playbook summary:\n${assistantSummary}` : ""].filter(Boolean).join("\n\n").slice(0, 8000);
+    if (!latestUserMessage) return;
+    window.localStorage.setItem(PLAYBOOK_NOTES_KEY, latestUserMessage);
     window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "ready");
     setSaving(true);
     try {
@@ -166,14 +187,20 @@ export function AiPlaybookTrainer() {
             placeholder="Tell me what you offer, who you target, who to exclude, and what tone your messages should use..."
             value={draft}
           />
-          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={!draft.trim()} onClick={sendMessage} type="button">Send</button>
+          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={thinking || !draft.trim()} onClick={sendMessage} type="button">{thinking ? "Thinking..." : "Send"}</button>
         </div>
 
         <div className="flex items-center justify-between gap-3 bg-white px-5 pb-5 max-md:grid">
-          <label className="inline-flex items-center gap-2 text-sm font-extrabold text-muted">
+          <label className="inline-flex select-none items-center gap-3 text-sm font-extrabold text-muted">
             <span>Send on Enter</span>
-            <input className="peer sr-only" checked={sendOnEnter} onChange={(event) => setSendOnEnter(event.target.checked)} type="checkbox" />
-            <span className="relative inline-flex h-5 w-9 rounded-full bg-slate-300 shadow-inner transition peer-checked:bg-accent after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true" />
+            <button
+              aria-pressed={sendOnEnter}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
+              onClick={() => setSendOnEnter((current) => !current)}
+              type="button"
+            >
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
           </label>
           <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
             {saving ? "Saving..." : ready ? "Update AI Playbook" : "Save AI Playbook"}

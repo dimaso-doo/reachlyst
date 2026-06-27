@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Reachlyst",
-  description: "Read-only LinkedIn Sales Navigator assistant and outreach logbook",
+  description: "AI outreach assistant for LinkedIn Sales Navigator leads.",
   icons: {
     icon: [
       { url: "/favicon.ico" },

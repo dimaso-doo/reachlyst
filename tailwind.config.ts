@@ -22,7 +22,7 @@ const config: Config = {
         "reachlyst-lg": "0 24px 70px rgba(15, 23, 42, 0.12)"
       },
       fontFamily: {
-        sans: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ["IBM Plex Sans", "Inter", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       keyframes: {
         reviewDrift: {

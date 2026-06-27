@@ -10,7 +10,7 @@ import { plans } from "@/lib/stripe";
 const workflow = [
   { icon: "/chrome-icon.svg", title: "Install the Chrome extension", body: "Open Reachlyst beside your normal prospecting flow and keep the helper available while you research." },
   { icon: "/linkedin-sales-icon.svg", title: "Open Sales Navigator", body: "Browse searches and lead lists as usual while Reachlyst reads visible context and keeps everything organized." },
-  { icon: "/reachlyst-r.svg", title: "Sync to Reachlyst", body: "Searches, leads, statuses, notes, suggested invites, and message history land in one clean workspace." },
+  { icon: "/reachlyst-logo-r-blue.png", title: "Sync to Reachlyst", body: "Searches, leads, statuses, notes, suggested invites, and message history land in one clean workspace.", brand: true },
   { icon: "/rocket-icon.svg", title: "Polish outreach", body: "Train each search, score leads, regenerate invite copy, and copy the version you actually want to send." }
 ];
 
@@ -69,8 +69,8 @@ export default function HomePage() {
         <div className="container grid gap-10">
           <motion.div className="mx-auto max-w-[980px] text-center" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">AI Sales Navigator helper</span>
-            <h1 className="mx-auto my-5 max-w-[980px] text-5xl font-extrabold leading-[.95] tracking-normal sm:text-7xl lg:text-8xl">Turn LinkedIn leads into a clean outreach workflow.</h1>
-            <p className="mx-auto max-w-[760px] text-xl leading-relaxed text-white/70 sm:text-[22px]">Reachlyst uses AI to qualify Sales Navigator leads, generate better invite copy, and track where every prospect stands.</p>
+            <h1 className="mx-auto my-5 max-w-[980px] text-5xl font-extrabold leading-[.95] tracking-normal sm:text-7xl lg:text-8xl">AI outreach assistant for LinkedIn Sales Navigator.</h1>
+            <p className="mx-auto max-w-[780px] text-xl leading-relaxed text-white/70 sm:text-[22px]">Reachlyst helps you understand leads, draft better invites and replies, and keep every outreach step organized while you prospect.</p>
             <div className="mt-7 flex justify-center"><Button href="/signup">Start free</Button></div>
           </motion.div>
           <motion.div className="mx-auto w-full max-w-[1080px] overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,.32)]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
@@ -98,7 +98,7 @@ export default function HomePage() {
             <motion.div className="absolute left-0 z-[2] flex h-14 w-14 items-center justify-center rounded-full border border-blue-300/30 bg-blue-300/10 shadow-[0_16px_46px_rgba(22,119,255,.25)] md:left-[calc(50%_-_28px)]" style={{ top: planeY }}><img className="h-8 w-8 rotate-90" alt="" src="/paper-plane.svg" /></motion.div>
             <div className="relative z-[1] grid gap-14">{workflow.map((item, index) => <motion.div className="flex justify-end md:even:justify-end md:odd:justify-start" key={item.title} initial={{ opacity: 0, y: 34, scale: .97 }} whileInView={{ opacity: 1, y: -8, scale: 1.018 }} viewport={{ once: false, margin: "-80px" }} transition={{ delay: index * .08, duration: .55 }} whileHover={{ scale: 1.018, y: -8 }}>
               <Card className="min-h-[300px] w-[calc(100%_-_72px)] !border-blue-300/20 !bg-white/10 p-8 !text-white shadow-[0_24px_90px_rgba(0,0,0,.18)] transition hover:!border-blue-300/50 hover:shadow-[0_28px_100px_rgba(22,119,255,.18)] md:w-[min(520px,calc(50%_-_54px))]">
-                <div className="flex items-center justify-between"><span className="flex h-[72px] w-[72px] items-center justify-center rounded-[18px] border border-blue-300/30 bg-accent/10"><img className="max-h-11 max-w-11 object-contain" alt="" src={item.icon} /></span><em className="not-italic font-black text-white/40">0{index + 1}</em></div>
+                <div className="flex items-center justify-between"><span className={`flex h-[72px] w-[72px] items-center justify-center rounded-[18px] ${item.brand ? "border border-white/80 bg-white shadow-[0_18px_48px_rgba(22,119,255,.18)]" : "border border-blue-300/30 bg-accent/10"}`}><img className={item.brand ? "h-12 w-12 object-contain" : "max-h-11 max-w-11 object-contain"} alt="" src={item.icon} /></span><em className="not-italic font-black text-white/40">0{index + 1}</em></div>
                 <h3 className="mt-10 text-3xl font-extrabold leading-tight">{item.title}</h3>
                 <p className="mt-3 text-[17px] font-semibold leading-7 text-white/65">{item.body}</p>
               </Card>

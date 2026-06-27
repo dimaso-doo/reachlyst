@@ -3,9 +3,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui";
 
 const marketingLinks = [
-  ["Features", "/features"],
-  ["Pricing", "/pricing"],
-  ["Login", "/login"]
+  ["Features", "/#features"],
+  ["How it works", "/#how-it-works"],
+  ["Pricing", "/#pricing"],
+  ["FAQ", "/#faq"]
 ] as const;
 
 export function MarketingNav() {
@@ -14,6 +15,7 @@ export function MarketingNav() {
       <MarketingLogo />
       <div className="hidden items-center gap-x-5 text-sm font-extrabold text-white/70 md:flex">
         {marketingLinks.map(([label, href]) => <Link className="transition hover:scale-[1.025] hover:text-white" href={href} key={href}>{label}</Link>)}
+        <Link className="transition hover:scale-[1.025] hover:text-white" href="/login">Login</Link>
         <Button href="/signup">Sign up</Button>
       </div>
       <details className="group relative md:hidden">
@@ -23,6 +25,7 @@ export function MarketingNav() {
         <div className="absolute right-0 mt-3 w-[min(320px,calc(100vw-32px))] rounded-xl border border-white/10 bg-slate-950 p-3 shadow-[0_24px_70px_rgba(0,0,0,.35)]">
           <nav className="grid gap-1" aria-label="Marketing mobile navigation">
             {marketingLinks.map(([label, href]) => <Link className="rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white" href={href} key={href}>{label}</Link>)}
+            <Link className="rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white" href="/login">Login</Link>
           </nav>
           <div className="mt-3 border-t border-white/10 pt-3"><Button href="/signup">Sign up</Button></div>
         </div>
@@ -36,8 +39,9 @@ export function MarketingFooter() {
     <div className="container flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
       <MarketingLogo />
       <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold">
-        <Link className="hover:text-white" href="/pricing">Pricing</Link>
-        <Link className="hover:text-white" href="/features">Features</Link>
+        <Link className="hover:text-white" href="/#features">Features</Link>
+        <Link className="hover:text-white" href="/#pricing">Pricing</Link>
+        <Link className="hover:text-white" href="/#faq">FAQ</Link>
         <Link className="hover:text-white" href="/privacy">Privacy Policy</Link>
         <Link className="hover:text-white" href="/terms">Terms</Link>
         <Link className="hover:text-white" href="/blog">Blog</Link>

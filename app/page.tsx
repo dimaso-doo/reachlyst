@@ -21,6 +21,17 @@ const aiHighlights = [
   ["04", "Reply suggestions", "Turn visible message context into cleaner follow-up ideas."]
 ];
 
+const features = [
+  ["Lead context chat", "Ask Reachlyst about the selected Sales Navigator lead and get practical fit notes, profile context, and outreach angles."],
+  ["Invite generation", "Generate concise connection invites from visible Sales Navigator context, then edit and send manually."],
+  ["Reply suggestions", "Use visible LinkedIn message context to draft warmer, clearer follow-ups for accepted connections."],
+  ["AI Playbook", "Train Reachlyst on your offer, ICP, tone, objections, and message style so suggestions match your business."],
+  ["Extension setup", "Manage a persistent extension token for your workspace and keep the Sales Navigator helper ready."],
+  ["Usage controls", "Track lead scans, AI replies, trial status, package limits, and seats from the dashboard."],
+  ["Search workflow support", "Work naturally inside Sales Navigator while Reachlyst helps organize lead context and outreach decisions."],
+  ["Manual-first safety", "Reachlyst never sends LinkedIn messages for you. It prepares copy and context, while you stay in control."]
+];
+
 const reviews = [
   ["Sofia Grant", "Founder, Pipeline North", "Reachlyst turned our Sales Navigator tabs into an actual workflow. It is much easier to see who is worth contacting.", "https://i.pravatar.cc/96?img=47"],
   ["Marcus Lee", "Growth Lead, Cloudlane", "The fit scoring and invite drafts save our team a lot of review time without changing how reps work on LinkedIn.", "https://i.pravatar.cc/96?img=12"],
@@ -65,7 +76,7 @@ export default function HomePage() {
   return (
     <main className="pageShell bg-[#050a18]">
       <MarketingNav />
-      <section className="bg-[radial-gradient(circle_at_72%_12%,rgba(22,119,255,.28)_0,transparent_33%),linear-gradient(180deg,#050a18,#08111f)] px-0 py-20 text-white sm:py-28">
+      <section id="hero" className="bg-[radial-gradient(circle_at_72%_12%,rgba(22,119,255,.28)_0,transparent_33%),linear-gradient(180deg,#050a18,#08111f)] px-0 py-20 text-white sm:py-28">
         <div className="container grid gap-10">
           <motion.div className="mx-auto max-w-[980px] text-center" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">AI Sales Navigator helper</span>
@@ -90,7 +101,19 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      <section className="border-y border-white/10 bg-[#08111f] py-24 text-white sm:py-28">
+      <section id="features" className="border-y border-white/10 bg-[#050a18] py-24 text-white sm:py-28">
+        <div className="container">
+          <SectionIntro eyebrow="Features" title="Everything you need to turn Sales Navigator context into better outreach." />
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {features.map(([title, body], index) => <Card className="!border-white/10 !bg-white/5 p-5 !text-white transition hover:!border-blue-300/50 hover:shadow-[0_20px_70px_rgba(22,119,255,.14)]" key={title}>
+              <span className="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-300/20 bg-[#14233d] text-sm font-black text-blue-200">0{index + 1}</span>
+              <h3 className="text-xl font-extrabold leading-tight">{title}</h3>
+              <p className="mt-3 text-sm font-semibold leading-6 text-white/65">{body}</p>
+            </Card>)}
+          </div>
+        </div>
+      </section>
+      <section id="how-it-works" className="border-y border-white/10 bg-[#08111f] py-24 text-white sm:py-28">
         <div className="container">
           <SectionIntro eyebrow="How it works" title="From Sales Navigator search to tracked outreach." />
           <div className="relative mt-12" ref={workflowRef}>
@@ -106,7 +129,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="relative max-h-[780px] overflow-hidden border-b border-white/10 bg-[#08111f] py-24 text-white before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-[2] before:h-[72px] before:bg-[linear-gradient(180deg,#08111f,transparent)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[2] after:h-[72px] after:bg-[linear-gradient(0deg,#08111f,transparent)]">
+      <section id="testimonials" className="relative max-h-[780px] overflow-hidden border-b border-white/10 bg-[#08111f] py-24 text-white before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-[2] before:h-[72px] before:bg-[linear-gradient(180deg,#08111f,transparent)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[2] after:h-[72px] after:bg-[linear-gradient(0deg,#08111f,transparent)]">
         <div className="container">
           <h2 className="text-4xl font-extrabold leading-tight sm:text-5xl">For teams turning LinkedIn lists into pipeline</h2>
           <div className="mt-10 grid gap-6 overflow-hidden py-5 pb-24 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]" style={{ marginInline: "calc((100vw - min(1160px, calc(100vw - 40px))) / -2)" }}>
@@ -120,13 +143,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="border-b border-white/10 bg-[#08111f] py-24 text-white">
+      <section id="pricing" className="border-b border-white/10 bg-[#08111f] py-24 text-white">
         <div className="container">
           <SectionIntro eyebrow="Pricing" title="Start free. Upgrade when your lead volume grows." />
           <div className="grid gap-4 md:grid-cols-3">{plans.map((plan) => <PlanCard key={plan.key} plan={plan} />)}</div>
         </div>
       </section>
-      <section className="border-t border-white/10 bg-[#050a18] py-24 text-white sm:py-28">
+      <section id="faq" className="border-t border-white/10 bg-[#050a18] py-24 text-white sm:py-28">
         <div className="container grid gap-12 lg:grid-cols-[.85fr_1.15fr] lg:gap-16">
           <div className="lg:sticky lg:top-24 lg:self-start">
             <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">FAQ</span>
@@ -141,7 +164,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="bg-[radial-gradient(circle_at_50%_0,rgba(22,119,255,.32),transparent_42%),linear-gradient(180deg,#08111f,#050a18)] py-28 text-center text-white">
+      <section id="start" className="bg-[radial-gradient(circle_at_50%_0,rgba(22,119,255,.32),transparent_42%),linear-gradient(180deg,#08111f,#050a18)] py-28 text-center text-white">
         <div className="container"><span className="mb-3 block text-xs font-black uppercase tracking-[.08em] text-blue-300">Ready when your next Sales Navigator search is.</span><h2 className="mx-auto mb-7 max-w-[940px] text-5xl font-extrabold leading-none sm:text-7xl">Give your LinkedIn lead workflow a real workspace.</h2><Button href="/signup">Create workspace</Button></div>
       </section>
       <MarketingFooter />
@@ -162,6 +185,9 @@ function PlanCard({ plan }: { plan: (typeof plans)[number] }) {
     <div className="mt-5 grid gap-2">
       {plan.features.map((feature) => <p className="m-0 font-semibold leading-6 text-white/65" key={feature}>✓ {feature}</p>)}
     </div>
-    <div className="mt-5"><Button href="/pricing" variant={isFeatured ? "primary" : "secondary"}>{plan.cta}</Button></div>
+    <form className="mt-5" action="/api/stripe/checkout" method="post">
+      <input name="plan" type="hidden" value={plan.key} />
+      <Button type="submit" variant={isFeatured ? "primary" : "secondary"}>{plan.cta}</Button>
+    </form>
   </Card>;
 }

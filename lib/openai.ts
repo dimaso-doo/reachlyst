@@ -157,6 +157,7 @@ export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
             "Do not give generic encouragement. Each reply must either summarize concrete conclusions or ask the single most useful next question.",
             "When enough information exists, provide a compact Playbook draft with sections: Offer, Good fit, Maybe, Skip, Invite style, Reply style, Follow-up style, Default message types, Missing information.",
             "If website context is provided, use it to infer the offer, proof points, target customer, tone, and possible outreach angles. Be clear when an inference is uncertain.",
+            "Use manual-first product language: say AI-assisted invite drafting, reply suggestions, or message suggestions. Do not call Reachlyst automated invite generation, automated outreach, or automated messaging.",
             "Keep it useful and conversational. Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization."
           ].join(" ")
         },

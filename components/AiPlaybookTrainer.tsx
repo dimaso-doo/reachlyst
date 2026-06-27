@@ -191,9 +191,16 @@ export function AiPlaybookTrainer() {
         </div>
 
         <div className="flex items-center justify-between gap-3 bg-white px-5 pb-5 max-md:grid">
-          <label className="inline-flex select-none items-center gap-2 text-sm font-semibold text-muted">
-            <input className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent" checked={sendOnEnter} onChange={(event) => setSendOnEnter(event.target.checked)} type="checkbox" />
+          <label className="inline-flex select-none items-center gap-3 text-sm font-extrabold text-muted">
             <span>Send on Enter</span>
+            <button
+              aria-pressed={sendOnEnter}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
+              onClick={() => setSendOnEnter((current) => !current)}
+              type="button"
+            >
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
           </label>
           <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
             {saving ? "Saving..." : ready ? "Update AI Playbook" : "Save AI Playbook"}

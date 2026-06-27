@@ -455,8 +455,13 @@
   border: 2px solid rgba(159, 176, 199, .34);
   border-radius: 50%;
   border-top-color: #1677ff;
+  display: none;
   height: 16px;
   width: 16px;
+}
+
+.reachlyst-status[data-tone="loading"] .reachlyst-status-loader {
+  display: inline-flex;
 }
 
 .reachlyst-status strong {

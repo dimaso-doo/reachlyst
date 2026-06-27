@@ -16,6 +16,13 @@ let reachlystRunTimer;
 let activeSearchPlaybook = null;
 let selectedLead = null;
 const SALES_NAV_PAGE_SIZE = 25;
+const pageRunState = {
+  searchUrl: "",
+  searchSignature: "",
+  messagesUrl: "",
+  messagesSignature: "",
+  profileUrl: ""
+};
 
 async function getSettings() {
   const values = await chrome.storage.sync.get(Object.keys(DEFAULT_SETTINGS));
@@ -66,7 +73,7 @@ function setStatus(message, tone = "neutral") {
 }
 
 function setFetchStatus(count) {
-  setStatus(`Fetched: ${count}/${SALES_NAV_PAGE_SIZE}`, "loading");
+  setStatus(`Fetched: ${count}/${SALES_NAV_PAGE_SIZE}`, "neutral");
 }
 
 function removeReachlystUi() {
@@ -223,11 +230,12 @@ function chatStateForLead(lead) {
   return leadChatState.get(key);
 }
 
-function renderThread(chat, lead) {
+function renderThread(chat, lead, scrollMode = "bottom") {
   const state = chatStateForLead(lead);
   const thread = chat.querySelector(".reachlyst-chat-thread");
   if (!thread) return;
   thread.innerHTML = "";
+  let firstNewAssistantRow = null;
   state.messages.slice(-10).forEach((message) => {
     const row = document.createElement("div");
     row.className = message.role === "user" ? "reachlyst-message-row reachlyst-message-user" : "reachlyst-message-row reachlyst-message-assistant";
@@ -245,8 +253,13 @@ function renderThread(chat, lead) {
       row.append(copyButton);
     }
     thread.append(row);
+    if (scrollMode === "assistant-start" && message.role === "assistant") firstNewAssistantRow = row;
   });
-  thread.scrollTop = thread.scrollHeight;
+  if (scrollMode === "assistant-start" && firstNewAssistantRow) {
+    thread.scrollTop = Math.max(0, firstNewAssistantRow.offsetTop - 12);
+  } else if (scrollMode === "bottom") {
+    thread.scrollTop = thread.scrollHeight;
+  }
 }
 
 function ensureChatControls(chat) {
@@ -357,13 +370,15 @@ function openFloatingChat(lead) {
   chat.querySelector('[data-role="leadName"]').textContent = lead.name;
   chat.querySelector('[data-role="leadMeta"]').textContent = leadCompanyLine(lead);
   const generateButton = chat.querySelector('[data-action="generate"]');
-  if (generateButton) generateButton.textContent = lead.context === "messages" ? "Generate reply" : "Generate invite";
+  if (generateButton) generateButton.textContent = lead.context === "search" ? "Generate invite" : lead.context === "messages" ? "Generate reply" : "Generate message";
   const input = chat.querySelector(".reachlyst-chat-input");
   if (input) input.placeholder = lead.context === "messages"
     ? "Ask for a shorter, warmer, direct, or more specific reply..."
+    : lead.context === "profile"
+    ? "Ask for a message, follow-up, fit angle, or profile-based outreach idea..."
     : "Write in any language. Ask for a shorter, warmer, direct, or more specific invite...";
-  chat.querySelector(".reachlyst-chat-status").textContent = lead.context === "messages" ? "Chat is tied to this selected conversation." : "Chat is tied to this selected lead.";
-  renderThread(chat, lead);
+  chat.querySelector(".reachlyst-chat-status").textContent = lead.context === "messages" ? "Chat is tied to this selected conversation." : lead.context === "profile" ? "Chat is tied to this selected profile." : "Chat is tied to this selected lead.";
+  renderThread(chat, lead, "bottom");
   if (!document.activeElement?.closest?.(".reachlyst-floating-chat")) chat.querySelector(".reachlyst-chat-input").focus();
 }
 
@@ -482,22 +497,23 @@ async function generateInvite(lead, chat, button) {
   const state = chatStateForLead(lead);
   const status = chat.querySelector(".reachlyst-chat-status");
   const isMessages = lead.context === "messages";
+  const isProfile = lead.context === "profile";
   button.textContent = "Generating";
-  if (status) status.textContent = isMessages ? "Generating a copyable reply..." : "Generating a copyable invite...";
+  if (status) status.textContent = isMessages ? "Generating a copyable reply..." : isProfile ? "Generating a copyable message..." : "Generating a copyable invite...";
 
   const response = await reachlystApi("/api/extension/ai/generate-message", {
     method: "POST",
     body: JSON.stringify(leadPayload(lead, {
-      instruction: isMessages ? "Generate a concise LinkedIn reply or follow-up for this accepted connection conversation." : "Generate a concise LinkedIn connection invite for this specific lead.",
+      instruction: isMessages ? "Generate a concise LinkedIn reply or follow-up for this accepted connection conversation." : isProfile ? "Generate a concise LinkedIn message or follow-up for this selected profile. Do not write it as a connection invite unless the user asks." : "Generate a concise LinkedIn connection invite for this specific lead.",
       previousMessage: state.latestInvite
     }))
   });
   const result = await response.json();
   state.latestInvite = result.message;
   state.messages.push({ role: "assistant", content: result.message });
-  renderThread(chat, lead);
-  if (status) status.textContent = isMessages ? "Reply saved as a Reachlyst suggestion." : "Invite saved as a Reachlyst suggestion.";
-  button.textContent = isMessages ? "Generate reply" : "Generate invite";
+  renderThread(chat, lead, result.message.length > 420 ? "assistant-start" : "bottom");
+  if (status) status.textContent = isMessages ? "Reply saved as a Reachlyst suggestion." : isProfile ? "Message saved as a Reachlyst suggestion." : "Invite saved as a Reachlyst suggestion.";
+  button.textContent = isMessages ? "Generate reply" : isProfile ? "Generate message" : "Generate invite";
 }
 
 async function sendLeadChat(lead, chat, button) {
@@ -512,7 +528,7 @@ async function sendLeadChat(lead, chat, button) {
   const state = chatStateForLead(lead);
   state.messages.push({ role: "user", content: prompt });
   input.value = "";
-  renderThread(chat, lead);
+  renderThread(chat, lead, "bottom");
   button.textContent = "Thinking";
   if (status) status.textContent = lead.context === "messages" ? "AI is working on this conversation..." : "AI is working on this lead...";
 
@@ -531,7 +547,7 @@ async function sendLeadChat(lead, chat, button) {
   const result = await response.json();
   state.latestInvite = result.reply;
   state.messages.push({ role: "assistant", content: result.reply });
-  renderThread(chat, lead);
+  renderThread(chat, lead, result.reply.length > 420 ? "assistant-start" : "bottom");
   if (status) status.textContent = "Suggestion saved in Reachlyst usage log.";
   button.textContent = "Send";
 }
@@ -583,14 +599,22 @@ async function runSalesNavigator() {
 
   if (/login|checkpoint/.test(location.href)) return showLinkedInNotice();
 
-  setFetchStatus(0);
+  const parsed = parseSalesNavigatorLeads();
+  const signature = `${location.href}|${parsed.leads.map((lead) => leadKey(lead)).join("|")}`;
+  if (pageRunState.searchSignature === signature) {
+    attachLeadButtons(parsed.leads);
+    setFetchStatus(parsed.leads.length);
+    return;
+  }
+  pageRunState.searchSignature = signature;
+  pageRunState.searchUrl = location.href;
+  setStatus("Fetching visible leads...", "loading");
   const detected = await reachlystApi("/api/extension/search/detect", {
     method: "POST",
     body: JSON.stringify({ url: location.href, title: document.title })
   }).then((response) => response.json());
   activeSearchPlaybook = detected.aiPlaybook || null;
 
-  const parsed = parseSalesNavigatorLeads();
   const imported = await reachlystApi("/api/extension/search/import-leads", {
     method: "POST",
     body: JSON.stringify({ searchId: detected.id, leads: parsed.leads })
@@ -692,9 +716,12 @@ async function runSalesProfile() {
     return;
   }
 
-  openFloatingChat(lead);
+  if (pageRunState.profileUrl !== location.href || !selectedLead || selectedLead.context !== "profile") {
+    openFloatingChat(lead);
+    pageRunState.profileUrl = location.href;
+  }
   const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
-  if (status) status.textContent = "Profile context ready. Ask for fit, angle, or a better invite.";
+  if (status) status.textContent = "Profile context ready. Ask for fit, angle, or a better message.";
 }
 
 async function runSalesMessages() {
@@ -718,6 +745,13 @@ async function runSalesMessages() {
 
   const parsed = parseVisibleMessages(messageThreadRoot());
   lead.conversationContext = formatConversationContext(parsed.messages);
+  const signature = `${location.href}|${lead.name}|${lead.conversationContext}`;
+  if (pageRunState.messagesSignature === signature) {
+    if (!selectedLead || !sameLeadRecord(selectedLead, lead)) openFloatingChat(lead);
+    return;
+  }
+  pageRunState.messagesSignature = signature;
+  pageRunState.messagesUrl = location.href;
   await reportParser("sales_messages", parsed.messages.length, parsed.failures);
   if (parsed.messages.length) {
     reachlystApi("/api/extension/messages/sync-thread", {

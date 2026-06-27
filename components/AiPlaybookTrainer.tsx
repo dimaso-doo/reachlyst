@@ -174,7 +174,7 @@ export function AiPlaybookTrainer() {
           <div ref={endRef} />
         </div>
 
-        <div className="grid gap-3 border-t border-blue-100 bg-white px-5 pb-3 pt-4 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid gap-3 border-t border-blue-100 bg-white px-5 pt-4">
           <textarea
             className="min-h-24 resize-y rounded-lg border border-blue-100 p-3 text-sm font-semibold leading-6 text-ink outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
             onChange={(event) => setDraft(event.target.value)}
@@ -187,22 +187,22 @@ export function AiPlaybookTrainer() {
             placeholder="Tell me what you offer, who you target, who to exclude, and what tone your messages should use..."
             value={draft}
           />
-          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={thinking || !draft.trim()} onClick={sendMessage} type="button">{thinking ? "Thinking..." : "Send"}</button>
         </div>
 
-        <div className="flex items-center justify-between gap-3 bg-white px-5 pb-5 max-md:grid">
-          <label className="inline-flex select-none items-center gap-3 text-sm font-extrabold text-muted">
+        <div className="flex flex-wrap items-center gap-3 bg-white px-5 pb-5 pt-3">
+          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-5 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={thinking || !draft.trim()} onClick={sendMessage} type="button">{thinking ? "Thinking..." : "Send"}</button>
+          <label className="inline-flex min-h-11 select-none items-center gap-2 text-sm font-extrabold text-muted">
             <span>Send on Enter</span>
             <button
               aria-pressed={sendOnEnter}
-              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
+              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
               onClick={() => setSendOnEnter((current) => !current)}
               type="button"
             >
-              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-5" : "translate-x-0"}`} />
+              <span className={`block h-4 w-4 rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-4" : "translate-x-0"}`} />
             </button>
           </label>
-          <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
+          <button className="ml-auto min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:ml-0 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
             {saving ? "Saving..." : ready ? "Update AI Playbook" : "Save AI Playbook"}
           </button>
         </div>

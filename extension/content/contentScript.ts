@@ -1,7 +1,7 @@
 declare const chrome: any;
 declare function parseSalesNavigatorLeads(root?: ParentNode): { leads: any[]; failures: string[] };
 declare function parseVisibleMessages(root?: ParentNode): { messages: Array<{ senderType: "user" | "lead" | "unknown"; body: string; sentAt?: string }>; failures: string[] };
-const EXTENSION_VERSION = "0.1.3";
+const EXTENSION_VERSION = "0.1.4";
 const PARSER_VERSION = "2026.06.26";
 const DEFAULT_SETTINGS = {
   reachlystApiBase: "https://reachlyst.com",
@@ -141,9 +141,63 @@ function leadPayload(lead, extra = {}) {
     `Tone: ${playbook.tone || "Professional, concise, human"}`,
     `Rules: ${playbook.instructions || "Avoid fake personalization. Keep it concise."}`,
     lead.conversationContext ? `Visible conversation:\n${lead.conversationContext}` : "",
+    lead.profileContext ? `Visible profile context:\n${lead.profileContext}` : "",
     "LinkedIn action policy: suggest copy only; user manually pastes and sends."
   ].filter(Boolean).join("\n");
   return { ...lead, campaignContext, tone: playbook.tone || "Professional, concise, human", useCase: playbook.useCase || "sales_outreach", ...extra };
+}
+
+function wantsProfileAnalysis(prompt) {
+  return /analy|fit|profile|profil|research|istraž|istraz|angle|relevant|why|zašto|zasto|score|qualif|good fit|bad fit|intent|signal/i.test(String(prompt || ""));
+}
+
+function profileContextFromRoot(root = document, lead = {}) {
+  const source = root.querySelector?.("main") || root.body || root;
+  const raw = source?.innerText || source?.textContent || "";
+  const leadName = String(lead.name || "").toLowerCase();
+  const lines = raw.split(/\n+/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => {
+      if (line.length < 3 || line.length > 420) return false;
+      if (/^(home|messaging|notifications|search|sales navigator|all filters|save|saved|more|connect|message|follow)$/i.test(line)) return false;
+      if (/privacy|terms|cookie|keyboard shortcuts|skip to main content/i.test(line)) return false;
+      return true;
+    });
+  const unique = [];
+  const seen = new Set();
+  for (const line of lines) {
+    const key = line.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(line);
+  }
+  const nameIndex = leadName ? unique.findIndex((line) => line.toLowerCase().includes(leadName)) : -1;
+  const focused = nameIndex >= 0 ? unique.slice(Math.max(0, nameIndex - 2), nameIndex + 45) : unique.slice(0, 45);
+  return focused.join("\n").slice(0, 5000);
+}
+
+async function fetchProfileContext(lead) {
+  const url = lead.salesNavigatorUrl || lead.linkedinUrl;
+  if (!url || !/^https:\/\/www\.linkedin\.com\/sales\//.test(url)) return "";
+  try {
+    const response = await fetch(url, { credentials: "include" });
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return profileContextFromRoot(doc, lead);
+  } catch {
+    return "";
+  }
+}
+
+async function enrichLeadForPrompt(lead, prompt) {
+  if (!wantsProfileAnalysis(prompt)) return lead;
+  if (lead.profileContext) return lead;
+  const visibleContext = profileContextFromRoot(document, lead);
+  if (visibleContext && (isSalesLeadProfilePage() || visibleContext.toLowerCase().includes(String(lead.name || "").toLowerCase()))) {
+    return { ...lead, profileContext: visibleContext };
+  }
+  const fetchedContext = await fetchProfileContext(lead);
+  return fetchedContext ? { ...lead, profileContext: fetchedContext } : lead;
 }
 
 function formatConversationContext(messages) {
@@ -462,10 +516,15 @@ async function sendLeadChat(lead, chat, button) {
   button.textContent = "Thinking";
   if (status) status.textContent = lead.context === "messages" ? "AI is working on this conversation..." : "AI is working on this lead...";
 
+  const enrichedLead = await enrichLeadForPrompt(lead, prompt);
+  if (enrichedLead.profileContext && !lead.profileContext) {
+    Object.assign(lead, { profileContext: enrichedLead.profileContext });
+  }
+
   const response = await reachlystApi("/api/extension/ai/lead-chat", {
     method: "POST",
     body: JSON.stringify({
-      lead: leadPayload(lead, { currentMessage: state.latestInvite }),
+      lead: leadPayload(enrichedLead, { currentMessage: state.latestInvite }),
       messages: state.messages
     })
   });
@@ -551,6 +610,10 @@ function isSalesMessagesPage() {
   return /linkedin\.com\/sales\/(inbox|messaging|messages)/.test(location.href);
 }
 
+function isSalesLeadProfilePage() {
+  return /linkedin\.com\/sales\/lead\//.test(location.href);
+}
+
 function cleanVisibleText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
@@ -586,6 +649,52 @@ function selectedMessageLead() {
     context: "messages",
     snippet: "Sales Navigator message thread"
   };
+}
+
+function selectedProfileLead() {
+  const root = document.querySelector("main") || document;
+  const profileContext = profileContextFromRoot(root);
+  const headings = Array.from(root.querySelectorAll("h1, h2")).filter(visibleElement);
+  const heading = headings
+    .map((item) => cleanVisibleText(item.textContent))
+    .find((text) => text.length > 1 && !/sales navigator|linkedin/i.test(text));
+  const lines = profileContext.split("\n");
+  const name = heading || lines.find((line) => /^[A-Z][A-Za-z'.-]+(\s+[A-Z][A-Za-z'.-]+)+$/.test(line)) || "Selected profile";
+  const detailLine = lines.find((line) => line !== name && line.length > 10 && !/1st|2nd|3rd|degree|connection/i.test(line));
+  return {
+    id: `profile-${safeDomKey(location.href)}`,
+    name,
+    title: detailLine,
+    company: detailLine,
+    salesNavigatorUrl: location.href,
+    context: "profile",
+    snippet: lines.slice(0, 8).join(" "),
+    profileContext
+  };
+}
+
+async function runSalesProfile() {
+  if (!(await reachlystIsEnabled())) {
+    removeReachlystUi();
+    return;
+  }
+
+  if (!isSalesLeadProfilePage()) {
+    removeReachlystUi();
+    return;
+  }
+
+  if (/login|checkpoint/.test(location.href)) return showLinkedInNotice();
+
+  const lead = selectedProfileLead();
+  if (!lead.name || lead.name === "Selected profile") {
+    setStatus("Open a Sales Navigator profile.", "warn");
+    return;
+  }
+
+  openFloatingChat(lead);
+  const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
+  if (status) status.textContent = "Profile context ready. Ask for fit, angle, or a better invite.";
 }
 
 async function runSalesMessages() {
@@ -637,7 +746,7 @@ async function scheduleReachlystRun() {
     return;
   }
   reachlystRunTimer = setTimeout(() => {
-    const runner = isSalesSearchPage() ? runSalesNavigator : isSalesMessagesPage() ? runSalesMessages : null;
+    const runner = isSalesSearchPage() ? runSalesNavigator : isSalesMessagesPage() ? runSalesMessages : isSalesLeadProfilePage() ? runSalesProfile : null;
     if (!runner) {
       removeReachlystUi();
       return;

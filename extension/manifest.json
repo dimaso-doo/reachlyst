@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Reachlyst",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Read-only LinkedIn Sales Navigator assistant and outreach logbook",
   "permissions": ["storage", "activeTab", "scripting", "clipboardWrite"],
   "host_permissions": ["https://www.linkedin.com/sales/*", "https://reachlyst.com/*", "http://localhost/*", "http://127.0.0.1/*", "https://*.vercel.app/*"],

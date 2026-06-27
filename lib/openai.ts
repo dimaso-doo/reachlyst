@@ -12,6 +12,7 @@ export type AiLeadInput = {
   previousMessage?: string;
   instruction?: string;
   conversationContext?: string;
+  profileContext?: string;
   variant?: number;
   limit?: number;
 };
@@ -198,7 +199,24 @@ function fallbackLeadInviteChat(input: LeadInviteChatInput) {
   }
   if (!latest.trim()) return wantsSerbian ? `Evo čistog početka:\n\n${base}` : `Here is a clean starting point:\n\n${base}`;
 
-  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|reply|conversation|thread|chat|see|poruk|poziv|odgovor|prepis|vidi|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez/i.test(latest)) {
+  if (/analy|fit|profile|profil|research|istraž|istraz|angle|relevant|why|zašto|zasto|score|qualif|good fit|bad fit|intent|signal/i.test(latest)) {
+    const context = [
+      input.lead.profileContext ? `Profile context:\n${input.lead.profileContext}` : "",
+      input.lead.conversationContext ? `Conversation context:\n${input.lead.conversationContext}` : "",
+      input.lead.snippet ? `Visible card: ${input.lead.snippet}` : "",
+      input.lead.title || input.lead.company ? `Role/company: ${input.lead.title || "Unknown role"} at ${input.lead.company || "unknown company"}` : ""
+    ].filter(Boolean).join("\n\n");
+    if (!context) {
+      return wantsSerbian
+        ? "Mogu da analiziram fit, ali trenutno imam samo osnovne podatke. Otvori Sales Navigator profil sa uključenom ekstenzijom i pitaj me ponovo."
+        : "I can analyze fit, but I only have basic data right now. Open the Sales Navigator profile with the extension running and ask me again.";
+    }
+    return wantsSerbian
+      ? `Mogu. Na osnovu vidljivog konteksta mogu da procenim fit, razlog i bolji outreach angle. Evo šta trenutno vidim:\n\n${context.slice(0, 900)}`
+      : `Yes. Based on the visible context, I can assess fit, explain why, and suggest a better outreach angle. Here is what I can see:\n\n${context.slice(0, 900)}`;
+  }
+
+  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|reply|conversation|thread|chat|see|poruk|poziv|odgovor|prepis|vidi|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez|analy|fit|profile|profil|research|istraž|istraz|angle|relevant|score|qualif|good fit|bad fit|intent|signal/i.test(latest)) {
     return wantsSerbian
       ? "Mogu da pomognem samo oko LinkedIn invite i outreach poruke za ovaj lead."
       : "I can only help polish LinkedIn invite and outreach copy for this lead.";
@@ -231,10 +249,11 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           content: [
             "You are Reachlyst AI. Help polish LinkedIn copy for one visible Sales Navigator person.",
             "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
-            "Stay strictly in scope: invite copy, reply copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
+            "Stay strictly in scope: visible profile analysis, lead fit, outreach angles, invite copy, reply copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
             "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies or follow-ups and never say you cannot see the conversation.",
-            "If lead.conversationContext is missing, focus on connection invite copy for search/leads.",
-            "If the user asks for anything else, refuse briefly in the user's language and bring them back to improving LinkedIn outreach copy.",
+            "If lead.profileContext is present, use it to assess Good fit / Maybe / Skip, explain why, suggest the strongest outreach angle, and then offer better copy.",
+            "If profileContext is missing but card fields exist, answer fit/profile questions from visible card context and say when confidence is limited.",
+            "If the user asks for anything else, refuse briefly in the user's language and bring them back to lead fit or LinkedIn outreach copy.",
             "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
             "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",
             "Avoid hype, flattery, emojis, exclamation marks, and phrases like admire, love, excited, partnership, collaboration, discuss, learn more, or share insights."
@@ -244,9 +263,11 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           role: "user",
           content: JSON.stringify({
             lead: input.lead,
-            task: input.lead.conversationContext
+            task: input.lead.profileContext
+              ? "Analyze visible Sales Navigator profile context for fit, relevance, outreach angle, and better copy."
+              : input.lead.conversationContext
               ? "Polish or generate a safe copyable LinkedIn reply or follow-up for this visible conversation."
-              : "Polish or generate a safe copyable LinkedIn invite for this lead."
+              : "Help with visible card-based fit, outreach angle, or safe copyable LinkedIn invite for this lead."
           })
         },
         ...input.messages.map((message) => ({ role: message.role, content: message.content }))

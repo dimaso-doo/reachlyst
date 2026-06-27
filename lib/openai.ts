@@ -224,15 +224,11 @@ export async function generateInviteMessage(input: AiLeadInput) {
 function fallbackSearchAdvisor(input: SearchAdvisorInput) {
   const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
   const isTraining = input.mode === "train_search";
-  const inScope = /lead|linkedin|sales|navigator|search|pretrag|poruk|invite|connect|outreach|fit|icp|kup|buyer|company|kompan|firma|industr|title|role|uloga|founder|owner|ceo|agenc|agency|tone|ton|follow|reply|odgovor|target|cilj/i.test(latest);
   const starter = isTraining
     ? "Got it. For this search, I would score good fits as decision makers in the target niche, maybe fits as relevant but unclear buyers, and skips as profiles without a clear business match."
     : "Got it. Let’s define the ICP first: role, industry, location, company size, and clear exclusions.";
 
   if (!latest.trim()) return starter;
-  if (!inScope) {
-    return "I can only help with Reachlyst workflows: Sales Navigator searches, ICP, fit scoring, manual outreach copy, lead organization, and extension setup.";
-  }
 
   const wantsLink = /link|url|sales nav|navigator|pretrag/i.test(latest);
   const wantsMessage = /poruk|invite|connect|tone|ton/i.test(latest);
@@ -245,7 +241,7 @@ function fallbackSearchAdvisor(input: SearchAdvisorInput) {
     return "For messages, I would keep the tone short, calm, and specific without fake personalization. Example: “Hi Ana, noticed your work at Bright SEO. Thought it made sense to connect here.” Tell me the offer and audience, and I can draft 3 variants.";
   }
 
-  return `${starter}\n\nHere is how I would frame it:\n1. Good fit: owner/founder/CEO/partner with a clear B2B buying signal.\n2. Maybe: relevant company, but weak title or unclear intent.\n3. Skip: unrelated industry, wrong company size, or profiles without business context.\n\nSend me the offer and ideal company size, and I will tighten the rules and draft invite copy.`;
+  return `I can help with that. ${starter}\n\nIf this should train Reachlyst, I will translate the conversation into practical rules for lead fit, tone, message style, and follow-up strategy as we go.`;
 }
 
 export async function adviseOnSearch(input: SearchAdvisorInput) {
@@ -260,12 +256,11 @@ export async function adviseOnSearch(input: SearchAdvisorInput) {
           role: "system",
           content: [
             "You are Reachlyst AI, a practical Sales Navigator search and outreach advisor.",
-            "Always answer in English, even if the user writes in another language.",
-            "Have a real conversation. Ask clarifying questions, suggest ICP criteria, fit rules, exclusions, message tone, and concise invite copy.",
-            "Do not claim to automate LinkedIn. Do not suggest auto-connect, auto-send, scraping, bypassing limits, or credential storage.",
-            "Only answer questions related to Reachlyst's purpose: Sales Navigator searches, ICP design, lead fit scoring, outreach copy suggestions, manual LinkedIn workflow, read-only message sync, campaign organization, and Chrome extension setup.",
-            "If the user asks about anything outside that scope, politely refuse in one short English sentence and bring them back to Reachlyst-related work.",
-            "Keep replies concise and actionable. When useful, include Good fit, Maybe, Skip, Suggested invite, and Sales Navigator filter ideas.",
+            "Reply in the user's language unless they ask for another language.",
+            "Have a free, natural conversation. The user may ask about business, positioning, competitors, sales, websites, offers, messaging, LinkedIn, or anything else that helps them think.",
+            "When the conversation touches prospecting or outreach, translate useful details into Reachlyst training ideas: ICP criteria, fit rules, exclusions, message tone, reply style, and concise invite copy.",
+            "Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization.",
+            "Keep replies useful and actionable. When relevant, include Good fit, Maybe, Skip, Suggested invite, and Sales Navigator filter ideas.",
             "For create_search mode, help the user design a search and optionally draft a Sales Navigator query/filter plan.",
             "For train_search mode, help the user define how this specific search should score leads and write messages."
           ].join(" ")
@@ -320,12 +315,6 @@ function fallbackLeadInviteChat(input: LeadInviteChatInput) {
       : `Yes. Based on the visible context, I can assess fit, explain why, and suggest a better outreach angle. Here is what I can see:\n\n${context.slice(0, 900)}`;
   }
 
-  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|reply|conversation|thread|chat|see|poruk|poziv|odgovor|prepis|vidi|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez|analy|fit|profile|profil|research|istraž|istraz|angle|relevant|score|qualif|good fit|bad fit|intent|signal/i.test(latest)) {
-    return wantsSerbian
-      ? "Mogu da pomognem samo oko LinkedIn invite i outreach poruke za ovaj lead."
-      : "I can only help polish LinkedIn invite and outreach copy for this lead.";
-  }
-
   if (/short|shorter|concise|krać|krac/i.test(latest)) {
     return base.replace(/Thought it made sense to connect\.?/i, "Open to connecting?").slice(0, 180);
   }
@@ -336,8 +325,8 @@ function fallbackLeadInviteChat(input: LeadInviteChatInput) {
   }
 
   return wantsSerbian
-    ? `Probaj ovu verziju:\n\n${base}\n\nOstaje kratko, mirno i spremno za ručno slanje na LinkedIn-u.`
-    : `Try this version:\n\n${base}\n\nIt stays specific, calm, and safe for a manual LinkedIn invite.`;
+    ? `Možemo slobodno da prođemo kroz to. Za ovaj lead trenutno imam ovaj osnovni outreach početak:\n\n${base}\n\nAko želiš, mogu dalje da pričam o fit-u, uglu pristupa, tonu, follow-up poruci ili širem kontekstu oko ovog prospekta.`
+    : `We can talk through that freely. For this lead, I currently have this outreach starting point:\n\n${base}\n\nI can also help with fit, positioning, tone, follow-up strategy, or broader context around this prospect.`;
 }
 
 export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
@@ -353,12 +342,12 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           content: [
             "You are Reachlyst AI. Help polish LinkedIn copy for one visible Sales Navigator person.",
             "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
-            "Stay strictly in scope: visible profile analysis, lead fit, outreach angles, invite copy, reply copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
+            "Have a free, natural conversation with the user. They may ask about the lead, their business, positioning, sales strategy, websites, messaging, objections, or broader context.",
+            "When relevant, connect the answer back to the selected lead, visible conversation, outreach strategy, or practical next message.",
             "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies or follow-ups and never say you cannot see the conversation.",
             "If lead.profileContext is present, use it to assess Good fit / Maybe / Skip, explain why, suggest the strongest outreach angle, and then offer better copy.",
             "If profileContext is missing but card fields exist, answer fit/profile questions from visible card context and say when confidence is limited.",
-            "If the user asks for anything else, refuse briefly in the user's language and bring them back to lead fit or LinkedIn outreach copy.",
-            "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
+            "Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, hidden scraping, or fake personalization.",
             "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",
             "Avoid hype, flattery, emojis, exclamation marks, and phrases like admire, love, excited, partnership, collaboration, discuss, learn more, or share insights."
           ].join(" ")

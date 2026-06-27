@@ -776,4 +776,9 @@ new MutationObserver((mutations) => {
         return;
     scheduleReachlystRun();
 }).observe(document.body, { childList: true, subtree: true });
-document.addEventListener("scroll", () => scheduleReachlystRun(), true);
+document.addEventListener("scroll", (event) => {
+    const target = event.target;
+    if (target instanceof Element && (target.closest(".reachlyst-floating-chat") || target.closest(".reachlyst-status") || target.closest(".reachlyst-lead-button")))
+        return;
+    scheduleReachlystRun();
+}, true);

@@ -195,11 +195,11 @@ export function AiPlaybookTrainer() {
             <span>Send on Enter</span>
             <button
               aria-pressed={sendOnEnter}
-              className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
+              className={`relative inline-flex shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
               onClick={() => setSendOnEnter((current) => !current)}
               type="button"
             >
-              <span className={`block h-4 w-4 rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-4" : "translate-x-0"}`} />
+              <span className={`block rounded-full bg-white p-2 shadow-sm transition ${sendOnEnter ? "translate-x-4" : "translate-x-0"}`} />
             </button>
           </label>
           <button className="ml-auto min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:ml-0 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">

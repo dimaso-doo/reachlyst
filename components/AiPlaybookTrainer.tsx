@@ -6,6 +6,10 @@ type Message = {
   role: "assistant" | "user";
   content: string;
 };
+type AiPlaybook = {
+  status: "not_trained" | "ready";
+  rawNotes: string;
+};
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
 const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
@@ -53,6 +57,7 @@ export function AiPlaybookTrainer() {
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: welcomeMessage }]);
   const [draft, setDraft] = useState("");
   const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [sendOnEnter, setSendOnEnter] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -66,6 +71,23 @@ export function AiPlaybookTrainer() {
         { role: "assistant", content: buildPlaybookReply(savedNotes) }
       ]);
     }
+    fetch("/api/ai-playbook")
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Unable to load AI Playbook")))
+      .then((data: { playbook?: AiPlaybook }) => {
+        const playbook = data.playbook;
+        if (!playbook?.rawNotes) return;
+        window.localStorage.setItem(PLAYBOOK_NOTES_KEY, playbook.rawNotes);
+        window.localStorage.setItem(PLAYBOOK_STATUS_KEY, playbook.status);
+        setReady(playbook.status === "ready");
+        setMessages([
+          { role: "assistant", content: welcomeMessage },
+          { role: "user", content: playbook.rawNotes },
+          { role: "assistant", content: buildPlaybookReply(playbook.rawNotes) }
+        ]);
+      })
+      .catch(() => {
+        // Local storage keeps the trainer usable when the API is unavailable.
+      });
   }, []);
 
   useEffect(() => {
@@ -79,12 +101,26 @@ export function AiPlaybookTrainer() {
     setDraft("");
   }
 
-  function savePlaybook() {
+  async function savePlaybook() {
     const latestUserMessage = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
     if (latestUserMessage) window.localStorage.setItem(PLAYBOOK_NOTES_KEY, latestUserMessage);
     window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "ready");
-    window.dispatchEvent(new Event("reachlyst:playbook-status"));
-    setReady(true);
+    setSaving(true);
+    try {
+      const response = await fetch("/api/ai-playbook", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rawNotes: latestUserMessage, status: "ready" })
+      });
+      if (!response.ok) throw new Error("Unable to save AI Playbook");
+      window.dispatchEvent(new Event("reachlyst:playbook-status"));
+      setReady(true);
+    } catch {
+      window.dispatchEvent(new Event("reachlyst:playbook-status"));
+      setReady(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -139,8 +175,8 @@ export function AiPlaybookTrainer() {
             <input className="peer sr-only" checked={sendOnEnter} onChange={(event) => setSendOnEnter(event.target.checked)} type="checkbox" />
             <span className="relative inline-flex h-5 w-9 rounded-full bg-slate-300 shadow-inner transition peer-checked:bg-accent after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4" aria-hidden="true" />
           </label>
-          <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={!messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
-            {ready ? "Update AI Playbook" : "Save AI Playbook"}
+          <button className="min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
+            {saving ? "Saving..." : ready ? "Update AI Playbook" : "Save AI Playbook"}
           </button>
         </div>
       </div>

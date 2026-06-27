@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJson, requireExtensionToken } from "@/lib/mockDb";
 import { generateInviteMessage } from "@/lib/openai";
-import { saveGeneratedMessage } from "@/lib/store";
+import { applyAiPlaybookToLeadInput, saveGeneratedMessage } from "@/lib/store";
 import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 
 const schema = z.object({
@@ -30,7 +30,8 @@ export async function POST(request: Request) {
   if (!feature.ok) return feature.response;
   const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
   if (!capacity.ok) return capacity.response;
-  const message = await generateInviteMessage(body);
-  await saveGeneratedMessage(body, message);
+  const enrichedBody = await applyAiPlaybookToLeadInput(body);
+  const message = await generateInviteMessage(enrichedBody);
+  await saveGeneratedMessage(enrichedBody, message);
   return NextResponse.json({ message: message.slice(0, body.limit ?? 280), storedAsSuggestion: true });
 }

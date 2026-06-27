@@ -44,7 +44,7 @@ Dashboard app:
 - `components/AppSidebarNav.tsx`: sidebar navigation. Current user nav items are Dashboard, AI Playbook, Extension Setup, Billing.
 - `app/app/dashboard/page.tsx`: user dashboard with package, usage, progress, trial/package status.
 - `app/app/ai-playbook/page.tsx`: AI Playbook trainer page.
-- `components/AiPlaybookTrainer.tsx`: local playbook chat. Stores playbook status in localStorage for now.
+- `components/AiPlaybookTrainer.tsx`: AI Playbook chat. Loads/saves the workspace playbook through `/api/ai-playbook` with localStorage as a browser fallback.
 - `app/app/extension/page.tsx`: extension setup page.
 - `components/ExtensionTokenPanel.tsx`: generates, displays, copies, and revokes extension token/connection key.
 - `app/app/billing/page.tsx`: billing/packages.
@@ -198,17 +198,19 @@ Implemented extension routes:
 
 ## AI Routes
 
+- `app/api/ai-playbook/route.ts`: app-side AI Playbook load/save endpoint.
 - `app/api/ai/lead-invite-chat/route.ts`: app-side lead invite chat.
 - `app/api/ai/search-chat/route.ts`: app-side search chat.
 - `app/api/extension/ai/analyze/route.ts`: extension AI fit analysis.
 - `app/api/extension/ai/generate-message/route.ts`: extension message generation.
 - `app/api/extension/ai/lead-chat/route.ts`: extension lead chat and profile/context reasoning.
 - `lib/openai.ts`: OpenAI integration and mocked fallback when `OPENAI_API_KEY` is missing.
+- `lib/store.ts`: `getAiPlaybook`, `saveAiPlaybook`, and `applyAiPlaybookToLeadInput` persist the trained playbook and inject it into extension AI prompts.
 
 AI behavior:
 
 - Suggest concise, human copy.
-- Use AI Playbook context when available.
+- Use AI Playbook context when available. Extension invite generation, reply chat, and fit analysis should all receive the central workspace playbook before OpenAI is called.
 - Avoid fake personalization.
 - Do not invent LinkedIn facts.
 - Clearly separate visible context from inference.
@@ -319,4 +321,3 @@ For production:
 - push to GitHub branch `dev`
 - deploy with Vercel production when app behavior changes
 - documentation-only Cognee changes do not require Vercel deploy
-

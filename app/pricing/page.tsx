@@ -18,7 +18,7 @@ export default function PricingPage() {
       <section className="border-y border-white/10 bg-[#08111f] py-20 text-white sm:py-24">
         <div className="container">
           <div className="grid gap-4 lg:grid-cols-3">
-            {plans.map((plan) => <Card className={`border-white/10 bg-white/5 p-5 text-white ${plan.key === "growth" ? "-translate-y-2 border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`} key={plan.key}>
+            {plans.map((plan) => <Card className={`!border-white/10 !bg-white/5 p-5 !text-white ${plan.key === "growth" ? "-translate-y-2 !border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`} key={plan.key}>
               <h3 className="text-xl font-extrabold">{plan.name}</h3>
               <strong className="my-4 block text-4xl font-extrabold">{plan.price}<span className="ml-1 text-sm text-white/55">/mo</span></strong>
               <p className="min-h-[52px] font-bold leading-6 text-white/80">{plan.summary}</p>
@@ -34,7 +34,7 @@ export default function PricingPage() {
               <div className="mt-5"><Button href="/app/billing" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button></div>
             </Card>)}
           </div>
-          <Card className="mt-5 border-white/10 bg-white/5 p-7 text-white">
+          <Card className="mt-5 !border-white/10 !bg-white/5 p-7 !text-white">
             <span className="inline-flex text-xs font-black uppercase tracking-[.08em] text-blue-300">Add-ons</span>
             <h2 className="my-3 text-3xl font-extrabold">Buy more only when volume grows.</h2>
             <p className="max-w-[780px] font-semibold leading-7 text-white/65">Growth includes enough capacity for a real Sales Navigator workflow. When you need more, add lead scan packs, AI reply packs, or workspace users without changing the whole account.</p>

@@ -97,7 +97,7 @@ export default function HomePage() {
             <div className="absolute bottom-7 left-7 top-7 w-0.5 rounded-full bg-[linear-gradient(180deg,transparent,rgba(96,165,250,.55),rgba(96,165,250,.16),transparent)] md:left-1/2 md:-translate-x-1/2" />
             <motion.div className="absolute left-0 z-[2] flex h-14 w-14 items-center justify-center rounded-full border border-blue-300/30 bg-blue-300/10 shadow-[0_16px_46px_rgba(22,119,255,.25)] md:left-[calc(50%_-_28px)]" style={{ top: planeY }}><img className="h-8 w-8 rotate-90" alt="" src="/paper-plane.svg" /></motion.div>
             <div className="relative z-[1] grid gap-14">{workflow.map((item, index) => <motion.div className="flex justify-end md:even:justify-end md:odd:justify-start" key={item.title} initial={{ opacity: 0, y: 34, scale: .97 }} whileInView={{ opacity: 1, y: -8, scale: 1.018 }} viewport={{ once: false, margin: "-80px" }} transition={{ delay: index * .08, duration: .55 }} whileHover={{ scale: 1.018, y: -8 }}>
-              <Card className="min-h-[300px] w-[calc(100%_-_72px)] border-blue-300/20 bg-white/10 p-8 text-white shadow-[0_24px_90px_rgba(0,0,0,.18)] transition hover:border-blue-300/50 hover:shadow-[0_28px_100px_rgba(22,119,255,.18)] md:w-[min(520px,calc(50%_-_54px))]">
+              <Card className="min-h-[300px] w-[calc(100%_-_72px)] !border-blue-300/20 !bg-white/10 p-8 !text-white shadow-[0_24px_90px_rgba(0,0,0,.18)] transition hover:!border-blue-300/50 hover:shadow-[0_28px_100px_rgba(22,119,255,.18)] md:w-[min(520px,calc(50%_-_54px))]">
                 <div className="flex items-center justify-between"><span className="flex h-[72px] w-[72px] items-center justify-center rounded-[18px] border border-blue-300/30 bg-accent/10"><img className="max-h-11 max-w-11 object-contain" alt="" src={item.icon} /></span><em className="not-italic font-black text-white/40">0{index + 1}</em></div>
                 <h3 className="mt-10 text-3xl font-extrabold leading-tight">{item.title}</h3>
                 <p className="mt-3 text-[17px] font-semibold leading-7 text-white/65">{item.body}</p>
@@ -111,7 +111,7 @@ export default function HomePage() {
           <h2 className="text-4xl font-extrabold leading-tight sm:text-5xl">For teams turning LinkedIn lists into pipeline</h2>
           <div className="mt-10 grid gap-6 overflow-hidden py-5 pb-24 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]" style={{ marginInline: "calc((100vw - min(1160px, calc(100vw - 40px))) / -2)" }}>
             {[reviews.slice(0, 11), reviews.slice(10).concat(reviews.slice(0, 3))].map((row, rowIndex) => <div className={`flex w-max gap-4 animate-reviewDrift ${rowIndex === 1 ? "[animation-direction:reverse] mt-3" : ""}`} key={rowIndex}>
-              {[...row, ...row].map(([name, role, quote, avatar], index) => <Card className={`min-h-[230px] flex-[0_0_330px] border-white/10 bg-white/10 p-5 text-white ${index % 3 === 2 ? "-translate-y-4" : ""} ${index % 4 === 3 ? "translate-y-3" : ""}`} key={`${name}-${rowIndex}-${index}`}>
+              {[...row, ...row].map(([name, role, quote, avatar], index) => <Card className={`min-h-[230px] flex-[0_0_330px] !border-white/10 !bg-white/10 p-5 !text-white ${index % 3 === 2 ? "-translate-y-4" : ""} ${index % 4 === 3 ? "translate-y-3" : ""}`} key={`${name}-${rowIndex}-${index}`}>
                 <div className="flex items-center gap-3"><img className="h-11 w-11 rounded-full object-cover" alt="" src={avatar} /><div><strong className="block font-extrabold">{name}</strong><span className="mt-0.5 block text-xs font-semibold text-white/55">{role}</span></div></div>
                 <div className="my-4 text-xs font-black text-amber-300">★★★★★ <span className="ml-2 inline-flex rounded-full border border-white/10 bg-white/10 px-2 py-1 text-[11px] text-white">Google</span></div>
                 <p className="font-semibold leading-6 text-white/65">"{quote}"</p>
@@ -167,7 +167,7 @@ function SectionIntro({ eyebrow, title }: { eyebrow: string; title: string }) {
 
 function PlanCard({ plan }: { plan: (typeof plans)[number] }) {
   const isFeatured = plan.key === "growth";
-  return <Card className={`border-white/10 bg-white/5 p-5 text-white ${isFeatured ? "-translate-y-2 border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`}>
+  return <Card className={`!border-white/10 !bg-white/5 p-5 !text-white ${isFeatured ? "-translate-y-2 !border-blue-300/60 shadow-[0_24px_80px_rgba(22,119,255,.18)]" : ""}`}>
     <h3 className="text-xl font-extrabold">{plan.name}</h3>
     <strong className="my-4 block text-4xl font-extrabold">{plan.price}<span className="ml-1 text-sm text-white/55">/mo</span></strong>
     <p className="min-h-[52px] font-bold leading-6 text-white/80">{plan.summary}</p>

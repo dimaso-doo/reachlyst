@@ -35,4 +35,4 @@ body {
 a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 .pageShell { min-height: 100vh; }
-.container { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+.container { width: min(1320px, calc(100% - 40px)); margin: 0 auto; }

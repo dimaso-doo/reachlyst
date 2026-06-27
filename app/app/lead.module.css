@@ -19,7 +19,7 @@
 .active { background: #eef4ff; border-color: #cddcff; color: #3867d6; }
 .pending { color: #8b97a6; }
 .muted { opacity: .45; }
-.grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.contentGrid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
 .extensionSetupGrid { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .extensionSetupGrid section { padding: 22px; }
 .extensionSetupGrid h2 { font-size: 16px; margin: 0 0 12px; }
@@ -27,9 +27,9 @@
 .videoTutorial { display: grid; gap: 12px; }
 .videoTutorial div { align-items: center; aspect-ratio: 16 / 10; background: linear-gradient(135deg, #07111f, #162033); border-radius: 8px; color: white; display: flex; justify-content: center; }
 .videoTutorial div span { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; font-size: 12px; font-weight: 900; padding: 8px 11px; }
-.grid section { padding: 22px; }
-.grid p { color: var(--muted); line-height: 1.55; overflow-wrap: anywhere; }
-.grid h2 { font-size: 16px; margin: 0 0 12px; }
+.contentGrid section { padding: 22px; }
+.contentGrid p { color: var(--muted); line-height: 1.55; overflow-wrap: anywhere; }
+.contentGrid h2 { font-size: 16px; margin: 0 0 12px; }
 .settingsGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .settingsGrid section { padding: 22px; }
 .formGrid { display: grid; gap: 12px; }
@@ -64,7 +64,7 @@
 .primaryAction:hover { background: var(--accent-strong); color: white; }
 .steps { color: var(--muted); line-height: 1.7; margin: 0; padding-left: 20px; }
 .steps strong { color: var(--ink); }
-.grid code { background: #f1f5f9; border: 1px solid var(--line); border-radius: 8px; display: block; margin: 12px 0; overflow-wrap: anywhere; padding: 12px; }
+.contentGrid code { background: #f1f5f9; border: 1px solid var(--line); border-radius: 8px; display: block; margin: 12px 0; overflow-wrap: anywhere; padding: 12px; }
 .inviteChat { display: grid; gap: 10px; }
 .inviteThread { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 8px; max-height: 260px; overflow: auto; padding: 10px; }
 .inviteThread p { border-radius: 8px; line-height: 1.5; margin: 0; padding: 9px 10px; white-space: pre-wrap; }
@@ -79,4 +79,4 @@
 .enterToggle { align-items: center; color: var(--muted); display: inline-flex; font-size: 13px; font-weight: 700; gap: 8px; justify-self: start; }
 .enterToggle input { accent-color: var(--accent); height: 15px; width: 15px; }
 .chatError { color: #b42318; font-size: 13px; font-weight: 700; margin: 0; }
-@media (max-width: 920px) { .grid, .extensionSetupGrid, .settingsGrid, .kanban, .leadHero, .inviteComposer, .extensionAccess { grid-template-columns: 1fr; } .accessStatus { justify-items: start; } }
+@media (max-width: 920px) { .contentGrid, .extensionSetupGrid, .settingsGrid, .kanban, .leadHero, .inviteComposer, .extensionAccess { grid-template-columns: 1fr; } .accessStatus { justify-items: start; } }

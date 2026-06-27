@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import styles from "@/app/app/app.module.css";
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
 
@@ -37,24 +36,28 @@ export function AppSidebarNav() {
     };
   }, []);
 
+  const navItem = "relative flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white";
+  const readyBadge = "shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold leading-none text-emerald-800";
+  const untrainedBadge = "shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold leading-none text-amber-800";
+
   return (
     <>
-      <Link href="/app/dashboard">Dashboard</Link>
-      <Link className={styles.playbookNavItem} href="/app/ai-playbook">
+      <Link className="rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white" href="/app/dashboard">Dashboard</Link>
+      <Link className={navItem} href="/app/ai-playbook">
         <span>AI Playbook</span>
-        <small className={ready ? styles.readyBadge : styles.untrainedBadge} title={ready ? "AI Playbook is ready" : "AI Playbook is not trained yet"}>
+        <small className={ready ? readyBadge : untrainedBadge} title={ready ? "AI Playbook is ready" : "AI Playbook is not trained yet"}>
           {ready ? "Ready" : "Not trained"}
         </small>
       </Link>
-      <Link className={styles.playbookNavItem} href="/app/extension">
+      <Link className={navItem} href="/app/extension">
         <span>Extension Setup</span>
-        <small className={extensionReady ? styles.readyBadge : styles.untrainedBadge} title={extensionReady ? "Extension token is ready" : "Extension setup is not ready yet"}>
+        <small className={extensionReady ? readyBadge : untrainedBadge} title={extensionReady ? "Extension token is ready" : "Extension setup is not ready yet"}>
           {extensionReady ? "Ready" : "Not ready"}
         </small>
       </Link>
-      <Link className={styles.billingNavItem} href="/app/billing">
+      <Link className={navItem} href="/app/billing">
         <span>Billing</span>
-        <small>Plan</small>
+        <small className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-extrabold leading-none text-accent-strong">Plan</small>
       </Link>
     </>
   );

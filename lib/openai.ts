@@ -32,6 +32,7 @@ export type SearchAdvisorInput = {
 
 export type AiPlaybookChatInput = {
   messages: SearchAdvisorMessage[];
+  websiteContexts?: Array<{ url: string; title?: string; text: string }>;
 };
 
 export type LeadInviteChatInput = {
@@ -85,8 +86,18 @@ function playbookMemory(messages: SearchAdvisorMessage[]) {
     .join("\n\n");
 }
 
+function formatWebsiteContexts(contexts?: AiPlaybookChatInput["websiteContexts"]) {
+  if (!contexts?.length) return "";
+  return contexts.map((context, index) => [
+    `Website ${index + 1}: ${context.url}`,
+    context.title ? `Title: ${context.title}` : "",
+    context.text
+  ].filter(Boolean).join("\n")).join("\n\n");
+}
+
 function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
   const memory = playbookMemory(input.messages);
+  const websiteContext = formatWebsiteContexts(input.websiteContexts);
   const lower = memory.toLowerCase();
   const hasOffer = /sell|offer|provide|help|we do|service|product|agency|software|consult|support|website|marketing|sales|seo|ppc|development|outreach/i.test(memory);
   const hasIcp = /target|ideal|lead|icp|founder|owner|ceo|head|director|agency|saas|b2b|industry|company|employees|location/i.test(memory);
@@ -116,6 +127,10 @@ function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
     return "Let us build the Playbook properly. Start with what you sell, who buys it, who is a bad fit, and what a good first LinkedIn message should achieve.";
   }
 
+  if (websiteContext) {
+    return `${summary}\n\nI also read the website context you shared. Next question: ${missing[0] ?? "which website claims or offers should Reachlyst use as the main outreach angle, and which should it avoid mentioning?"}`;
+  }
+
   if (lower.includes("save") || lower.includes("ready")) {
     return `${summary}\n\nBefore saving, I would tighten one thing: ${missing[0] ?? "give me 2-3 examples of leads you would definitely want and 2-3 you would skip"}.`;
   }
@@ -135,14 +150,23 @@ export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
           role: "system",
           content: [
             "You are Reachlyst AI Playbook trainer.",
-            "Always answer in English.",
-            "Your job is to have a real discovery conversation and convert the user's business context into practical rules for the Reachlyst extension.",
+            "Reply in the user's language unless they ask for another language.",
+            "Your job is to have a real discovery conversation and convert the user's business context, website content, and sales thinking into practical rules for the Reachlyst extension.",
+            "You may freely discuss the user's website, offer, market, positioning, competitors, buyer psychology, sales angles, objection handling, messaging strategy, and examples as long as the conversation helps train Reachlyst.",
             "Focus on: offer, ICP, good-fit signals, maybe-fit signals, skip/disqualifier rules, target roles, industries, company size, geography, tone, words to avoid, connection invite rules, accepted-connection reply rules, follow-up style, CTA, and examples.",
             "Do not give generic encouragement. Each reply must either summarize concrete conclusions or ask the single most useful next question.",
             "When enough information exists, provide a compact Playbook draft with sections: Offer, Good fit, Maybe, Skip, Invite style, Reply style, Follow-up style, Default message types, Missing information.",
-            "Keep it concise and actionable. Do not mention automation, scraping, auto-connect, auto-send, or credential storage."
+            "If website context is provided, use it to infer the offer, proof points, target customer, tone, and possible outreach angles. Be clear when an inference is uncertain.",
+            "Keep it useful and conversational. Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization."
           ].join(" ")
         },
+        ...(input.websiteContexts?.length ? [{
+          role: "user" as const,
+          content: JSON.stringify({
+            instruction: "Use this public website context as additional material for AI Playbook training.",
+            websiteContexts: input.websiteContexts
+          })
+        }] : []),
         ...input.messages.map((message) => ({ role: message.role, content: message.content }))
       ]
     });

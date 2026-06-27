@@ -1,6 +1,8 @@
 const DEFAULTS = {
   reachlystApiBase: "https://reachlyst.com",
   reachlystToken: "",
+  reachlystDeviceId: "",
+  reachlystDeviceLabel: "",
   reachlystEnabled: false,
   reachlystVerified: false,
   reachlystPlanName: ""
@@ -33,13 +35,32 @@ async function ensureDefaults() {
   return { ...DEFAULTS, ...values, ...next };
 }
 
+function createDeviceId() {
+  if (globalThis.crypto?.randomUUID) return `rlydev_${globalThis.crypto.randomUUID()}`;
+  return `rlydev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+}
+
+async function ensureDeviceIdentity() {
+  const values = await chrome.storage.sync.get(["reachlystDeviceId", "reachlystDeviceLabel"]);
+  const next = {};
+  const deviceId = values.reachlystDeviceId || createDeviceId();
+  const deviceLabel = values.reachlystDeviceLabel || `Chrome on ${navigator.platform || "this computer"}`;
+  if (!values.reachlystDeviceId) next.reachlystDeviceId = deviceId;
+  if (!values.reachlystDeviceLabel) next.reachlystDeviceLabel = deviceLabel;
+  if (Object.keys(next).length) await chrome.storage.sync.set(next);
+  return { deviceId, deviceLabel };
+}
+
 async function callReachlyst(path, token) {
   const settings = await chrome.storage.sync.get(["reachlystApiBase"]);
+  const identity = await ensureDeviceIdentity();
   const response = await fetch(`${settings.reachlystApiBase || DEFAULTS.reachlystApiBase}${path}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-reachlyst-extension-token": token
+      "x-reachlyst-extension-token": token,
+      "x-reachlyst-extension-device-id": identity.deviceId,
+      "x-reachlyst-extension-device-label": identity.deviceLabel
     }
   });
   const data = await response.json().catch(() => ({}));

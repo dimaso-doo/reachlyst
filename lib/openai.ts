@@ -229,11 +229,12 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
         {
           role: "system",
           content: [
-            "You are Reachlyst AI. Help polish a LinkedIn connection invite for one visible lead.",
+            "You are Reachlyst AI. Help polish LinkedIn copy for one visible Sales Navigator person.",
             "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
             "Stay strictly in scope: invite copy, reply copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
-            "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies and never say you cannot see the conversation.",
-            "If the user asks for anything else, refuse briefly in the user's language and bring them back to improving the invite.",
+            "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies or follow-ups and never say you cannot see the conversation.",
+            "If lead.conversationContext is missing, focus on connection invite copy for search/leads.",
+            "If the user asks for anything else, refuse briefly in the user's language and bring them back to improving LinkedIn outreach copy.",
             "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
             "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",
             "Avoid hype, flattery, emojis, exclamation marks, and phrases like admire, love, excited, partnership, collaboration, discuss, learn more, or share insights."
@@ -243,7 +244,9 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           role: "user",
           content: JSON.stringify({
             lead: input.lead,
-            task: "Polish or generate a safe copyable LinkedIn invite for this lead."
+            task: input.lead.conversationContext
+              ? "Polish or generate a safe copyable LinkedIn reply or follow-up for this visible conversation."
+              : "Polish or generate a safe copyable LinkedIn invite for this lead."
           })
         },
         ...input.messages.map((message) => ({ role: message.role, content: message.content }))

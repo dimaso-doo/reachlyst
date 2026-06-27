@@ -53,9 +53,13 @@
 .tokenBox input { background: white; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; min-height: 42px; padding: 0 12px; }
 .tokenBox button, .tokenActions button { background: var(--accent); border: 0; border-radius: 8px; color: white; cursor: pointer; font-weight: 900; min-height: 42px; padding: 0 14px; width: fit-content; }
 .tokenBox button:hover, .tokenActions button:hover { background: var(--accent-strong); }
+.tokenBox button[data-variant="danger"] { background: #fff1f2; border: 1px solid #fecdd3; color: #be123c; }
+.tokenBox button[data-variant="danger"]:hover { background: #ffe4e6; color: #9f1239; }
 .tokenBox small { color: var(--muted); font-weight: 700; }
+.tokenButtonRow { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
 .tokenError { color: #b42318 !important; font-weight: 800; grid-column: 1 / -1; }
-.tokenActions { display: flex; grid-column: 1 / -1; justify-content: flex-start; }
+.tokenActions { align-items: center; display: flex; grid-column: 1 / -1; justify-content: flex-start; }
+.tokenHint { color: var(--muted); font-weight: 800; }
 .primaryAction { background: var(--accent); border-radius: 8px; box-shadow: 0 8px 18px rgba(22,119,255,.18); color: white; display: inline-flex; font-weight: 800; min-height: 40px; padding: 10px 14px; text-decoration: none; white-space: nowrap; }
 .primaryAction:hover { background: var(--accent-strong); color: white; }
 .steps { color: var(--muted); line-height: 1.7; margin: 0; padding-left: 20px; }

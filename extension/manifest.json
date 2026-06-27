@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Reachlyst",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Read-only LinkedIn Sales Navigator assistant and outreach logbook",
   "permissions": ["storage", "activeTab", "scripting", "clipboardWrite"],
   "host_permissions": ["https://www.linkedin.com/sales/*", "https://reachlyst.com/*", "http://localhost/*", "http://127.0.0.1/*", "https://*.vercel.app/*"],
@@ -13,6 +13,12 @@
       "js": ["parsers/salesNavigatorParser.js", "parsers/messagesParser.js", "content/contentScript.js"],
       "css": ["styles/content.css"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/reachlyst-logo-r-blue.png"],
+      "matches": ["https://www.linkedin.com/*"]
     }
   ]
 }

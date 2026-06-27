@@ -3,10 +3,15 @@ import { z } from "zod";
 import { verifyExtensionToken } from "@/lib/extensionTokens";
 
 export const extensionAuthHeader = "x-reachlyst-extension-token";
+export const extensionDeviceHeader = "x-reachlyst-extension-device-id";
+export const extensionDeviceLabelHeader = "x-reachlyst-extension-device-label";
 
 export async function requireExtensionToken(request: Request) {
   const token = request.headers.get(extensionAuthHeader) ?? "";
-  const auth = await verifyExtensionToken(token);
+  const deviceId = request.headers.get(extensionDeviceHeader) ?? "";
+  const deviceLabel = request.headers.get(extensionDeviceLabelHeader) ?? undefined;
+  const userAgent = request.headers.get("user-agent") ?? undefined;
+  const auth = await verifyExtensionToken(token, deviceId, deviceLabel, userAgent);
   if (!auth.ok) {
     return {
       ok: false as const,

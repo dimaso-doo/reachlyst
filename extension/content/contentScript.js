@@ -1,4 +1,4 @@
-const EXTENSION_VERSION = "0.1.2";
+const EXTENSION_VERSION = "0.1.3";
 const PARSER_VERSION = "2026.06.26";
 const DEFAULT_SETTINGS = {
     reachlystApiBase: "https://reachlyst.com",
@@ -107,6 +107,9 @@ function sameLeadRecord(a, b) {
 function firstName(name) {
     return String(name || "").split(" ")[0] || "there";
 }
+function reachlystLogoUrl() {
+    return chrome.runtime.getURL("assets/reachlyst-logo-r-blue.png");
+}
 function leadCompanyLine(lead) {
     return String(lead.company || lead.title || "").trim() || (lead.context === "messages" ? "Sales Navigator messages" : "Company not found");
 }
@@ -206,7 +209,7 @@ function ensureFloatingChat() {
     chat.className = "reachlyst-floating-chat";
     chat.innerHTML = `
     <div class="reachlyst-chat-top">
-      <span class="reachlyst-r">R</span>
+      <img class="reachlyst-r" alt="Reachlyst" src="${reachlystLogoUrl()}" />
       <div>
         <strong data-role="leadName">Reachlyst AI</strong>
         <small data-role="leadMeta">Select a lead to start.</small>
@@ -362,7 +365,7 @@ function ensureLeadButton(anchor, lead) {
         button = document.createElement("button");
         button.className = "reachlyst-lead-button";
         button.type = "button";
-        button.textContent = "R";
+        button.innerHTML = `<img alt="Reachlyst" src="${reachlystLogoUrl()}" />`;
         button.setAttribute("aria-label", "Open Reachlyst AI");
         button.addEventListener("click", (event) => {
             event.preventDefault();

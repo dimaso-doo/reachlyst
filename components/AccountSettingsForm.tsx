@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
-import styles from "@/app/app/lead.module.css";
 
 const defaults = {
   fullName: "Predrag",
@@ -38,30 +37,30 @@ export function AccountSettingsForm() {
 
   return (
     <>
-      <section className={styles.settingsGrid}>
-        <Card>
-          <h2>Profile</h2>
-          <div className={styles.formGrid}>
-            <label>Full name<input onChange={(event) => update("fullName", event.target.value)} value={values.fullName} /></label>
-            <label>Work email<input readOnly type="email" value={values.email} /></label>
-            <label>Phone number<input onChange={(event) => update("phone", event.target.value)} placeholder="+381..." type="tel" value={values.phone} /></label>
-            <label>Role<input onChange={(event) => update("role", event.target.value)} value={values.role} /></label>
-            <label>Timezone<input onChange={(event) => update("timezone", event.target.value)} value={values.timezone} /></label>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-6">
+          <h2 className="mb-4 text-lg font-extrabold text-ink">Profile</h2>
+          <div className="grid gap-3">
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Full name<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("fullName", event.target.value)} value={values.fullName} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Work email<input className="min-h-11 cursor-default rounded-lg border border-slate-200 bg-slate-100 px-3 text-sm font-bold normal-case text-muted" readOnly type="email" value={values.email} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Phone number<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("phone", event.target.value)} placeholder="+381..." type="tel" value={values.phone} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Role<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("role", event.target.value)} value={values.role} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Timezone<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("timezone", event.target.value)} value={values.timezone} /></label>
           </div>
         </Card>
 
-        <Card>
-          <h2>Workspace</h2>
-          <div className={styles.formGrid}>
-            <label>Workspace name<input onChange={(event) => update("workspace", event.target.value)} value={values.workspace} /></label>
-            <label>Company website<input onChange={(event) => update("website", event.target.value)} placeholder="https://example.com" value={values.website} /></label>
+        <Card className="p-6">
+          <h2 className="mb-4 text-lg font-extrabold text-ink">Workspace</h2>
+          <div className="grid gap-3">
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Workspace name<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("workspace", event.target.value)} value={values.workspace} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Company website<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("website", event.target.value)} placeholder="https://example.com" value={values.website} /></label>
           </div>
         </Card>
       </section>
 
-      <div className={styles.settingsActions}>
-        <button onClick={save} type="button">Save changes</button>
-        {saved ? <span>Saved</span> : null}
+      <div className="mt-4 flex items-center gap-3">
+        <button className="min-h-11 rounded-lg bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong" onClick={save} type="button">Save changes</button>
+        {saved ? <span className="text-sm font-extrabold text-emerald-700">Saved</span> : null}
       </div>
     </>
   );

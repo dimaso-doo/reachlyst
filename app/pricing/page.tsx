@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import { MarketingFooter, MarketingNav } from "@/components/MarketingChrome";
 import { Button, Card } from "@/components/ui";
 import { formatLimit } from "@/lib/planLimits";
 import { plans } from "@/lib/stripe";
@@ -52,12 +52,4 @@ export default function PricingPage() {
       <MarketingFooter />
     </main>
   );
-}
-
-function MarketingNav() {
-  return <nav className="sticky top-0 z-10 border-b border-white/10 bg-[#050a18]"><div className="container flex min-h-[72px] flex-col items-start gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0"><Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-extrabold text-white/70"><Link className="transition hover:scale-[1.025] hover:text-white" href="/features">Features</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/pricing">Pricing</Link><Link className="transition hover:scale-[1.025] hover:text-white" href="/login">Login</Link><Button href="/signup">Sign up</Button></div></div></nav>;
-}
-
-function MarketingFooter() {
-  return <footer className="border-t border-white/10 bg-[#050a18] py-8 text-white/70"><div className="container flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between"><Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link><nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold"><Link className="hover:text-white" href="/pricing">Pricing</Link><Link className="hover:text-white" href="/features">Features</Link><Link className="hover:text-white" href="/privacy">Privacy Policy</Link><Link className="hover:text-white" href="/terms">Terms</Link><Link className="hover:text-white" href="/blog">Blog</Link></nav></div></footer>;
 }

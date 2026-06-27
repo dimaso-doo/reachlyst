@@ -21,12 +21,6 @@ export function getAppUrl() {
 export function getStripePriceId(plan: string) {
   const config = plans.find((item) => item.key === plan);
   if (!config) return null;
-  if (config.priceEnv === "STRIPE_GROWTH_PRICE_ID") {
-    return process.env.STRIPE_GROWTH_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID || null;
-  }
-  if (config.priceEnv === "STRIPE_SCALE_PRICE_ID") {
-    return process.env.STRIPE_SCALE_PRICE_ID || process.env.STRIPE_AGENCY_PRICE_ID || null;
-  }
   return config.priceEnv ? process.env[config.priceEnv] || null : null;
 }
 

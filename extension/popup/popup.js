@@ -69,7 +69,7 @@ async function verifyToken() {
       reachlystVerified: true,
       reachlystPlanName: data.plan?.plan || data.plan?.status || "active"
     });
-    setStatus("Token verified. Open a Sales Navigator search and click Start.", false, true);
+    setStatus("Token verified. Open Sales Navigator search or messages and click Start.", false, true);
     return true;
   } catch (error) {
     await chrome.storage.sync.set({ reachlystVerified: false, reachlystEnabled: false });
@@ -93,14 +93,14 @@ async function startReachlyst() {
   if (!verified) return;
   await chrome.storage.sync.set({ reachlystEnabled: true });
   await messageActiveTab("reachlyst_start");
-  setStatus("Running on visible Sales Navigator search leads.", true, true);
+  setStatus("Running on visible Sales Navigator pages.", true, true);
 }
 
 async function stopReachlyst() {
   await chrome.storage.sync.set({ reachlystEnabled: false });
   await messageActiveTab("reachlyst_stop");
   const settings = await chrome.storage.sync.get(["reachlystVerified"]);
-  setStatus("Paused. Click Start when you want Reachlyst on this search.", false, settings.reachlystVerified === true);
+  setStatus("Paused. Click Start when you want Reachlyst on Sales Navigator.", false, settings.reachlystVerified === true);
 }
 
 verifyButton.addEventListener("click", verifyToken);
@@ -116,8 +116,8 @@ ensureDefaults().then((settings) => {
   setStatus(
     settings.reachlystVerified
       ? settings.reachlystEnabled
-        ? "Running on visible Sales Navigator search leads."
-        : "Token verified. Open a Sales Navigator search and click Start."
+        ? "Running on visible Sales Navigator pages."
+        : "Token verified. Open Sales Navigator search or messages and click Start."
       : "Paste your token from Reachlyst, then verify it.",
     settings.reachlystEnabled && settings.reachlystVerified,
     settings.reachlystVerified

@@ -1,6 +1,7 @@
 declare const chrome: any;
 declare function parseSalesNavigatorLeads(root?: ParentNode): { leads: any[]; failures: string[] };
-const EXTENSION_VERSION = "0.1.0";
+declare function parseVisibleMessages(root?: ParentNode): { messages: Array<{ senderType: "user" | "lead" | "unknown"; body: string; sentAt?: string }>; failures: string[] };
+const EXTENSION_VERSION = "0.1.1";
 const PARSER_VERSION = "2026.06.26";
 const DEFAULT_SETTINGS = {
   reachlystApiBase: "https://reachlyst.com",
@@ -124,7 +125,7 @@ function firstName(name) {
 }
 
 function leadCompanyLine(lead) {
-  return String(lead.company || "").trim() || "Company not found";
+  return String(lead.company || lead.title || "").trim() || (lead.context === "messages" ? "Sales Navigator messages" : "Company not found");
 }
 
 function leadPayload(lead, extra = {}) {
@@ -146,7 +147,9 @@ function chatStateForLead(lead) {
     leadChatState.set(key, {
       messages: [{
         role: "assistant",
-        content: `Selected ${firstName(lead.name)}. Click Generate invite or tell me how to shape the message.`
+        content: lead.context === "messages"
+          ? `Selected ${firstName(lead.name)}. Tell me what kind of reply or follow-up you want to write.`
+          : `Selected ${firstName(lead.name)}. Click Generate invite or tell me how to shape the message.`
       }],
       latestInvite: ""
     });
@@ -287,9 +290,15 @@ function openFloatingChat(lead) {
   }
   chat.querySelector('[data-role="leadName"]').textContent = lead.name;
   chat.querySelector('[data-role="leadMeta"]').textContent = leadCompanyLine(lead);
-  chat.querySelector(".reachlyst-chat-status").textContent = "Chat is tied to this selected lead.";
+  const generateButton = chat.querySelector('[data-action="generate"]');
+  if (generateButton) generateButton.textContent = lead.context === "messages" ? "Generate reply" : "Generate invite";
+  const input = chat.querySelector(".reachlyst-chat-input");
+  if (input) input.placeholder = lead.context === "messages"
+    ? "Ask for a shorter, warmer, direct, or more specific reply..."
+    : "Write in any language. Ask for a shorter, warmer, direct, or more specific invite...";
+  chat.querySelector(".reachlyst-chat-status").textContent = lead.context === "messages" ? "Chat is tied to this selected conversation." : "Chat is tied to this selected lead.";
   renderThread(chat, lead);
-  chat.querySelector(".reachlyst-chat-input").focus();
+  if (!document.activeElement?.closest?.(".reachlyst-floating-chat")) chat.querySelector(".reachlyst-chat-input").focus();
 }
 
 function visibleActionControl(element, card) {
@@ -406,19 +415,23 @@ function attachLeadButtons(leads) {
 async function generateInvite(lead, chat, button) {
   const state = chatStateForLead(lead);
   const status = chat.querySelector(".reachlyst-chat-status");
+  const isMessages = lead.context === "messages";
   button.textContent = "Generating";
-  if (status) status.textContent = "Generating a copyable invite...";
+  if (status) status.textContent = isMessages ? "Generating a copyable reply..." : "Generating a copyable invite...";
 
   const response = await reachlystApi("/api/extension/ai/generate-message", {
     method: "POST",
-    body: JSON.stringify(leadPayload(lead, { instruction: "Generate a concise LinkedIn connection invite for this specific lead.", previousMessage: state.latestInvite }))
+    body: JSON.stringify(leadPayload(lead, {
+      instruction: isMessages ? "Generate a concise LinkedIn reply or follow-up for this accepted connection conversation." : "Generate a concise LinkedIn connection invite for this specific lead.",
+      previousMessage: state.latestInvite
+    }))
   });
   const result = await response.json();
   state.latestInvite = result.message;
   state.messages.push({ role: "assistant", content: result.message });
   renderThread(chat, lead);
-  if (status) status.textContent = "Invite saved as a Reachlyst suggestion.";
-  button.textContent = "Generate invite";
+  if (status) status.textContent = isMessages ? "Reply saved as a Reachlyst suggestion." : "Invite saved as a Reachlyst suggestion.";
+  button.textContent = isMessages ? "Generate reply" : "Generate invite";
 }
 
 async function sendLeadChat(lead, chat, button) {
@@ -435,7 +448,7 @@ async function sendLeadChat(lead, chat, button) {
   input.value = "";
   renderThread(chat, lead);
   button.textContent = "Thinking";
-  if (status) status.textContent = "AI is working on this lead...";
+  if (status) status.textContent = lead.context === "messages" ? "AI is working on this conversation..." : "AI is working on this lead...";
 
   const response = await reachlystApi("/api/extension/ai/lead-chat", {
     method: "POST",
@@ -518,6 +531,84 @@ async function runSalesNavigator() {
   setFetchStatus(parsed.leads.length);
 }
 
+function isSalesSearchPage() {
+  return /linkedin\.com\/sales\/search/.test(location.href);
+}
+
+function isSalesMessagesPage() {
+  return /linkedin\.com\/sales\/(inbox|messaging|messages)/.test(location.href);
+}
+
+function cleanVisibleText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function visibleElement(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function messageThreadRoot() {
+  return Array.from(document.querySelectorAll('main, [aria-label*="conversation" i], [data-test-conversation-view], [data-test-message-list], section'))
+    .filter(visibleElement)
+    .sort((a, b) => b.getBoundingClientRect().width * b.getBoundingClientRect().height - a.getBoundingClientRect().width * a.getBoundingClientRect().height)[0] || document;
+}
+
+function selectedMessageLead() {
+  const root = messageThreadRoot();
+  const anchors = Array.from(root.querySelectorAll('a[href*="/sales/lead/"], a[href*="/in/"]')).filter(visibleElement);
+  const anchor = anchors.find((item) => cleanVisibleText(item.textContent).length > 1);
+  const headings = Array.from(root.querySelectorAll("h1, h2, h3")).filter(visibleElement);
+  const heading = headings
+    .map((item) => cleanVisibleText(item.textContent))
+    .find((text) => text.length > 1 && !/messag|conversation|inbox|sales navigator/i.test(text));
+  const name = cleanVisibleText(anchor?.textContent) || heading || "Selected conversation";
+  const href = anchor?.href || location.href;
+  return {
+    id: `message-${safeDomKey(href || name)}`,
+    name,
+    company: "Accepted connection",
+    salesNavigatorUrl: href.includes("/sales/lead/") ? href : undefined,
+    linkedinUrl: href.includes("/in/") ? href : undefined,
+    context: "messages",
+    snippet: "Sales Navigator message thread"
+  };
+}
+
+async function runSalesMessages() {
+  if (!(await reachlystIsEnabled())) {
+    removeReachlystUi();
+    return;
+  }
+
+  if (!isSalesMessagesPage()) {
+    removeReachlystUi();
+    return;
+  }
+
+  if (/login|checkpoint/.test(location.href)) return showLinkedInNotice();
+
+  const lead = selectedMessageLead();
+  if (!lead.name || lead.name === "Selected conversation") {
+    setStatus("Open a Sales Navigator conversation.", "warn");
+    return;
+  }
+
+  const parsed = parseVisibleMessages(messageThreadRoot());
+  await reportParser("sales_messages", parsed.messages.length, parsed.failures);
+  if (parsed.messages.length) {
+    reachlystApi("/api/extension/messages/sync-thread", {
+      method: "POST",
+      body: JSON.stringify({ threadUrl: location.href, source: "sales_inbox", messages: parsed.messages.slice(-30) })
+    }).catch(() => undefined);
+  }
+
+  if (!selectedLead || !sameLeadRecord(selectedLead, lead)) openFloatingChat(lead);
+  const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
+  if (status) status.textContent = parsed.messages.length ? `Conversation ready. Synced ${parsed.messages.length} visible messages.` : "Conversation ready.";
+}
+
 async function reportParser(pageType, extractedCount, failures) {
   await reachlystApi("/api/extension/parser/report", {
     method: "POST",
@@ -533,7 +624,12 @@ async function scheduleReachlystRun() {
     return;
   }
   reachlystRunTimer = setTimeout(() => {
-    runSalesNavigator().catch((error) => setStatus(`Reachlyst: ${error.message}`, "danger"));
+    const runner = isSalesSearchPage() ? runSalesNavigator : isSalesMessagesPage() ? runSalesMessages : null;
+    if (!runner) {
+      removeReachlystUi();
+      return;
+    }
+    runner().catch((error) => setStatus(`Reachlyst: ${error.message}`, "danger"));
   }, 600);
 }
 

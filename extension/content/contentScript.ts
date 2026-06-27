@@ -1,7 +1,7 @@
 declare const chrome: any;
 declare function parseSalesNavigatorLeads(root?: ParentNode): { leads: any[]; failures: string[] };
 declare function parseVisibleMessages(root?: ParentNode): { messages: Array<{ senderType: "user" | "lead" | "unknown"; body: string; sentAt?: string }>; failures: string[] };
-const EXTENSION_VERSION = "0.1.1";
+const EXTENSION_VERSION = "0.1.2";
 const PARSER_VERSION = "2026.06.26";
 const DEFAULT_SETTINGS = {
   reachlystApiBase: "https://reachlyst.com",
@@ -136,9 +136,17 @@ function leadPayload(lead, extra = {}) {
     `Offer: ${playbook.offer || "Not configured"}`,
     `Tone: ${playbook.tone || "Professional, concise, human"}`,
     `Rules: ${playbook.instructions || "Avoid fake personalization. Keep it concise."}`,
+    lead.conversationContext ? `Visible conversation:\n${lead.conversationContext}` : "",
     "LinkedIn action policy: suggest copy only; user manually pastes and sends."
-  ].join("\n");
+  ].filter(Boolean).join("\n");
   return { ...lead, campaignContext, tone: playbook.tone || "Professional, concise, human", useCase: playbook.useCase || "sales_outreach", ...extra };
+}
+
+function formatConversationContext(messages) {
+  return messages.slice(-12).map((message) => {
+    const speaker = message.senderType === "user" ? "You" : message.senderType === "lead" ? "Lead" : "Unknown";
+    return `${speaker}: ${String(message.body || "").replace(/\s+/g, " ").trim()}`;
+  }).filter((line) => line.length > 8).join("\n").slice(0, 5000);
 }
 
 function chatStateForLead(lead) {
@@ -596,6 +604,7 @@ async function runSalesMessages() {
   }
 
   const parsed = parseVisibleMessages(messageThreadRoot());
+  lead.conversationContext = formatConversationContext(parsed.messages);
   await reportParser("sales_messages", parsed.messages.length, parsed.failures);
   if (parsed.messages.length) {
     reachlystApi("/api/extension/messages/sync-thread", {

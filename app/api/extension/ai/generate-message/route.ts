@@ -16,6 +16,7 @@ const schema = z.object({
   useCase: z.string().optional(),
   previousMessage: z.string().optional(),
   instruction: z.string().optional(),
+  conversationContext: z.string().optional(),
   variant: z.number().optional(),
   limit: z.number().optional()
 });

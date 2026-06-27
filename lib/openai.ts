@@ -11,6 +11,7 @@ export type AiLeadInput = {
   useCase?: string;
   previousMessage?: string;
   instruction?: string;
+  conversationContext?: string;
   variant?: number;
   limit?: number;
 };
@@ -97,11 +98,14 @@ export async function generateInviteMessage(input: AiLeadInput) {
 
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
+    const isReply = /reply|follow-up|conversation|accepted connection|odgovor|prepis/i.test(`${input.instruction ?? ""} ${input.conversationContext ?? ""}`);
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "Return JSON with a single field message. Write one short LinkedIn connection invite sentence under the provided character limit, ideally 90-160 characters. Style example: 'Hi Ana, saw your work at Bright SEO Agency. Thought it made sense to connect here.' Keep it calm, direct, specific, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', 'request', 'opportunities', 'discuss', 'learn more', 'collaboration', and 'partnership'. Do not invent personalization. Do not imply automation." },
+        { role: "system", content: isReply
+          ? "Return JSON with a single field message. Write a concise LinkedIn reply or follow-up based only on the visible conversation context. Keep it calm, direct, human, and ready for manual copy/paste. Do not invent personalization. Do not imply automation. Avoid hype, flattery, emojis, and pushy sales language."
+          : "Return JSON with a single field message. Write one short LinkedIn connection invite sentence under the provided character limit, ideally 90-160 characters. Style example: 'Hi Ana, saw your work at Bright SEO Agency. Thought it made sense to connect here.' Keep it calm, direct, specific, and human. Avoid hype, flattery, emojis, exclamation marks, 'admire', 'love', 'excited', 'looking forward', 'share insights', 'exchange ideas', 'thank you', 'request', 'opportunities', 'discuss', 'learn more', 'collaboration', and 'partnership'. Do not invent personalization. Do not imply automation." },
         { role: "user", content: JSON.stringify(input) }
       ]
     });
@@ -187,9 +191,14 @@ function fallbackLeadInviteChat(input: LeadInviteChatInput) {
   const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
   const base = input.lead.currentMessage || fallbackInviteMessage(input.lead);
   const wantsSerbian = /[čćžšđ]|srpsk|bosansk|hrvatsk|poruk|poziv|krać|krac|toplij|direktnij|napiš|napis|može|moze|lead|osob/i.test(latest);
+  if (/see|vidi|prepis|conversation|thread|chat/i.test(latest) && input.lead.conversationContext) {
+    return wantsSerbian
+      ? `Da, vidim poslednju vidljivu prepisku koju je ekstenzija pročitala:\n\n${input.lead.conversationContext}`
+      : `Yes, I can see the latest visible conversation that the extension captured:\n\n${input.lead.conversationContext}`;
+  }
   if (!latest.trim()) return wantsSerbian ? `Evo čistog početka:\n\n${base}` : `Here is a clean starting point:\n\n${base}`;
 
-  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|poruk|poziv|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez/i.test(latest)) {
+  if (!/message|invite|tone|short|long|friendly|direct|formal|casual|rewrite|improve|polish|personal|copy|connect|linkedin|outreach|follow|reply|conversation|thread|chat|see|poruk|poziv|odgovor|prepis|vidi|ton|krać|krac|duž|duz|toplij|direkt|formal|neformal|prepiš|prepis|poboljš|poboljs|kopir|povež|povez/i.test(latest)) {
     return wantsSerbian
       ? "Mogu da pomognem samo oko LinkedIn invite i outreach poruke za ovaj lead."
       : "I can only help polish LinkedIn invite and outreach copy for this lead.";
@@ -222,7 +231,8 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
           content: [
             "You are Reachlyst AI. Help polish a LinkedIn connection invite for one visible lead.",
             "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
-            "Stay strictly in scope: invite copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
+            "Stay strictly in scope: invite copy, reply copy, follow-up copy, tone, personalization boundaries, and manual LinkedIn outreach.",
+            "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies and never say you cannot see the conversation.",
             "If the user asks for anything else, refuse briefly in the user's language and bring them back to improving the invite.",
             "Do not suggest automation, auto-connect, auto-send, scraping, or fake personalization.",
             "Keep suggested invite copy under 280 characters, ideally 90-160 characters.",

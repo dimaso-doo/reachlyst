@@ -32,6 +32,24 @@ const features = [
   ["Manual-first safety", "Reachlyst never sends LinkedIn messages for you. It prepares copy and context, while you stay in control."]
 ];
 
+const productScreenshots = [
+  {
+    image: "/product-screenshots/lead.png",
+    title: "Lead research and invite generation",
+    body: "Open a Sales Navigator lead, ask Reachlyst for context, and generate a short connection invite without leaving the page."
+  },
+  {
+    image: "/product-screenshots/messages.png",
+    title: "Reply suggestions for accepted connections",
+    body: "On message threads, Reachlyst uses the visible conversation to suggest cleaner follow-ups you can copy, edit, and send manually."
+  },
+  {
+    image: "/product-screenshots/dashboard.png",
+    title: "Dashboard, AI Playbook, and extension setup",
+    body: "Train the AI Playbook, track usage, manage extension access, and keep the workspace ready for your team."
+  }
+];
+
 const reviews = [
   ["Sofia Grant", "Founder, Pipeline North", "Reachlyst turned our Sales Navigator tabs into an actual workflow. It is much easier to see who is worth contacting.", "https://i.pravatar.cc/96?img=47"],
   ["Marcus Lee", "Growth Lead, Cloudlane", "The fit scoring and invite drafts save our team a lot of review time without changing how reps work on LinkedIn.", "https://i.pravatar.cc/96?img=12"],
@@ -84,13 +102,9 @@ export default function HomePage() {
             <p className="mx-auto max-w-[780px] text-xl leading-relaxed text-white/70 sm:text-[22px]">Reachlyst helps you understand leads, draft better invites and replies, and keep every outreach step organized while you prospect.</p>
             <div className="mt-7 flex justify-center"><Button href="/signup">Start free</Button></div>
           </motion.div>
-          <motion.div className="mx-auto w-full max-w-[1080px] overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,.32)]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
-            <div className="flex h-[42px] items-center gap-2 bg-white/10 px-3.5"><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><strong className="ml-2 text-xs font-extrabold text-white/70">Reachlyst demo</strong></div>
-            <div className="relative grid min-h-[420px] gap-3.5 bg-[linear-gradient(145deg,rgba(11,18,32,.96),rgba(15,23,42,.88))] p-5 md:min-h-[500px] md:grid-cols-[1.2fr_.8fr] md:p-7">
-              <div className="absolute left-1/2 top-1/2 z-[2] flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent pl-1 text-2xl text-white shadow-[0_18px_50px_rgba(22,119,255,.45)]">▶</div>
-              <Card className="self-end p-6 text-ink md:row-span-2 md:min-h-[280px]"><h3 className="text-xl font-extrabold">Agency owners</h3><strong className="mt-5 block text-5xl">62 leads</strong><p className="mt-3 font-bold text-muted">21 good fits · 16 invited · 5 replies</p></Card>
-              <Card className="p-6 text-ink"><h3 className="text-xl font-extrabold">Suggested invite</h3><p className="mt-3 font-bold leading-7 text-muted">Hi Maya, noticed your work at Bright Pipeline. Thought it made sense to connect.</p></Card>
-            </div>
+          <motion.div className="mx-auto w-full max-w-[1120px] overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,.32)]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
+            <div className="flex h-[42px] items-center gap-2 bg-white/10 px-3.5"><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><span className="h-2.5 w-2.5 rounded-full bg-white/50" /><strong className="ml-2 text-xs font-extrabold text-white/70">Reachlyst in Sales Navigator</strong></div>
+            <img className="block aspect-[16/10] w-full object-cover object-center" src="/product-screenshots/lead.png" alt="Reachlyst lead chat generating a Sales Navigator connection invite" />
           </motion.div>
           <motion.div className="relative mx-auto grid w-full max-w-[1080px] gap-3.5 overflow-hidden rounded-2xl border border-blue-200/20 bg-[linear-gradient(120deg,rgba(96,165,250,.16),rgba(255,255,255,.055)_38%,rgba(34,211,238,.11)),repeating-linear-gradient(90deg,rgba(255,255,255,.04)_0_1px,transparent_1px_56px)] p-3.5 shadow-[0_30px_90px_rgba(0,0,0,.24)] before:pointer-events-none before:absolute before:inset-0 before:animate-aiSweep before:bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,.12)_42%,rgba(96,165,250,.18)_50%,transparent_64%)] md:grid-cols-4" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .5 }}>
             {aiHighlights.map(([number, title, body], index) => <motion.div className="relative z-[1] min-h-[168px] animate-aiFloat rounded-xl border border-white/10 bg-[#050a18]/60 p-5 transition hover:-translate-y-1.5 hover:border-blue-300/50 hover:shadow-[0_18px_52px_rgba(22,119,255,.18)]" style={{ animationDelay: `${index * .8}s` }} key={title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .06 }}>
@@ -110,6 +124,29 @@ export default function HomePage() {
               <h3 className="text-xl font-extrabold leading-tight">{title}</h3>
               <p className="mt-3 text-sm font-semibold leading-6 text-white/65">{body}</p>
             </Card>)}
+          </div>
+        </div>
+      </section>
+      <section id="product-screenshots" className="border-b border-white/10 bg-[#08111f] py-24 text-white sm:py-28">
+        <div className="container">
+          <SectionIntro eyebrow="Product screenshots" title="See the extension and workspace in the moments where buyers actually need help." />
+          <div className="mt-10 grid gap-5">
+            <motion.figure className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_28px_90px_rgba(0,0,0,.24)]" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .5 }}>
+              <img className="block w-full" src={productScreenshots[0].image} alt={productScreenshots[0].title} />
+              <figcaption className="grid gap-2 border-t border-white/10 p-5 sm:grid-cols-[.38fr_1fr] sm:items-center">
+                <strong className="text-xl font-extrabold">{productScreenshots[0].title}</strong>
+                <span className="font-semibold leading-7 text-white/65">{productScreenshots[0].body}</span>
+              </figcaption>
+            </motion.figure>
+            <div className="grid gap-5 lg:grid-cols-2">
+              {productScreenshots.slice(1).map((shot, index) => <motion.figure className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_24px_70px_rgba(0,0,0,.18)]" key={shot.title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .08, duration: .5 }}>
+                <img className="block aspect-[16/10] w-full object-cover object-left-top" src={shot.image} alt={shot.title} />
+                <figcaption className="min-h-[156px] border-t border-white/10 p-5">
+                  <strong className="text-xl font-extrabold">{shot.title}</strong>
+                  <p className="mt-3 font-semibold leading-7 text-white/65">{shot.body}</p>
+                </figcaption>
+              </motion.figure>)}
+            </div>
           </div>
         </div>
       </section>

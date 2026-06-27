@@ -4,6 +4,7 @@ import { Button } from "@/components/ui";
 
 const marketingLinks = [
   ["Features", "/#features"],
+  ["Product", "/#product-screenshots"],
   ["How it works", "/#how-it-works"],
   ["Pricing", "/#pricing"],
   ["FAQ", "/#faq"]
@@ -40,6 +41,7 @@ export function MarketingFooter() {
       <MarketingLogo />
       <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold">
         <Link className="hover:text-white" href="/#features">Features</Link>
+        <Link className="hover:text-white" href="/#product-screenshots">Product</Link>
         <Link className="hover:text-white" href="/#pricing">Pricing</Link>
         <Link className="hover:text-white" href="/#faq">FAQ</Link>
         <Link className="hover:text-white" href="/privacy">Privacy Policy</Link>

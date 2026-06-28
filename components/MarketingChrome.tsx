@@ -47,7 +47,6 @@ export function MarketingFooter() {
         <Link className="hover:text-white" href="/privacy">Privacy Policy</Link>
         <Link className="hover:text-white" href="/terms">Terms</Link>
         <Link className="hover:text-white" href="/refund">Refund Policy</Link>
-        <Link className="hover:text-white" href="/blog">Blog</Link>
       </nav>
     </div>
   </footer>;

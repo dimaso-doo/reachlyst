@@ -225,7 +225,7 @@ Feature language should include:
 
 Marketing, dashboard, and app should use IBM Plex Sans.
 
-Footer should link to Privacy Policy, Terms and Conditions, Refund Policy, Blog, Pricing, FAQ, and product sections.
+Footer should link to Privacy Policy, Terms and Conditions, Refund Policy, Pricing, FAQ, and product sections. Do not show a Blog link until there is real blog content.
 
 The product should have a clean 404 page.
 

@@ -36,7 +36,7 @@ Marketing and auth:
 - `components/MarketingChrome.tsx`: marketing nav/footer with one-page anchor links.
 - `app/login/page.tsx`: login page with email and Google login.
 - `components/AuthMarketingConsent.tsx`: consent checkbox for promotional email permission.
-- `app/signup/page.tsx`, `app/privacy/page.tsx`, `app/terms/page.tsx`, `app/blog/page.tsx`, `app/pricing/page.tsx`: supporting marketing/legal pages.
+- `app/signup/page.tsx`, `app/privacy/page.tsx`, `app/terms/page.tsx`, `app/pricing/page.tsx`: supporting marketing/legal pages.
 
 Dashboard app:
 

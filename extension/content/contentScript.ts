@@ -132,7 +132,7 @@ function firstName(name) {
 }
 
 function reachlystLogoUrl() {
-  return chrome.runtime.getURL("assets/reachlyst-logo-r-blue.png");
+  return chrome.runtime.getURL("assets/reachlyst-mark.svg");
 }
 
 function leadCompanyLine(lead) {

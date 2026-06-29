@@ -115,7 +115,7 @@ function firstName(name) {
     return String(name || "").split(" ")[0] || "there";
 }
 function reachlystLogoUrl() {
-    return chrome.runtime.getURL("assets/reachlyst-logo-r-blue.png");
+    return chrome.runtime.getURL("assets/reachlyst-mark.svg");
 }
 function leadCompanyLine(lead) {
     return String(lead.company || lead.title || "").trim() || (lead.context === "messages" ? "Sales Navigator messages" : "Company not found");

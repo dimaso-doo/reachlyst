@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { getAiMessageGrantTotalsByUser } from "@/lib/store";
 import { getStripe, plans } from "@/lib/stripe";
 
 export type AdminUser = {
@@ -13,6 +14,7 @@ export type AdminUser = {
   currentPeriodEnd?: string;
   paidSoFarCents: number;
   monthlyRevenueCents: number;
+  extraAiMessages: number;
 };
 
 export type AdminSnapshot = {
@@ -38,13 +40,14 @@ export async function getAdminSnapshot(): Promise<AdminSnapshot> {
   const supabase = getSupabaseServerClient();
   if (!supabase || !process.env.SUPABASE_SERVICE_ROLE_KEY) return getLocalAdminSnapshot();
 
-  const [authResult, profilesResult, membersResult, workspacesResult, subscriptionsResult, analysesResult] = await Promise.all([
+  const [authResult, profilesResult, membersResult, workspacesResult, subscriptionsResult, analysesResult, grantTotals] = await Promise.all([
     supabase.auth.admin.listUsers({ page: 1, perPage: 200 }),
     supabase.from("profiles").select("id,email,full_name,created_at"),
     supabase.from("workspace_members").select("workspace_id,user_id,role"),
     supabase.from("workspaces").select("id,name,owner_id,created_at"),
     supabase.from("subscriptions").select("workspace_id,plan,status,current_period_end,stripe_customer_id,created_at"),
-    supabase.from("ai_analyses").select("cost_estimate,created_at")
+    supabase.from("ai_analyses").select("cost_estimate,created_at"),
+    getAiMessageGrantTotalsByUser()
   ]);
 
   const authUsers = authResult.data?.users ?? [];
@@ -71,7 +74,8 @@ export async function getAdminSnapshot(): Promise<AdminSnapshot> {
       status: subscription?.status ?? "inactive",
       currentPeriodEnd: subscription?.current_period_end,
       paidSoFarCents: await getCustomerSpendCents(subscription?.stripe_customer_id),
-      monthlyRevenueCents
+      monthlyRevenueCents,
+      extraAiMessages: grantTotals[user.id] ?? 0
     };
   }));
 
@@ -95,7 +99,8 @@ export async function getAdminSnapshot(): Promise<AdminSnapshot> {
   };
 }
 
-function getLocalAdminSnapshot(): AdminSnapshot {
+async function getLocalAdminSnapshot(): Promise<AdminSnapshot> {
+  const grantTotals = await getAiMessageGrantTotalsByUser();
   const users = [
     {
       id: "local-owner",
@@ -107,19 +112,21 @@ function getLocalAdminSnapshot(): AdminSnapshot {
       status: "local",
       currentPeriodEnd: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString(),
       paidSoFarCents: 8700,
-      monthlyRevenueCents: 2900
+      monthlyRevenueCents: 2900,
+      extraAiMessages: 0
     }
   ];
   const monthlyCostsCents = Number(process.env.ADMIN_MONTHLY_COST_CENTS ?? 3000);
+  const usersWithGrants = users.map((user) => ({ ...user, extraAiMessages: grantTotals[user.id] ?? 0 }));
   return {
-    users,
+    users: usersWithGrants,
     stats: {
-      users: users.length,
+      users: usersWithGrants.length,
       monthlyRevenueCents: 2900,
       monthlyCostsCents,
       monthlyProfitCents: 2900 - monthlyCostsCents
     },
-    topSubscribers: users
+    topSubscribers: usersWithGrants
   };
 }
 

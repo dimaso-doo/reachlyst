@@ -30,7 +30,7 @@ export function Badge({ children, tone = "neutral" }: { children: React.ReactNod
     danger: "bg-rose-100 text-rose-800",
     blue: "bg-blue-50 text-accent-strong"
   };
-  return <span className={`inline-flex rounded-full px-2.5 py-1.5 text-xs font-extrabold ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex min-h-7 items-center justify-center rounded-full px-2.5 py-1.5 text-center text-xs font-extrabold leading-none ${tones[tone]}`}>{children}</span>;
 }
 
 export function StatCard({ label, value, detail }: { label: string; value: string; detail?: string }) {

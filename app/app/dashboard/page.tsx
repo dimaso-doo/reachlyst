@@ -1,23 +1,20 @@
 import { Badge, Button, Card } from "@/components/ui";
 import { AnimatedUsageBars } from "@/components/AnimatedUsageBars";
 import { DashboardReadiness } from "@/components/DashboardReadiness";
+import { SearchAiChat } from "@/components/SearchAiChat";
 import { getPlanSnapshot } from "@/lib/entitlements";
 import { getExtensionAccessState } from "@/lib/extensionTokens";
 import { getWorkspaceSubscription } from "@/lib/stripe";
 
-function trialDaysLeft(date?: string | null) {
-  if (!date) return null;
-  const days = Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
-  return days > 0 ? days : 0;
-}
-
 export default async function DashboardPage() {
   const [snapshot, extensionAccess, subscription] = await Promise.all([getPlanSnapshot(), getExtensionAccessState(), getWorkspaceSubscription()]);
-  const daysLeft = subscription?.status === "trialing" ? trialDaysLeft(subscription.current_period_end) : null;
+  const packageStatus = snapshot.plan === "free"
+    ? "Free plan"
+    : subscription?.status === "active" || subscription?.status === "trialing"
+      ? "Active subscription"
+      : subscription?.status ?? "Demo mode";
   const usageItems = [
-    { label: "Searches", used: snapshot.usage.searches, limit: snapshot.config.limits.searches },
-    { label: "Lead scans", used: snapshot.usage.leads, limit: snapshot.config.limits.leads },
-    { label: "AI replies", used: snapshot.usage.monthlyAiSuggestions, limit: snapshot.config.limits.monthlyAiSuggestions }
+    { label: "AI messages", used: snapshot.usage.monthlyAiSuggestions, limit: snapshot.config.limits.monthlyAiSuggestions }
   ];
 
   return (
@@ -43,8 +40,7 @@ export default async function DashboardPage() {
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-muted">{snapshot.config.summary}</p>
           </div>
           <div className="grid gap-2 lg:justify-items-end">
-            <Badge tone={snapshot.plan !== "free" ? "good" : "blue"}>{subscription?.status ?? "Demo mode"}</Badge>
-            {daysLeft !== null ? <strong className="text-sm font-extrabold text-emerald-700">{daysLeft} trial day{daysLeft === 1 ? "" : "s"} left</strong> : null}
+            <Badge tone={snapshot.plan !== "free" ? "good" : "blue"}>{packageStatus}</Badge>
           </div>
         </Card>
 
@@ -52,16 +48,27 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-lg font-extrabold text-ink">Plan usage</h2>
-              <p className="mt-1 text-sm font-semibold leading-6 text-muted">Current usage against the limits included in your package.</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-muted">AI message usage against the limit included in your package. Sales Navigator context sync is unlimited on every plan.</p>
             </div>
             <Badge tone={snapshot.plan !== "free" ? "good" : "warn"}>{snapshot.config.name}</Badge>
           </div>
           <AnimatedUsageBars items={usageItems} />
-          {snapshot.plan === "free" ? <div className="mt-5 grid gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"><div><strong className="block text-sm font-extrabold text-ink">Ready to use the extension?</strong><span className="mt-1 block text-sm font-semibold leading-6 text-muted">Upgrade to Starter to unlock workspace tokens, lead scans, and AI replies.</span></div><Button href="/app/billing">Upgrade package</Button></div> : null}
+          {snapshot.bonusAiMessages > 0 ? <p className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800">Super admin added {snapshot.bonusAiMessages.toLocaleString("en-US")} extra AI messages to this month&apos;s allowance.</p> : null}
+          {snapshot.plan === "free" ? <div className="mt-5 grid gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"><div><strong className="block text-sm font-extrabold text-ink">Free includes the full workflow.</strong><span className="mt-1 block text-sm font-semibold leading-6 text-muted">Use the extension and Sales Navigator context now. Upgrade only when you need more monthly AI messages.</span></div><Button href="/app/billing">Upgrade package</Button></div> : null}
         </Card>
 
         <DashboardReadiness extensionReady={extensionAccess.isPaid && extensionAccess.tokenCount > 0} tokenCount={extensionAccess.tokenCount} />
       </section>
+
+      <SearchAiChat
+        mode="create_search"
+        title="Reachlyst Ally"
+        assistantName="Reachlyst Ally"
+        intro="I am here as your LinkedIn outreach ally. Tell me what you are trying to sell, who you want to reach, or where the workflow feels stuck, and I will help you shape the next move."
+        description="A freer strategy chat for positioning, ICP, Sales Navigator searches, message angles, replies, and the next best move."
+        placeholder="Ask about ICP, positioning, Sales Navigator searches, invite angles, replies, follow-ups, or what to do next..."
+        context="Dashboard ally chat for broader LinkedIn outreach strategy, ICP, positioning, message direction, and next steps."
+      />
     </div>
   );
 }

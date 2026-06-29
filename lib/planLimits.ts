@@ -1,7 +1,7 @@
-export type BillingPlanKey = "free" | "starter" | "growth" | "scale";
+export type BillingPlanKey = "free" | "starter" | "growth";
 export type PlanFeature = "extensionSync" | "aiScoring" | "inviteGeneration" | "inboxSync" | "teamSeats";
 
-export const planOrder: BillingPlanKey[] = ["starter", "growth", "scale"];
+export const planOrder: BillingPlanKey[] = ["free", "starter", "growth"];
 
 export const planCatalog: Record<BillingPlanKey, {
   name: string;
@@ -10,10 +10,9 @@ export const planCatalog: Record<BillingPlanKey, {
   summary: string;
   cta: string;
   features: string[];
+  guidance: string[];
   addOns: string[];
   limits: {
-    searches: number;
-    leads: number;
     monthlyAiSuggestions: number;
     seats: number;
   };
@@ -23,17 +22,22 @@ export const planCatalog: Record<BillingPlanKey, {
     name: "Free",
     price: "$0",
     priceEnv: "",
-    summary: "Create an account, view the dashboard, and choose a paid package when you are ready to use the Chrome extension.",
-    cta: "Start free",
+    summary: "For using the full Reachlyst workflow with a smaller monthly AI message allowance.",
+    cta: "Create workspace",
     features: [
-      "Dashboard preview",
-      "Billing setup",
-      "No Chrome extension token",
-      "Upgrade to activate AI invite chat"
+      "Chrome extension access",
+      "Unlimited Sales Navigator context",
+      "300 AI messages per month",
+      "AI Playbook training",
+      "Stops AI generation when messages run out"
     ],
-    addOns: ["Upgrade when you need lead scans, AI replies, and Chrome extension access."],
-    limits: { searches: 0, leads: 0, monthlyAiSuggestions: 0, seats: 1 },
-    included: { extensionSync: false, aiScoring: false, inviteGeneration: false, inboxSync: false, teamSeats: false }
+    guidance: [
+      "Best for testing the full workflow before paying.",
+      "Enough to train the Playbook, review leads, and draft a lighter batch of LinkedIn messages."
+    ],
+    addOns: ["Upgrade when you need more AI messages and heavier monthly usage."],
+    limits: { monthlyAiSuggestions: 300, seats: 1 },
+    included: { extensionSync: true, aiScoring: true, inviteGeneration: true, inboxSync: false, teamSeats: false }
   },
   starter: {
     name: "Starter",
@@ -43,63 +47,50 @@ export const planCatalog: Record<BillingPlanKey, {
     cta: "Start Starter",
     features: [
       "Chrome extension access",
-      "Sales Navigator lead context helper",
-      "1,000 AI replies per month",
+      "Unlimited Sales Navigator context",
+      "1,000 AI messages per month",
       "AI Playbook training"
     ],
-    addOns: [
-      "Extra AI reply packs",
-      "Extra lead scan packs"
+    guidance: [
+      "Best for a focused founder or operator using Sales Navigator weekly.",
+      "A practical allowance for lead review, invite drafts, replies, and AI strategy chat."
     ],
-    limits: { searches: 10, leads: 1000, monthlyAiSuggestions: 1000, seats: 1 },
+    addOns: [
+      "Extra AI message packs"
+    ],
+    limits: { monthlyAiSuggestions: 1000, seats: 1 },
     included: { extensionSync: true, aiScoring: true, inviteGeneration: true, inboxSync: false, teamSeats: false }
   },
   growth: {
     name: "Growth",
     price: "$29",
     priceEnv: "STRIPE_GROWTH_PRICE_ID",
-    summary: "For consistent prospecting with more lead scans and message generations each month.",
+    summary: "For consistent prospecting with more AI message generations each month.",
     cta: "Start Growth",
     features: [
       "Everything in Starter",
-      "3,000 AI replies per month",
-      "3,000 lead scans per month",
+      "3,000 AI messages per month",
+      "Unlimited Sales Navigator context",
       "Priority AI Playbook refinement"
     ],
-    addOns: [
-      "Extra AI reply packs",
-      "Extra lead scan packs"
+    guidance: [
+      "Best for consistent prospecting and multiple outreach angles each month.",
+      "Built for heavier AI-assisted lead review, replies, follow-ups, and Playbook refinement."
     ],
-    limits: { searches: 25, leads: 3000, monthlyAiSuggestions: 3000, seats: 1 },
+    addOns: [
+      "Extra AI message packs"
+    ],
+    limits: { monthlyAiSuggestions: 3000, seats: 1 },
     included: { extensionSync: true, aiScoring: true, inviteGeneration: true, inboxSync: false, teamSeats: false }
-  },
-  scale: {
-    name: "Scale",
-    price: "$49",
-    priceEnv: "STRIPE_SCALE_PRICE_ID",
-    summary: "For heavier Sales Navigator usage, small teams, or founders running several prospecting angles.",
-    cta: "Start Scale",
-    features: [
-      "Everything in Growth",
-      "10,000 AI replies per month",
-      "10,000 lead scans per month",
-      "Up to 3 workspace users"
-    ],
-    addOns: [
-      "Extra AI reply packs",
-      "Extra lead scan packs",
-      "Additional workspace users"
-    ],
-    limits: { searches: 75, leads: 10000, monthlyAiSuggestions: 10000, seats: 3 },
-    included: { extensionSync: true, aiScoring: true, inviteGeneration: true, inboxSync: false, teamSeats: true }
   }
 };
 
 export const plans = planOrder.map((key) => ({ key, ...planCatalog[key] }));
 
 export function normalizePlan(plan?: string | null): BillingPlanKey {
-  if (plan === "starter" || plan === "growth" || plan === "scale") return plan;
-  if (plan === "pro" || plan === "agency") return "scale";
+  if (plan === "starter" || plan === "growth") return plan;
+  if (plan === "scale") return "growth";
+  if (plan === "pro" || plan === "agency") return "growth";
   return "free";
 }
 

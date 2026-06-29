@@ -29,6 +29,7 @@ type LeadRecord = {
 };
 type ActivityRecord = { label: string; time: string; type?: string; leadId?: string; searchId?: string; createdAt?: string };
 type MessageRecord = { id: string; leadId?: string; threadUrl?: string; senderType: string; body: string; source: string; syncedAt: string };
+export type AiMessageGrantRecord = { id: string; userId: string; amount: number; note?: string; createdAt: string };
 export type AiPlaybookStatus = "not_trained" | "ready";
 export type AiPlaybookRecord = {
   status: AiPlaybookStatus;
@@ -41,7 +42,7 @@ export type AiPlaybookRecord = {
   defaultMessageTypes: string[];
   updatedAt?: string;
 };
-type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[]; aiPlaybook: AiPlaybookRecord };
+type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[]; aiPlaybook: AiPlaybookRecord; aiMessageGrants: AiMessageGrantRecord[] };
 type DashboardData = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[] };
 
 const workspaceId = "00000000-0000-4000-8000-000000000001";
@@ -73,7 +74,8 @@ function seedDb(): LocalDb {
     })),
     activities: seedActivities,
     messages: [],
-    aiPlaybook: defaultAiPlaybook()
+    aiPlaybook: defaultAiPlaybook(),
+    aiMessageGrants: []
   };
 }
 
@@ -84,7 +86,7 @@ function defaultAiPlaybook(): AiPlaybookRecord {
 export function readDb(): LocalDb {
   if (!existsSync(dbPath)) return seedDb();
   const parsed = JSON.parse(readFileSync(dbPath, "utf8")) as Partial<LocalDb>;
-  return { ...seedDb(), ...parsed, aiPlaybook: parsed.aiPlaybook ?? defaultAiPlaybook() };
+  return { ...seedDb(), ...parsed, aiPlaybook: parsed.aiPlaybook ?? defaultAiPlaybook(), aiMessageGrants: parsed.aiMessageGrants ?? [] };
 }
 
 export function writeDb(db: LocalDb) {
@@ -146,6 +148,22 @@ export async function saveAiPlaybook(input: Partial<AiPlaybookRecord> & { rawNot
   return record;
 }
 
+export async function resetAiPlaybook(): Promise<AiPlaybookRecord> {
+  const record = defaultAiPlaybook();
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    await ensureWorkspace();
+    await supabase?.from("ai_playbooks").delete().eq("workspace_id", workspaceId);
+    await supabase?.from("activities").insert({ workspace_id: workspaceId, type: "ai_playbook_reset", metadata: { label: "AI Playbook reset" } });
+    return record;
+  }
+  const db = readDb();
+  db.aiPlaybook = record;
+  db.activities.unshift({ label: "AI Playbook reset", time: "Just now", type: "ai_playbook_reset", createdAt: now() });
+  writeDb(db);
+  return record;
+}
+
 export function formatAiPlaybookContext(playbook: AiPlaybookRecord) {
   if (playbook.status !== "ready" || !playbook.rawNotes.trim()) return "";
   return [
@@ -153,7 +171,6 @@ export function formatAiPlaybookContext(playbook: AiPlaybookRecord) {
     playbook.rawNotes,
     playbook.offer ? `Offer: ${playbook.offer}` : "",
     playbook.icp ? `ICP: ${playbook.icp}` : "",
-    playbook.exclusions ? `Exclude: ${playbook.exclusions}` : "",
     playbook.tone ? `Preferred tone: ${playbook.tone}` : "",
     playbook.cta ? `CTA: ${playbook.cta}` : "",
     playbook.defaultMessageTypes.length ? `Default message types: ${playbook.defaultMessageTypes.join(", ")}` : "",
@@ -423,6 +440,66 @@ export async function recordAiUsage(type: "ai_analyzed" | "message_generated" = 
   const db = readDb();
   db.activities.unshift({ label: type.replaceAll("_", " "), time: "Just now", type, createdAt: now() });
   writeDb(db);
+}
+
+export async function grantAiMessages(input: { userId: string; amount: number; note?: string }): Promise<AiMessageGrantRecord> {
+  const amount = Math.max(0, Math.floor(Number(input.amount)));
+  const record: AiMessageGrantRecord = {
+    id: stableUuid(`ai-message-grant-${input.userId}-${amount}-${now()}-${input.note ?? ""}`),
+    userId: input.userId,
+    amount,
+    note: sanitizeText(input.note ?? "").slice(0, 240) || undefined,
+    createdAt: now()
+  };
+
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    await supabase?.from("activities").insert({
+      workspace_id: workspaceId,
+      type: "ai_messages_granted",
+      metadata: { userId: record.userId, amount: record.amount, note: record.note }
+    });
+    return record;
+  }
+
+  const db = readDb();
+  db.aiMessageGrants.unshift(record);
+  db.activities.unshift({ label: `Granted ${record.amount} AI messages`, time: "Just now", type: "ai_messages_granted", createdAt: record.createdAt });
+  writeDb(db);
+  return record;
+}
+
+export async function getAiMessageGrantTotalsByUser(): Promise<Record<string, number>> {
+  const monthPrefix = new Date().toISOString().slice(0, 7);
+  const totals: Record<string, number> = {};
+
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    const result = supabase
+      ? await supabase.from("activities").select("metadata,created_at").eq("workspace_id", workspaceId).eq("type", "ai_messages_granted")
+      : { data: [] };
+    const data = result.data ?? [];
+    for (const item of data ?? []) {
+      if (!String(item.created_at ?? "").startsWith(monthPrefix)) continue;
+      const metadata = item.metadata as { userId?: string; amount?: number } | null;
+      const userId = metadata?.userId;
+      const amount = Number(metadata?.amount ?? 0);
+      if (userId && amount > 0) totals[userId] = (totals[userId] ?? 0) + amount;
+    }
+    return totals;
+  }
+
+  for (const grant of readDb().aiMessageGrants) {
+    if (!grant.createdAt.startsWith(monthPrefix)) continue;
+    totals[grant.userId] = (totals[grant.userId] ?? 0) + grant.amount;
+  }
+  return totals;
+}
+
+export async function getGrantedAiMessages(userId?: string): Promise<number> {
+  const totals = await getAiMessageGrantTotalsByUser();
+  if (userId) return totals[userId] ?? 0;
+  return Object.values(totals).reduce((total, amount) => total + amount, 0);
 }
 
 export async function saveLeadAction(leadId: string, action: string, metadata: Record<string, unknown> = {}) {

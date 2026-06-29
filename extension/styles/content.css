@@ -1,13 +1,13 @@
 .reachlyst-lead-button {
   align-items: center;
-  background: #1677ff;
-  border: 1px solid #0f6eef;
+  background: #ffffff;
+  border: 1px solid #b7cff5;
   border-radius: 50%;
-  box-shadow: 0 6px 14px rgba(22, 119, 255, .18);
+  box-shadow: 0 6px 14px rgba(22, 119, 255, .14);
   cursor: pointer;
   display: inline-flex;
   flex: 0 0 32px;
-  font: 900 14px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 14px/1 Inter, system-ui, sans-serif;
   height: 32px;
   justify-content: center;
   margin: 0 4px;
@@ -21,19 +21,27 @@
   z-index: 1;
 }
 
+.reachlyst-lead-button,
+.reachlyst-floating-chat,
+.reachlyst-floating-chat *,
+.reachlyst-status,
+.reachlyst-status * {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-weight: 400 !important;
+}
+
 .reachlyst-lead-button:hover {
-  background: #0958d9;
-  border-color: #0958d9;
-  box-shadow: 0 12px 24px rgba(22, 119, 255, .26);
+  background: #f8fbff;
+  border-color: #1677ff;
+  box-shadow: 0 12px 24px rgba(22, 119, 255, .22);
   transform: translateY(-1px);
 }
 
 .reachlyst-lead-button img {
   display: block;
-  filter: brightness(0) invert(1);
-  height: 18px;
+  height: 20px;
   object-fit: contain;
-  width: 18px;
+  width: 20px;
 }
 
 .reachlyst-lead-button[data-floating="true"] {
@@ -101,14 +109,13 @@
   display: block;
   height: 34px;
   object-fit: contain;
-  filter: drop-shadow(0 10px 16px rgba(22, 119, 255, .18));
   width: 34px;
 }
 
 .reachlyst-chat-top strong {
   color: #162033;
   display: block;
-  font: 900 14px/1.2 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 14px/1.2 Inter, system-ui, sans-serif;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -117,7 +124,7 @@
 .reachlyst-chat-top small {
   color: #607086;
   display: block;
-  font: 700 11px/1.35 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 11px/1.35 Inter, system-ui, sans-serif;
   margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -139,7 +146,7 @@
   color: #172033;
   cursor: pointer;
   display: inline-flex;
-  font: 900 18px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 18px/1 Inter, system-ui, sans-serif;
   height: 30px;
   justify-content: center;
   padding: 0;
@@ -214,7 +221,7 @@
 
 .reachlyst-message-row p {
   border-radius: 10px;
-  font: 700 12px/1.45 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 12px/1.45 Inter, system-ui, sans-serif;
   margin: 0;
   max-width: 88%;
   padding: 9px 10px;
@@ -247,7 +254,7 @@
   color: transparent;
   cursor: pointer;
   flex: 0 0 auto;
-  font: 900 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 11px/1 Inter, system-ui, sans-serif;
   height: 28px;
   overflow: hidden;
   padding: 0;
@@ -305,7 +312,7 @@
   box-shadow: 0 18px 44px rgba(20, 124, 108, .25);
   color: white;
   display: inline-flex;
-  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 12px/1 Inter, system-ui, sans-serif;
   opacity: 0;
   padding: 10px 14px;
   pointer-events: none;
@@ -327,7 +334,7 @@
   border-radius: 12px;
   color: #172033;
   display: block;
-  font: 700 12px/1.45 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 12px/1.45 Inter, system-ui, sans-serif;
   margin: 14px 14px 0;
   min-height: 84px;
   outline: none;
@@ -356,7 +363,7 @@
   color: white;
   cursor: pointer;
   flex: 0 0 auto;
-  font: 900 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 11px/1 Inter, system-ui, sans-serif;
   min-height: 34px;
   padding: 8px 10px;
   transition: box-shadow .16s ease, transform .16s ease;
@@ -377,7 +384,7 @@
   align-items: center;
   color: #607086;
   display: inline-flex;
-  font: 800 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 11px/1 Inter, system-ui, sans-serif;
   gap: 8px;
   min-height: 34px;
   padding-left: 3px;
@@ -427,7 +434,7 @@
 
 .reachlyst-chat-status {
   color: #607086;
-  font: 800 11px/1.35 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 11px/1.35 Inter, system-ui, sans-serif;
   margin: 0;
   padding: 0 14px 14px;
 }
@@ -440,7 +447,7 @@
   box-shadow: 0 18px 44px rgba(7, 17, 31, .24), 0 0 0 1px rgba(255, 255, 255, .05);
   color: #f8fbff;
   display: inline-flex;
-  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 12px/1 Inter, system-ui, sans-serif;
   gap: 10px;
   min-height: 42px;
   padding: 10px 12px;
@@ -466,7 +473,7 @@
 
 .reachlyst-status strong {
   color: #f8fbff;
-  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  font: 400 12px/1 Inter, system-ui, sans-serif;
   white-space: nowrap;
 }
 

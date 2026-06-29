@@ -71,7 +71,7 @@ export async function getExtensionAccessState(): Promise<ExtensionAccessState> {
   const subscription = await getWorkspaceSubscription();
   const plan = normalizePlan(subscription?.plan);
   const status = subscription?.status ?? (process.env.NODE_ENV === "production" ? "inactive" : "local_dev");
-  const isPaid = activeSubscriptionStatus(subscription?.status) && plan !== "free";
+  const isPaid = planCatalog[plan].included.extensionSync && (plan === "free" || activeSubscriptionStatus(subscription?.status));
   const seatLimit = planCatalog[plan].limits.seats;
 
   if (hasSupabase()) {
@@ -120,8 +120,8 @@ export async function createExtensionToken(name = "Chrome Extension") {
     return {
       ok: false as const,
       status: 402,
-      error: "Billing required",
-      message: "An active Reachlyst Growth subscription is required to generate an extension token.",
+      error: "Extension access unavailable",
+      message: "Extension access is not available for this workspace.",
       access
     };
   }
@@ -207,7 +207,7 @@ export async function verifyExtensionToken(token: string, deviceId?: string, dev
 
     const access = await getExtensionAccessState();
     if (!access.isPaid) {
-      return { ok: false as const, status: 402, error: "Billing required", access };
+      return { ok: false as const, status: 402, error: "Extension access unavailable", access };
     }
 
     if (data.bound_device_id && data.bound_device_id !== deviceId) {
@@ -240,7 +240,7 @@ export async function verifyExtensionToken(token: string, deviceId?: string, dev
 
   const access = await getExtensionAccessState();
   if (!access.isPaid) {
-    return { ok: false as const, status: 402, error: "Billing required", access };
+    return { ok: false as const, status: 402, error: "Extension access unavailable", access };
   }
   if (existing.boundDeviceId && existing.boundDeviceId !== deviceId) {
     return { ok: false as const, status: 403, error: "This extension token is already connected to another browser. Revoke it in Reachlyst and generate a new connection key." };

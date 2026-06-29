@@ -1,19 +1,33 @@
 /* eslint-disable @next/next/no-img-element */
+import type { Metadata } from "next";
 import Link from "next/link";
 
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  description: "Read the Reachlyst refund policy for subscription billing, cancellations, Stripe processing, and refund requests.",
+  alternates: {
+    canonical: "/refund"
+  },
+  openGraph: {
+    title: "Reachlyst Refund Policy",
+    description: "How Reachlyst handles subscription cancellations, billing questions, and refund requests.",
+    url: "/refund"
+  }
+};
+
 const sections = [
-  ["Subscription billing", "Reachlyst subscriptions are billed in advance through Stripe. Your plan gives access to the package features, usage limits, seats, and extension access shown at checkout or in the billing area."],
+  ["Subscription billing", "Reachlyst subscriptions are billed in advance through Stripe. Your plan gives access to the package features, usage limits, and extension access shown at checkout or in the billing area."],
   ["Cancellation", "You can cancel future renewals through the billing portal or by contacting support. After cancellation, paid access normally remains available until the end of the current billing period."],
   ["Refund window", "If you believe a charge was made in error, contact support within 7 days of the charge. We will review the request and may issue a full or partial refund when the situation is reasonable and usage is limited."],
   ["Non-refundable cases", "Refunds are generally not provided for heavy usage during the billing period, violation of acceptable use rules, failure to cancel before renewal, third-party platform issues outside Reachlyst control, or accounts suspended for abuse."],
-  ["Trials", "If a free trial is offered, paid access may require selecting a plan. Trial terms shown at signup or checkout control the trial length and conversion rules."],
+  ["Free plan", "The Free plan provides a limited monthly AI message allowance and can be upgraded to a paid plan when more usage is needed."],
   ["Stripe processing", "Approved refunds are processed through Stripe and may take several business days to appear on the original payment method depending on the bank or card issuer."],
   ["How to request a refund", "Send the account email, charge date, plan name, and reason for the request through the product support channel. Do not send full payment card details."]
 ] as const;
 
 export default function RefundPage() {
   return <main className="min-h-screen bg-[#050a18] px-5 py-8 text-white sm:px-10 lg:px-[min(7vw,88px)]">
-    <Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link>
+    <Link className="inline-flex items-center" href="/"><img className="h-9 w-auto" alt="Reachlyst" src="/reachlyst-logo-white.svg" /></Link>
     <article className="mx-auto mt-16 max-w-4xl rounded-2xl border border-white/10 bg-white/[.04] p-6 shadow-[0_28px_90px_rgba(0,0,0,.24)] sm:p-10">
       <p className="text-xs font-black uppercase tracking-[.08em] text-blue-300">Last updated: June 27, 2026</p>
       <h1 className="mb-5 mt-4 text-4xl font-extrabold leading-tight sm:text-6xl">Refund Policy</h1>

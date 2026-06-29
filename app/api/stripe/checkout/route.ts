@@ -3,16 +3,15 @@ import { getEarlyAdopterConfig } from "@/lib/admin";
 import { getAppUrl, getStripe, getStripePriceId, plans, workspaceId } from "@/lib/stripe";
 
 export async function POST(request: Request) {
-  const stripe = getStripe();
-  if (!stripe) return NextResponse.json({ error: "Stripe is not configured" }, { status: 503 });
-
   const formData = await request.formData();
   const plan = String(formData.get("plan") ?? "");
   const coupon = String(formData.get("coupon") ?? "").trim();
   const planConfig = plans.find((item) => item.key === plan);
-  const priceId = getStripePriceId(plan);
 
   if (plan === "free") return NextResponse.redirect(new URL("/signup", request.url), { status: 303 });
+  const stripe = getStripe();
+  if (!stripe) return NextResponse.json({ error: "Stripe is not configured" }, { status: 503 });
+  const priceId = getStripePriceId(plan);
   if (!planConfig || !priceId) return NextResponse.json({ error: "Unknown or unconfigured plan" }, { status: 400 });
 
   const appUrl = getAppUrl();

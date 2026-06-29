@@ -79,9 +79,9 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
       </div>
 
       <div className="grid min-w-48 gap-1.5 lg:justify-items-end">
-        <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-extrabold ${access.isPaid ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{access.isPaid ? "Active" : "Billing required"}</span>
+        <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-extrabold ${access.isPaid ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{access.isPaid ? "Extension active" : "Access unavailable"}</span>
         <small className="text-xs font-bold text-muted">{access.plan} plan · {access.status}</small>
-        <small className="text-xs font-bold text-muted">{access.seatLimit} workspace {access.seatLimit === 1 ? "seat" : "seats"} included</small>
+        <small className="text-xs font-bold text-muted">Private extension connection</small>
         <small className="text-xs font-bold text-muted">{token ? "Connection key configured" : "No connection key yet"}</small>
       </div>
 
@@ -93,7 +93,7 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
             <button className="min-h-10 rounded-lg border border-rose-200 bg-rose-50 px-4 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60" disabled={revoking} onClick={revokeToken} type="button">{revoking ? "Revoking..." : "Revoke"}</button>
           </div>
           <small className="text-sm font-semibold leading-6 text-muted">{access.boundDeviceLabel ? `Connected to ${access.boundDeviceLabel}${access.boundAt ? ` since ${new Date(access.boundAt).toLocaleDateString()}` : ""}.` : "No browser is connected yet. The first verified extension will lock this key to that browser."}</small>
-          <small className="text-sm font-semibold leading-6 text-muted">Seats control workspace users. This key controls the connected Chrome extension device.</small>
+          <small className="text-sm font-semibold leading-6 text-muted">This key controls the connected Chrome extension device.</small>
         </div>
       ) : null}
 
@@ -103,7 +103,7 @@ export function ExtensionTokenPanel({ initialAccess }: { initialAccess: AccessSt
         {access.isPaid && !token ? (
           <button className="min-h-11 rounded-lg bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={loading} onClick={generateToken} type="button">{loading ? "Generating..." : access.tokenCount > 0 ? "Regenerate connection key" : "Generate connection key"}</button>
         ) : !access.isPaid ? (
-          <Button href="/app/billing">Open billing</Button>
+          <Button href="/app/billing">View packages</Button>
         ) : (
           <small className="text-sm font-bold text-muted">Copy this key into the Chrome extension, or revoke it when you need to connect a different browser.</small>
         )}

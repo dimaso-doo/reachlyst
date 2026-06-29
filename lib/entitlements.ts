@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import { getDashboardData } from "@/lib/store";
+import { getDashboardData, getGrantedAiMessages } from "@/lib/store";
 import { getWorkspaceSubscription } from "@/lib/stripe";
 import { formatLimit, minimumPlanFor, normalizePlan, planCatalog, type BillingPlanKey, type PlanFeature } from "@/lib/planLimits";
 
 export type WorkspaceUsage = {
-  searches: number;
-  leads: number;
   monthlyAiSuggestions: number;
 };
 
@@ -24,15 +22,21 @@ export async function getWorkspaceUsage(): Promise<WorkspaceUsage> {
   }).length;
 
   return {
-    searches: data.searches.length,
-    leads: data.leads.length,
     monthlyAiSuggestions
   };
 }
 
 export async function getPlanSnapshot() {
-  const [plan, usage] = await Promise.all([getActivePlan(), getWorkspaceUsage()]);
-  return { plan, config: planCatalog[plan], usage };
+  const [plan, usage, bonusAiMessages] = await Promise.all([getActivePlan(), getWorkspaceUsage(), getGrantedAiMessages()]);
+  const baseConfig = planCatalog[plan];
+  const config = {
+    ...baseConfig,
+    limits: {
+      ...baseConfig.limits,
+      monthlyAiSuggestions: baseConfig.limits.monthlyAiSuggestions + bonusAiMessages
+    }
+  };
+  return { plan, config, usage, bonusAiMessages };
 }
 
 export async function requirePlanFeature(feature: PlanFeature) {
@@ -51,13 +55,13 @@ export async function requirePlanFeature(feature: PlanFeature) {
 }
 
 export async function requirePlanCapacity(resource: keyof WorkspaceUsage, additional = 0) {
-  const { plan, usage } = await getPlanSnapshot();
-  const limit = planCatalog[plan].limits[resource];
+  const { plan, config, usage } = await getPlanSnapshot();
+  const limit = config.limits[resource];
   const nextUsage = usage[resource] + additional;
   if (nextUsage <= limit) return { ok: true as const, plan, usage, limit };
 
-  const nextPlan = plan === "free" ? "starter" : plan === "starter" ? "growth" : "scale";
-  const label = resource === "monthlyAiSuggestions" ? "AI replies this month" : resource;
+  const nextPlan = plan === "free" ? "starter" : "growth";
+  const label = "AI messages this month";
   return {
     ok: false as const,
     response: NextResponse.json({

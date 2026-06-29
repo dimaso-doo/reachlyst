@@ -10,24 +10,20 @@ type AiPlaybook = {
   status: "not_trained" | "ready";
   rawNotes: string;
 };
+type AiUsage = { used: number; limit: number };
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
 const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
 
-const welcomeMessage = `Welcome. I am your personal assistant for Sales Navigator leads.
+const readinessChecks = [
+  { key: "offer", label: "Offer", patterns: ["offer", "sell", "service", "product", "help", "solution", "we do", "we build", "nudim", "prodajem", "usluga", "proizvod", "pomazemo", "resenje"] },
+  { key: "icp", label: "ICP", patterns: ["icp", "target", "perfect lead", "founder", "owner", "ceo", "sales", "marketing", "industry", "company size", "cilj", "ideal", "osnivac", "vlasnik", "industrija", "velicina"] },
+  { key: "signals", label: "Buying signals", patterns: ["signal", "trigger", "hiring", "posted", "growth", "funding", "recent", "pain", "problem", "signal", "zaposljava", "objavio", "rast", "investicija", "bol", "problem"] },
+  { key: "tone", label: "Tone", patterns: ["tone", "casual", "professional", "friendly", "direct", "avoid words", "style", "ton", "stil", "profesionalno", "prijateljski", "direktno", "izbegava"] },
+  { key: "cta", label: "CTA", patterns: ["cta", "ask", "call", "meeting", "reply", "connect", "next step", "pitaj", "poziv", "sastanak", "odgovor", "povezivanje", "sledeci korak"] }
+];
 
-I will help you build the rules Reachlyst uses inside the extension: who is a good lead, who should be skipped, what invite style to use, and how replies should sound when someone accepts your connection.
-
-Start anywhere. The fastest path is to answer these:
-
-1. What do you sell or offer?
-2. Who is a perfect lead by role, industry, company size, and location?
-3. Who is not relevant and should be marked Skip?
-4. What signals make someone worth messaging?
-5. What should invites and accepted-connection replies ask for?
-6. What tone and words should Reachlyst avoid?
-
-I will ask follow-up questions until the Playbook is specific enough to guide invite suggestions, reply suggestions, and lead-fit analysis.`;
+const welcomeMessage = "Welcome. I am ready to train your Reachlyst AI Playbook for LinkedIn Sales Navigator. Fill the Playbook to 100%, then start using the extension with cleaner lead analysis, invite drafts, and reply suggestions.";
 
 function buildPlaybookReply(input: string) {
   return `Great. I captured this as your first AI Playbook draft:
@@ -54,33 +50,56 @@ A polite reply pattern for leads who are not ready yet.
 If this direction is right, save the AI Playbook. You can keep refining it here anytime.`;
 }
 
-export function AiPlaybookTrainer() {
+function calculateReadiness(messages: Message[]) {
+  const userText = messages.filter((message) => message.role === "user").map((message) => message.content).join("\n").toLowerCase();
+  const wordCount = userText.split(/\s+/).filter(Boolean).length;
+  const matched = readinessChecks.filter((check) => check.patterns.some((pattern) => userText.includes(pattern)));
+  const detailScore = Math.min(30, Math.floor(wordCount / 7));
+  const coverageScore = matched.length * 14;
+  const score = Math.min(100, Math.max(0, detailScore + coverageScore));
+  const missing = readinessChecks.filter((check) => !matched.some((item) => item.key === check.key)).map((check) => check.label);
+  const status = score >= 100 ? "Ready to start" : score >= 80 ? "Almost complete" : score >= 55 ? "Good draft" : score >= 25 ? "Needs more detail" : "Not trained yet";
+  return { score, missing, status, wordCount };
+}
+
+export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: AiUsage | null }) {
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: welcomeMessage }]);
   const [draft, setDraft] = useState("");
-  const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [sendOnEnter, setSendOnEnter] = useState(false);
+  const [aiUsage, setAiUsage] = useState<AiUsage | null>(initialAiUsage);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const readiness = calculateReadiness(messages);
+  const extensionReady = readiness.score >= 100;
+
+  async function refreshAiUsage() {
+    try {
+      const response = await fetch("/api/plan", { cache: "no-store" });
+      const data = await response.json();
+      setAiUsage({
+        used: Number(data?.usage?.monthlyAiSuggestions ?? 0),
+        limit: Number(data?.limits?.monthlyAiSuggestions ?? 0)
+      });
+    } catch {
+      setAiUsage(null);
+    }
+  }
 
   useEffect(() => {
-    setReady(window.localStorage.getItem(PLAYBOOK_STATUS_KEY) === "ready");
-    const savedNotes = window.localStorage.getItem(PLAYBOOK_NOTES_KEY);
-    if (savedNotes) {
-      setMessages([
-        { role: "assistant", content: welcomeMessage },
-        { role: "user", content: savedNotes },
-        { role: "assistant", content: buildPlaybookReply(savedNotes) }
-      ]);
-    }
-    fetch("/api/ai-playbook")
+    fetch(`/api/ai-playbook?ts=${Date.now()}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Unable to load AI Playbook")))
       .then((data: { playbook?: AiPlaybook }) => {
         const playbook = data.playbook;
-        if (!playbook?.rawNotes) return;
+        if (!playbook?.rawNotes) {
+          window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
+          window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "not_trained");
+          setMessages([{ role: "assistant", content: welcomeMessage }]);
+          return;
+        }
         window.localStorage.setItem(PLAYBOOK_NOTES_KEY, playbook.rawNotes);
         window.localStorage.setItem(PLAYBOOK_STATUS_KEY, playbook.status);
-        setReady(playbook.status === "ready");
         setMessages([
           { role: "assistant", content: welcomeMessage },
           { role: "user", content: playbook.rawNotes },
@@ -90,19 +109,49 @@ export function AiPlaybookTrainer() {
       .catch(() => {
         // Local storage keeps the trainer usable when the API is unavailable.
       });
+    const refreshTimer = window.setTimeout(() => {
+      void refreshAiUsage();
+    }, 0);
+
+    return () => window.clearTimeout(refreshTimer);
   }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
+  function wait(ms: number) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  async function revealAssistantReply(reply: string) {
+    const safeReply = reply.trim() || "I captured that. Tell me a little more about the buyers you want Reachlyst to prioritize.";
+    setStreaming(true);
+    setMessages((current) => [...current, { role: "assistant", content: "" }]);
+
+    const words = safeReply.split(/(\s+)/);
+    let visible = "";
+    for (let index = 0; index < words.length; index += 1) {
+      visible += words[index];
+      setMessages((current) => {
+        const next = [...current];
+        const last = next.at(-1);
+        if (last?.role === "assistant") next[next.length - 1] = { ...last, content: visible };
+        return next;
+      });
+      if (index % 3 === 0) await wait(24);
+    }
+    setStreaming(false);
+  }
+
   async function sendMessage() {
     const content = draft.trim();
-    if (!content || thinking) return;
+    if (!content || thinking || streaming) return;
     const nextMessages: Message[] = [...messages, { role: "user", content }];
     setMessages(nextMessages);
     setDraft("");
     setThinking(true);
+    const startedAt = Date.now();
     try {
       const response = await fetch("/api/ai-playbook/chat", {
         method: "POST",
@@ -111,11 +160,17 @@ export function AiPlaybookTrainer() {
       });
       if (!response.ok) throw new Error("Unable to chat about AI Playbook");
       const data = (await response.json()) as { reply?: string };
-      setMessages((current) => [...current, { role: "assistant", content: data.reply || buildPlaybookReply(content) }]);
+      await wait(Math.max(350, 900 - (Date.now() - startedAt)));
+      setThinking(false);
+      await revealAssistantReply(data.reply || buildPlaybookReply(content));
     } catch {
-      setMessages((current) => [...current, { role: "assistant", content: buildPlaybookReply(content) }]);
+      await wait(Math.max(350, 900 - (Date.now() - startedAt)));
+      setThinking(false);
+      await revealAssistantReply(buildPlaybookReply(content));
     } finally {
       setThinking(false);
+      void refreshAiUsage();
+      window.dispatchEvent(new Event("reachlyst:plan-usage"));
     }
   }
 
@@ -124,21 +179,20 @@ export function AiPlaybookTrainer() {
     const assistantSummary = messages.filter((message) => message.role === "assistant").at(-1)?.content.trim() ?? "";
     const latestUserMessage = [userNotes, assistantSummary ? `Latest AI Playbook summary:\n${assistantSummary}` : ""].filter(Boolean).join("\n\n").slice(0, 8000);
     if (!latestUserMessage) return;
+    const nextStatus = readiness.score >= 100 ? "ready" : "not_trained";
     window.localStorage.setItem(PLAYBOOK_NOTES_KEY, latestUserMessage);
-    window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "ready");
+    window.localStorage.setItem(PLAYBOOK_STATUS_KEY, nextStatus);
     setSaving(true);
     try {
       const response = await fetch("/api/ai-playbook", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ rawNotes: latestUserMessage, status: "ready" })
+        body: JSON.stringify({ rawNotes: latestUserMessage, status: nextStatus })
       });
       if (!response.ok) throw new Error("Unable to save AI Playbook");
       window.dispatchEvent(new Event("reachlyst:playbook-status"));
-      setReady(true);
     } catch {
       window.dispatchEvent(new Event("reachlyst:playbook-status"));
-      setReady(true);
     } finally {
       setSaving(false);
     }
@@ -146,31 +200,57 @@ export function AiPlaybookTrainer() {
 
   return (
     <section className="grid gap-5">
-      <header className="grid gap-5 rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-reachlyst md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+      <header className="grid gap-5 rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-reachlyst lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.4fr)] lg:items-start">
         <div>
           <span className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-accent-strong">AI Playbook</span>
           <h1 className="max-w-3xl text-3xl font-extrabold leading-tight text-ink">Train Reachlyst for your Sales Navigator workflow</h1>
           <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-muted">Your AI Playbook controls how Reachlyst understands leads and writes manual message suggestions inside the extension.</p>
         </div>
-        <span className={`inline-flex whitespace-nowrap rounded-full px-3 py-2 text-xs font-extrabold ${ready ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{ready ? "Ready" : "Not trained yet"}</span>
+        <div className="rounded-lg border border-blue-100 bg-white/80 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-extrabold ${extensionReady ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{extensionReady ? "Ready to start" : readiness.status}</span>
+            <strong className="text-sm font-extrabold text-ink">{readiness.score}%</strong>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <span className={`block h-full rounded-full ${extensionReady ? "bg-emerald-500" : readiness.score >= 55 ? "bg-blue-500" : "bg-amber-500"}`} style={{ width: `${readiness.score}%` }} />
+          </div>
+          <p className="mt-2 text-xs font-semibold leading-5 text-muted">
+            {extensionReady
+              ? "100% trained. You can start using the extension."
+              : readiness.missing.length
+                ? `To reach 100%, add: ${readiness.missing.slice(0, 3).join(", ")}.`
+                : "Add more concrete examples to reach 100%."}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {readinessChecks.map((check) => {
+            const complete = !readiness.missing.includes(check.label);
+            return <span className={`rounded-full px-2 py-1 text-[11px] font-extrabold ${complete ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"}`} key={check.key}>{check.label}</span>;
+            })}
+          </div>
+        </div>
       </header>
 
       <div className="grid overflow-hidden rounded-lg border border-blue-100 bg-white shadow-reachlyst">
         <div className="flex items-center gap-3 border-b border-blue-100 bg-blue-50/60 px-5 py-4">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-lg font-extrabold text-white shadow-[0_10px_22px_rgba(22,119,255,.24)]">R</span>
-          <div>
+          <div className="min-w-0">
             <strong className="block text-base font-extrabold text-ink">Reachlyst AI</strong>
-            <small className="mt-0.5 block text-sm font-semibold text-muted">{ready ? "AI Playbook is ready. You can refine it anytime." : "Answer the questions below to train your playbook."}</small>
+            <small className="mt-0.5 block text-sm font-semibold text-muted">{extensionReady ? "100% trained. Start the extension, or refine it anytime." : "Complete the missing areas to reach 100% before starting the extension."}</small>
           </div>
+          {aiUsage ? <div className="ml-auto shrink-0 rounded-lg border border-blue-100 bg-white px-3 py-2 text-right">
+            <span className="block text-[10px] font-extrabold uppercase tracking-wide text-accent-strong">AI messages</span>
+            <strong className="mt-0.5 block text-sm font-extrabold text-ink">{aiUsage.used.toLocaleString("en-US")} / {aiUsage.limit.toLocaleString("en-US")}</strong>
+          </div> : null}
         </div>
 
         <div className="grid max-h-[min(520px,calc(100vh-390px))] min-h-[360px] gap-3 overflow-auto bg-slate-50 p-5 max-md:max-h-none max-md:min-h-80">
           {messages.map((message, index) => (
             <p className={`m-0 max-w-3xl rounded-lg border p-4 text-sm font-semibold leading-6 whitespace-pre-wrap ${message.role === "user" ? "justify-self-end border-blue-200 bg-blue-50 text-ink" : "justify-self-start border-blue-100 bg-white text-slate-700"}`} key={`${message.role}-${index}`}>
               <strong className={`mb-1 block text-xs font-extrabold ${message.role === "user" ? "text-ink" : "text-accent-strong"}`}>{message.role === "user" ? "You" : "Reachlyst AI"}</strong>
-              {message.content}
+              {message.content || (message.role === "assistant" && streaming ? "Writing..." : "")}
             </p>
           ))}
+          {thinking ? <p className="m-0 max-w-3xl justify-self-start rounded-lg border border-blue-100 bg-white p-4 text-sm font-semibold leading-6 text-slate-700"><strong className="mb-1 block text-xs font-extrabold text-accent-strong">Reachlyst AI</strong>Reading context and shaping the next question...</p> : null}
           <div ref={endRef} />
         </div>
 
@@ -184,26 +264,27 @@ export function AiPlaybookTrainer() {
                 sendMessage();
               }
             }}
-            placeholder="Tell me what you offer, who you target, who to exclude, and what tone your messages should use..."
+            placeholder="Tell me what you offer, who you target, what buying signals matter, and what tone your messages should use..."
             value={draft}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3 bg-white px-5 pb-5 pt-3">
-          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-5 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={thinking || !draft.trim()} onClick={sendMessage} type="button">{thinking ? "Thinking..." : "Send"}</button>
+          <button className="min-h-11 rounded-lg border border-blue-200 bg-accent px-5 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55" disabled={thinking || streaming || !draft.trim()} onClick={sendMessage} type="button">{thinking ? "Reading..." : streaming ? "Writing..." : "Send"}</button>
           <label className="inline-flex min-h-11 select-none items-center gap-2 text-sm font-extrabold text-muted">
             <span>Send on Enter</span>
             <button
               aria-pressed={sendOnEnter}
-              className={`relative inline-flex shrink-0 rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
+              className={`relative inline-flex min-h-0 shrink-0 items-center rounded-full border p-0.5 transition ${sendOnEnter ? "border-accent bg-accent" : "border-slate-300 bg-slate-300"}`}
               onClick={() => setSendOnEnter((current) => !current)}
+              style={{ width: 40, height: 24, minHeight: 24 }}
               type="button"
             >
-              <span className={`block rounded-full bg-white p-2 shadow-sm transition ${sendOnEnter ? "translate-x-4" : "translate-x-0"}`} />
+              <span className={`block rounded-full bg-white shadow-sm transition ${sendOnEnter ? "translate-x-4" : "translate-x-0"}`} style={{ width: 20, height: 20 }} />
             </button>
           </label>
           <button className="ml-auto min-h-11 min-w-40 rounded-lg border border-blue-200 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-55 max-md:ml-0 max-md:w-full" disabled={saving || !messages.some((message) => message.role === "user")} onClick={savePlaybook} type="button">
-            {saving ? "Saving..." : ready ? "Update AI Playbook" : "Save AI Playbook"}
+            {saving ? "Saving..." : extensionReady ? "Save and start extension" : "Save draft"}
           </button>
         </div>
       </div>

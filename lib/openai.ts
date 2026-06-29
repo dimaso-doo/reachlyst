@@ -101,7 +101,7 @@ function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
   const lower = memory.toLowerCase();
   const hasOffer = /sell|offer|provide|help|we do|service|product|agency|software|consult|support|website|marketing|sales|seo|ppc|development|outreach/i.test(memory);
   const hasIcp = /target|ideal|lead|icp|founder|owner|ceo|head|director|agency|saas|b2b|industry|company|employees|location/i.test(memory);
-  const hasExclusions = /exclude|avoid|skip|not|wrong|bad fit|student|recruiter|enterprise|small|freelancer/i.test(memory);
+  const hasSignals = /signal|trigger|hiring|posted|growth|funding|recent|pain|problem|intent|active|looking|need/i.test(memory);
   const hasTone = /tone|voice|direct|friendly|professional|warm|short|concise|premium|casual|formal/i.test(memory);
   const hasMessages = /invite|message|reply|follow|connection|cta|ask|call|demo|audit|intro/i.test(memory);
 
@@ -110,7 +110,7 @@ function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
     "",
     `Offer: ${hasOffer ? "captured from your notes" : "not clear yet"}`,
     `Ideal leads: ${hasIcp ? "partly defined" : "not clear yet"}`,
-    `Bad-fit leads: ${hasExclusions ? "partly defined" : "not clear yet"}`,
+    `Buying signals: ${hasSignals ? "partly defined" : "not clear yet"}`,
     `Tone: ${hasTone ? "partly defined" : "not clear yet"}`,
     `Invite/reply goal: ${hasMessages ? "partly defined" : "not clear yet"}`
   ].join("\n");
@@ -118,24 +118,42 @@ function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
   const missing = [
     !hasOffer ? "what you sell and the concrete outcome you create" : "",
     !hasIcp ? "the exact roles, industries, company sizes, and countries you want" : "",
-    !hasExclusions ? "who Reachlyst should mark as Skip" : "",
+    !hasSignals ? "the buying signals that show a lead is worth a closer look" : "",
     !hasTone ? "the tone and words to avoid" : "",
     !hasMessages ? "what invites and accepted-connection replies should ask for" : ""
   ].filter(Boolean);
 
   if (!memory.trim()) {
-    return "Let us build the Playbook properly. Start with what you sell, who buys it, who is a bad fit, and what a good first LinkedIn message should achieve.";
+    return "Let us build the Playbook properly. Start with what you sell, who buys it, what buying signals matter, and what a good first LinkedIn message should achieve.";
   }
 
   if (websiteContext) {
-    return `${summary}\n\nI also read the website context you shared. Next question: ${missing[0] ?? "which website claims or offers should Reachlyst use as the main outreach angle, and which should it avoid mentioning?"}`;
+    const context = input.websiteContexts?.[0];
+    const text = context?.text ?? "";
+    const title = context?.title ? `\nTitle: ${context.title}` : "";
+    const likelyOffer = [
+      /website support|website care|technical support/i.test(text) ? "website support and technical support" : "",
+      /maintenance|security checks|performance monitoring/i.test(text) ? "ongoing website maintenance, security checks, and performance monitoring" : "",
+      /web development|custom development|api integrations|payment workflows/i.test(text) ? "web development, custom features, API integrations, and payment workflows" : "",
+      /web design|redesign|ux\/ui|landing pages|design systems/i.test(text) ? "web design, redesign, UX/UI improvements, landing pages, and design systems" : "",
+      /technical seo|analytics|qa/i.test(text) ? "technical SEO, analytics, and QA" : ""
+    ].filter(Boolean).join("; ");
+    return [
+      "I read the website context you shared.",
+      title,
+      likelyOffer ? `What it looks like you do: ${likelyOffer}.` : `Website context excerpt: ${text.slice(0, 600)}`,
+      "",
+      summary,
+      "",
+      `Next question: ${missing[0] ?? "which website claims or offers should Reachlyst use as the main outreach angle, and which should it avoid mentioning?"}`
+    ].filter(Boolean).join("\n");
   }
 
   if (lower.includes("save") || lower.includes("ready")) {
-    return `${summary}\n\nBefore saving, I would tighten one thing: ${missing[0] ?? "give me 2-3 examples of leads you would definitely want and 2-3 you would skip"}.`;
+    return `${summary}\n\nBefore saving, I would tighten one thing: ${missing[0] ?? "give me 2-3 examples of ideal leads and the message goal for each"}.`;
   }
 
-  return `${summary}\n\nNext question: ${missing[0] ?? "send me 2 good-fit examples and 2 bad-fit examples, and I will turn this into precise Good fit / Maybe / Skip rules plus default invite and reply styles."}`;
+  return `${summary}\n\nNext question: ${missing[0] ?? "send me 2-3 ideal lead examples, and I will turn this into precise ICP, buying-signal, invite, and reply rules."}`;
 }
 
 export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
@@ -153,9 +171,10 @@ export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
             "Reply in the user's language unless they ask for another language.",
             "Your job is to have a real discovery conversation and convert the user's business context, website content, and sales thinking into practical rules for the Reachlyst extension.",
             "You may freely discuss the user's website, offer, market, positioning, competitors, buyer psychology, sales angles, objection handling, messaging strategy, and examples as long as the conversation helps train Reachlyst.",
-            "Focus on: offer, ICP, good-fit signals, maybe-fit signals, skip/disqualifier rules, target roles, industries, company size, geography, tone, words to avoid, connection invite rules, accepted-connection reply rules, follow-up style, CTA, and examples.",
+            "Focus on: offer, ICP, buying signals, target roles, industries, company size, geography, tone, words to avoid, connection invite rules, accepted-connection reply rules, follow-up style, CTA, and examples.",
+            "Do not ask for negative-fit categories as a required Playbook item unless the user brings that topic up first.",
             "Do not give generic encouragement. Each reply must either summarize concrete conclusions or ask the single most useful next question.",
-            "When enough information exists, provide a compact Playbook draft with sections: Offer, Good fit, Maybe, Skip, Invite style, Reply style, Follow-up style, Default message types, Missing information.",
+            "When enough information exists, provide a compact Playbook draft with sections: Offer, ICP, Buying signals, Invite style, Reply style, Follow-up style, Default message types, Missing information.",
             "If website context is provided, use it to infer the offer, proof points, target customer, tone, and possible outreach angles. Be clear when an inference is uncertain.",
             "Use manual-first product language: say AI-assisted invite drafting, reply suggestions, or message suggestions. Do not call Reachlyst automated invite generation, automated outreach, or automated messaging.",
             "Keep it useful and conversational. Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization."
@@ -226,7 +245,7 @@ function fallbackSearchAdvisor(input: SearchAdvisorInput) {
   const isTraining = input.mode === "train_search";
   const starter = isTraining
     ? "Got it. For this search, I would score good fits as decision makers in the target niche, maybe fits as relevant but unclear buyers, and skips as profiles without a clear business match."
-    : "Got it. Let’s define the ICP first: role, industry, location, company size, and clear exclusions.";
+    : "I am with you. Let’s shape this into a useful LinkedIn outreach plan: offer, ICP, buying signals, and the next message angle.";
 
   if (!latest.trim()) return starter;
 
@@ -234,14 +253,14 @@ function fallbackSearchAdvisor(input: SearchAdvisorInput) {
   const wantsMessage = /poruk|invite|connect|tone|ton/i.test(latest);
 
   if (wantsLink) {
-    return "I can structure the Sales Navigator search around role/title filters, company headcount, geography, industry, and keywords. Tell me what you sell, the target country, company size, and 3-5 bad-fit examples to exclude.";
+    return "Yes. I can help turn that into a Sales Navigator search. Give me the offer, target country, ideal roles, company size, and the buying signals that matter most. Then I will suggest the cleanest search structure and outreach angle.";
   }
 
   if (wantsMessage) {
     return "For messages, I would keep the tone short, calm, and specific without fake personalization. Example: “Hi Ana, noticed your work at Bright SEO. Thought it made sense to connect here.” Tell me the offer and audience, and I can draft 3 variants.";
   }
 
-  return `I can help with that. ${starter}\n\nIf this should train Reachlyst, I will translate the conversation into practical rules for lead fit, tone, message style, and follow-up strategy as we go.`;
+  return `I can help with that. ${starter}\n\nTalk to me naturally: rough ideas are fine. I will turn them into clearer ICP, buying-signal, message, and follow-up decisions as we go.`;
 }
 
 export async function adviseOnSearch(input: SearchAdvisorInput) {
@@ -255,12 +274,15 @@ export async function adviseOnSearch(input: SearchAdvisorInput) {
         {
           role: "system",
           content: [
-            "You are Reachlyst AI, a practical Sales Navigator search and outreach advisor.",
+            "You are Reachlyst Ally, a warm, sharp LinkedIn outreach partner inside the Reachlyst dashboard.",
             "Reply in the user's language unless they ask for another language.",
-            "Have a free, natural conversation. The user may ask about business, positioning, competitors, sales, websites, offers, messaging, LinkedIn, or anything else that helps them think.",
-            "When the conversation touches prospecting or outreach, translate useful details into Reachlyst training ideas: ICP criteria, fit rules, exclusions, message tone, reply style, and concise invite copy.",
+            "Have a free, natural conversation. Be friendly, candid, and useful, like a trusted sales partner thinking with the user.",
+            "The user may ask about business, positioning, competitors, sales, websites, offers, messaging, LinkedIn, or anything else that helps them think.",
+            "Do not sound like a support bot. You can say what you think, make reasonable assumptions, and then ask for the one missing detail that would improve the answer.",
+            "When the conversation touches prospecting or outreach, translate useful details into Reachlyst training ideas: ICP criteria, buying signals, message tone, reply style, and concise invite copy.",
             "Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization.",
-            "Keep replies useful and actionable. When relevant, include Good fit, Maybe, Skip, Suggested invite, and Sales Navigator filter ideas.",
+            "Keep replies useful and actionable. Prefer one clear recommendation plus the next best question over long checklists.",
+            "When relevant, include ICP, buying signals, suggested invite angle, reply direction, and Sales Navigator filter ideas.",
             "For create_search mode, help the user design a search and optionally draft a Sales Navigator query/filter plan.",
             "For train_search mode, help the user define how this specific search should score leads and write messages."
           ].join(" ")

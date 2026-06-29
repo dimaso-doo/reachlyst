@@ -1,5 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Read how Reachlyst collects, uses, and protects information across the website, dashboard, billing flow, AI features, and Chrome extension.",
+  alternates: {
+    canonical: "/privacy"
+  },
+  openGraph: {
+    title: "Reachlyst Privacy Policy",
+    description: "How Reachlyst handles account, billing, AI, extension, and workspace data.",
+    url: "/privacy"
+  }
+};
 
 const sections = [
   ["Information we collect", "We collect account information such as name, email address, workspace details, subscription status, extension connection status, usage counts, AI Playbook notes you provide, and product activity needed to operate Reachlyst."],
@@ -22,7 +36,7 @@ export default function PrivacyPage() {
 
 function LegalPage({ title, intro, sections }: { title: string; intro: string; sections: readonly (readonly [string, string])[] }) {
   return <main className="min-h-screen bg-[#050a18] px-5 py-8 text-white sm:px-10 lg:px-[min(7vw,88px)]">
-    <Link className="inline-flex items-center" href="/"><img className="h-8 w-auto" alt="Reachlyst" src="/reachlyst-logo-blue.png" /></Link>
+    <Link className="inline-flex items-center" href="/"><img className="h-9 w-auto" alt="Reachlyst" src="/reachlyst-logo-white.svg" /></Link>
     <article className="mx-auto mt-16 max-w-4xl rounded-2xl border border-white/10 bg-white/[.04] p-6 shadow-[0_28px_90px_rgba(0,0,0,.24)] sm:p-10">
       <p className="text-xs font-black uppercase tracking-[.08em] text-blue-300">Last updated: June 27, 2026</p>
       <h1 className="mb-5 mt-4 text-4xl font-extrabold leading-tight sm:text-6xl">{title}</h1>

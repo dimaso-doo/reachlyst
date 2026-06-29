@@ -10,30 +10,41 @@ import { recordAiUsage } from "@/lib/store";
 const schema = z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant"]),
-    content: z.string().min(1).max(4000)
+    content: z.string().min(1)
   })).min(1).max(40)
 });
 
 export async function POST(request: Request) {
   const body = schema.parse(await request.json());
+  const messages = body.messages.map((message) => ({
+    role: message.role,
+    content: message.content.slice(0, 4000)
+  }));
   const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
   if (!capacity.ok) return capacity.response;
-  const websiteContexts = await collectWebsiteContexts(body.messages.map((message) => message.content).join("\n"));
+  const websiteContexts = await collectWebsiteContexts(messages.map((message) => message.content).join("\n"));
   const ragContext = await buildReachlystRagContext({
     query: [
-      body.messages.map((message) => `${message.role}: ${message.content}`).join("\n"),
+      messages.map((message) => `${message.role}: ${message.content}`).join("\n"),
       websiteContexts.map((context) => `${context.url}\n${context.title ?? ""}\n${context.text}`).join("\n\n")
     ].join("\n\n"),
     limit: 8
   });
-  const reply = await chatAboutAiPlaybook({ ...body, websiteContexts, ragContext });
+  const reply = await chatAboutAiPlaybook({ messages, websiteContexts, ragContext });
   await recordAiUsage("message_generated");
   return NextResponse.json({ reply });
 }
 
 function extractUrls(text: string) {
-  const matches = text.match(/https?:\/\/[^\s<>"')]+/gi) ?? [];
-  return Array.from(new Set(matches.map((url) => url.replace(/[.,;:!?]+$/, "")))).slice(0, 3);
+  const explicit = text.match(/https?:\/\/[^\s<>"')]+/gi) ?? [];
+  const bareDomains = text.match(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s<>"')]+)?/gi) ?? [];
+  const urls = [
+    ...explicit,
+    ...bareDomains
+      .filter((domain) => !domain.includes("@") && !explicit.some((url) => url.includes(domain)))
+      .map((domain) => `https://${domain}`)
+  ];
+  return Array.from(new Set(urls.map((url) => url.replace(/[.,;:!?]+$/, "")))).slice(0, 3);
 }
 
 async function collectWebsiteContexts(text: string) {

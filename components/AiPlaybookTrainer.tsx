@@ -50,6 +50,13 @@ A polite reply pattern for leads who are not ready yet.
 If this direction is close, save the AI Playbook. Or keep talking here and I will tighten the rules with you.`;
 }
 
+function buildUnavailableReply(input: string) {
+  const wantsSerbian = /[čćžšđ]|jesi|moze|može|sta|šta|kako|poruk|posetio|posjetio/i.test(input);
+  return wantsSerbian
+    ? "Nisam dobio pravi AI odgovor iz servera za ovu poruku. Neću to pretvarati u Playbook draft. Probaj ponovo za par sekundi, a možeš i samo nastaviti pitanje ovde."
+    : "I did not get a proper AI response from the server for that message. I will not turn it into a Playbook draft. Try again in a few seconds, or keep the question going here.";
+}
+
 function calculateReadiness(messages: Message[]) {
   const userText = messages.filter((message) => message.role === "user").map((message) => message.content).join("\n").toLowerCase();
   const wordCount = userText.split(/\s+/).filter(Boolean).length;
@@ -162,11 +169,11 @@ export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: 
       const data = (await response.json()) as { reply?: string };
       await wait(Math.max(350, 900 - (Date.now() - startedAt)));
       setThinking(false);
-      await revealAssistantReply(data.reply || buildPlaybookReply(content));
+      await revealAssistantReply(data.reply || buildUnavailableReply(content));
     } catch {
       await wait(Math.max(350, 900 - (Date.now() - startedAt)));
       setThinking(false);
-      await revealAssistantReply(buildPlaybookReply(content));
+      await revealAssistantReply(buildUnavailableReply(content));
     } finally {
       setThinking(false);
       void refreshAiUsage();

@@ -293,7 +293,7 @@ function ensureFloatingChat() {
       </div>
     </div>
     <div class="reachlyst-chat-thread"></div>
-    <textarea class="reachlyst-chat-input" rows="3" placeholder="Write in any language. Ask for a shorter, warmer, direct, or more specific invite..."></textarea>
+    <textarea class="reachlyst-chat-input" rows="3" placeholder="Write naturally. Ask about fit, angle, replies, objections, follow-ups, or paste a rough idea..."></textarea>
     <div class="reachlyst-chat-actions">
       <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
       <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Send</button>
@@ -353,10 +353,10 @@ function openFloatingChat(lead) {
     const input = chat.querySelector(".reachlyst-chat-input");
     if (input)
         input.placeholder = lead.context === "messages"
-            ? "Ask for a shorter, warmer, direct, or more specific reply..."
+            ? "Ask about the thread, reply angle, objection, tone, or paste a rough response..."
             : lead.context === "profile"
-                ? "Ask for a message, follow-up, fit angle, or profile-based outreach idea..."
-                : "Write in any language. Ask for a shorter, warmer, direct, or more specific invite...";
+                ? "Ask about fit, angle, message, follow-up, objection, or what to do next..."
+                : "Write naturally. Ask about fit, angle, invite, follow-up, or paste a rough idea...";
     chat.querySelector(".reachlyst-chat-status").textContent = lead.context === "messages" ? "Chat is tied to this selected conversation." : lead.context === "profile" ? "Chat is tied to this selected profile." : "Chat is tied to this selected lead.";
     renderThread(chat, lead, "bottom");
     if (!document.activeElement?.closest?.(".reachlyst-floating-chat"))
@@ -684,7 +684,7 @@ async function runSalesProfile() {
     }
     const status = document.querySelector(".reachlyst-floating-chat .reachlyst-chat-status");
     if (status)
-        status.textContent = "Profile context ready. Ask for fit, angle, or a better message.";
+        status.textContent = "Profile context ready. Ask freely about fit, angle, message, or next step.";
 }
 async function runSalesMessages() {
     if (!(await reachlystIsEnabled())) {

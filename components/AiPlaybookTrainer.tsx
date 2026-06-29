@@ -23,10 +23,10 @@ const readinessChecks = [
   { key: "cta", label: "CTA", patterns: ["cta", "ask", "call", "meeting", "reply", "connect", "next step", "pitaj", "poziv", "sastanak", "odgovor", "povezivanje", "sledeci korak"] }
 ];
 
-const welcomeMessage = "Welcome. I am ready to train your Reachlyst AI Playbook for LinkedIn Sales Navigator. Fill the Playbook to 100%, then start using the extension with cleaner lead analysis, invite drafts, and reply suggestions.";
+const welcomeMessage = "Welcome. Talk to me naturally about your offer, buyers, website, messages, or the kind of leads you like. I will turn the useful parts into your Reachlyst AI Playbook for Sales Navigator.";
 
 function buildPlaybookReply(input: string) {
-  return `Great. I captured this as your first AI Playbook draft:
+  return `Great. I captured this as a working AI Playbook draft:
 
 ${input}
 
@@ -47,7 +47,7 @@ A light manual follow-up that continues the same tone without pressure.
 5. Not-now response
 A polite reply pattern for leads who are not ready yet.
 
-If this direction is right, save the AI Playbook. You can keep refining it here anytime.`;
+If this direction is close, save the AI Playbook. Or keep talking here and I will tighten the rules with you.`;
 }
 
 function calculateReadiness(messages: Message[]) {
@@ -125,7 +125,7 @@ export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: 
   }
 
   async function revealAssistantReply(reply: string) {
-    const safeReply = reply.trim() || "I captured that. Tell me a little more about the buyers you want Reachlyst to prioritize.";
+    const safeReply = reply.trim() || "I am with you. Send one rough example of an ideal buyer, a bad-fit lead, or a message style you like, and I will shape it into Playbook rules.";
     setStreaming(true);
     setMessages((current) => [...current, { role: "assistant", content: "" }]);
 
@@ -264,7 +264,7 @@ export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: 
                 sendMessage();
               }
             }}
-            placeholder="Tell me what you offer, who you target, what buying signals matter, and what tone your messages should use..."
+            placeholder="Write freely: your offer, buyers, website link, lead examples, message style, objections, or anything Reachlyst should learn..."
             value={draft}
           />
         </div>

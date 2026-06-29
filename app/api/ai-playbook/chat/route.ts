@@ -4,6 +4,7 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { requirePlanCapacity } from "@/lib/entitlements";
 import { chatAboutAiPlaybook } from "@/lib/openai";
+import { buildReachlystRagContext } from "@/lib/rag";
 import { recordAiUsage } from "@/lib/store";
 
 const schema = z.object({
@@ -18,7 +19,14 @@ export async function POST(request: Request) {
   const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
   if (!capacity.ok) return capacity.response;
   const websiteContexts = await collectWebsiteContexts(body.messages.map((message) => message.content).join("\n"));
-  const reply = await chatAboutAiPlaybook({ ...body, websiteContexts });
+  const ragContext = await buildReachlystRagContext({
+    query: [
+      body.messages.map((message) => `${message.role}: ${message.content}`).join("\n"),
+      websiteContexts.map((context) => `${context.url}\n${context.title ?? ""}\n${context.text}`).join("\n\n")
+    ].join("\n\n"),
+    limit: 8
+  });
+  const reply = await chatAboutAiPlaybook({ ...body, websiteContexts, ragContext });
   await recordAiUsage("message_generated");
   return NextResponse.json({ reply });
 }

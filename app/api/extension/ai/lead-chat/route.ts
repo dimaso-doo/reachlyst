@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireExtensionToken } from "@/lib/mockDb";
 import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 import { chatAboutLeadInvite, type LeadInviteChatInput } from "@/lib/openai";
+import { buildReachlystRagContext } from "@/lib/rag";
 import { applyAiPlaybookToLeadInput, recordAiUsage, saveGeneratedMessage } from "@/lib/store";
 
 export async function POST(request: Request) {
@@ -26,7 +27,16 @@ export async function POST(request: Request) {
   if (!capacity.ok) return capacity.response;
 
   const enrichedLead = await applyAiPlaybookToLeadInput(lead);
-  const reply = await chatAboutLeadInvite({ lead: enrichedLead, messages });
+  const ragContext = await buildReachlystRagContext({
+    query: [
+      JSON.stringify(enrichedLead),
+      messages.map((message) => `${message.role}: ${message.content}`).join("\n")
+    ].join("\n"),
+    leadName: enrichedLead.name,
+    leadCompany: enrichedLead.company,
+    limit: 8
+  });
+  const reply = await chatAboutLeadInvite({ lead: enrichedLead, messages, ragContext });
   await saveGeneratedMessage(enrichedLead, reply);
   await recordAiUsage("message_generated");
   return NextResponse.json({ reply });

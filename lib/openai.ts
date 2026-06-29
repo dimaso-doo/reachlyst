@@ -28,16 +28,19 @@ export type SearchAdvisorInput = {
   searchUrl?: string;
   context?: string;
   messages: SearchAdvisorMessage[];
+  ragContext?: string;
 };
 
 export type AiPlaybookChatInput = {
   messages: SearchAdvisorMessage[];
   websiteContexts?: Array<{ url: string; title?: string; text: string }>;
+  ragContext?: string;
 };
 
 export type LeadInviteChatInput = {
   lead: AiLeadInput & { currentMessage?: string; status?: string };
   messages: SearchAdvisorMessage[];
+  ragContext?: string;
 };
 
 function fallbackAnalysis(input: AiLeadInput, reason: string) {
@@ -95,6 +98,19 @@ function formatWebsiteContexts(contexts?: AiPlaybookChatInput["websiteContexts"]
   ].filter(Boolean).join("\n")).join("\n\n");
 }
 
+function ragContextMessages(context?: string) {
+  const trimmed = context?.trim();
+  if (!trimmed) return [];
+  return [{
+    role: "user" as const,
+    content: [
+      "Use this retrieved Reachlyst workspace context as background memory for this chat.",
+      "Do not quote it mechanically. If it is incomplete, make a reasonable assumption and ask one easy follow-up question.",
+      trimmed
+    ].join("\n\n")
+  }];
+}
+
 function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
   const memory = playbookMemory(input.messages);
   const websiteContext = formatWebsiteContexts(input.websiteContexts);
@@ -124,7 +140,9 @@ function fallbackAiPlaybookReply(input: AiPlaybookChatInput) {
   ].filter(Boolean);
 
   if (!memory.trim()) {
-    return "Let us build the Playbook properly. Start with what you sell, who buys it, what buying signals matter, and what a good first LinkedIn message should achieve.";
+    return input.ragContext
+      ? "I already have some workspace context, so we can start loose. Send me one rough thought: what should Reachlyst notice first about a good lead, or what kind of message should it avoid sounding like?"
+      : "We can start messy. Send me anything: what you sell, who usually buys, a website link, or even one lead you like. I will turn it into Playbook rules as we talk.";
   }
 
   if (websiteContext) {
@@ -170,6 +188,8 @@ export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
             "You are Reachlyst AI Playbook trainer.",
             "Reply in the user's language unless they ask for another language.",
             "Your job is to have a real discovery conversation and convert the user's business context, website content, and sales thinking into practical rules for the Reachlyst extension.",
+            "Make the conversation easy to continue. If the user is vague, answer warmly from context, offer one useful angle, and ask a small next question.",
+            "Never say you do not know what to say. If context is missing, say what you can infer and invite the user to add a rough thought.",
             "You may freely discuss the user's website, offer, market, positioning, competitors, buyer psychology, sales angles, objection handling, messaging strategy, and examples as long as the conversation helps train Reachlyst.",
             "Focus on: offer, ICP, buying signals, target roles, industries, company size, geography, tone, words to avoid, connection invite rules, accepted-connection reply rules, follow-up style, CTA, and examples.",
             "Do not ask for negative-fit categories as a required Playbook item unless the user brings that topic up first.",
@@ -187,6 +207,7 @@ export async function chatAboutAiPlaybook(input: AiPlaybookChatInput) {
             websiteContexts: input.websiteContexts
           })
         }] : []),
+        ...ragContextMessages(input.ragContext),
         ...input.messages.map((message) => ({ role: message.role, content: message.content }))
       ]
     });
@@ -244,8 +265,8 @@ function fallbackSearchAdvisor(input: SearchAdvisorInput) {
   const latest = input.messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
   const isTraining = input.mode === "train_search";
   const starter = isTraining
-    ? "Got it. For this search, I would score good fits as decision makers in the target niche, maybe fits as relevant but unclear buyers, and skips as profiles without a clear business match."
-    : "I am with you. Let’s shape this into a useful LinkedIn outreach plan: offer, ICP, buying signals, and the next message angle.";
+    ? "Got it. I can help train this search from the context we already have: who should count as a good fit, what signals matter, and what kind of message should feel natural."
+    : "I am with you. We can talk freely and turn the rough thinking into ICP, buying signals, Sales Navigator filters, and message angles as we go.";
 
   if (!latest.trim()) return starter;
 
@@ -253,14 +274,14 @@ function fallbackSearchAdvisor(input: SearchAdvisorInput) {
   const wantsMessage = /poruk|invite|connect|tone|ton/i.test(latest);
 
   if (wantsLink) {
-    return "Yes. I can help turn that into a Sales Navigator search. Give me the offer, target country, ideal roles, company size, and the buying signals that matter most. Then I will suggest the cleanest search structure and outreach angle.";
+    return "Yes. We can turn that into a clean Sales Navigator search. Send whatever you have first - offer, country, roles, company size, or a messy example - and I will shape the filters and outreach angle from there.";
   }
 
   if (wantsMessage) {
-    return "For messages, I would keep the tone short, calm, and specific without fake personalization. Example: “Hi Ana, noticed your work at Bright SEO. Thought it made sense to connect here.” Tell me the offer and audience, and I can draft 3 variants.";
+    return "For messages, I would keep the tone short, calm, and specific without fake personalization. Give me the audience or paste a rough line, and I will make it sound more human while keeping it safe for manual LinkedIn outreach.";
   }
 
-  return `I can help with that. ${starter}\n\nTalk to me naturally: rough ideas are fine. I will turn them into clearer ICP, buying-signal, message, and follow-up decisions as we go.`;
+  return `Yes, let's work through it. ${starter}\n\nWrite naturally, even if it is unfinished. I will pull out the useful parts and keep asking for the next smallest detail.`;
 }
 
 export async function adviseOnSearch(input: SearchAdvisorInput) {
@@ -277,8 +298,10 @@ export async function adviseOnSearch(input: SearchAdvisorInput) {
             "You are Reachlyst Ally, a warm, sharp LinkedIn outreach partner inside the Reachlyst dashboard.",
             "Reply in the user's language unless they ask for another language.",
             "Have a free, natural conversation. Be friendly, candid, and useful, like a trusted sales partner thinking with the user.",
+            "Your goal is to keep the user writing. Make rough ideas feel welcome, then turn them into practical outreach decisions.",
             "The user may ask about business, positioning, competitors, sales, websites, offers, messaging, LinkedIn, or anything else that helps them think.",
             "Do not sound like a support bot. You can say what you think, make reasonable assumptions, and then ask for the one missing detail that would improve the answer.",
+            "Never use a dead-end fallback such as 'I do not know what to say'. If context is thin, continue with a useful assumption and a small next question.",
             "When the conversation touches prospecting or outreach, translate useful details into Reachlyst training ideas: ICP criteria, buying signals, message tone, reply style, and concise invite copy.",
             "Do not suggest auto-connect, auto-send, credential storage, bypassing platform limits, or fake personalization.",
             "Keep replies useful and actionable. Prefer one clear recommendation plus the next best question over long checklists.",
@@ -296,6 +319,7 @@ export async function adviseOnSearch(input: SearchAdvisorInput) {
             context: input.context
           })
         },
+        ...ragContextMessages(input.ragContext),
         ...input.messages.map((message) => ({
           role: message.role,
           content: message.content
@@ -347,8 +371,8 @@ function fallbackLeadInviteChat(input: LeadInviteChatInput) {
   }
 
   return wantsSerbian
-    ? `Možemo slobodno da prođemo kroz to. Za ovaj lead trenutno imam ovaj osnovni outreach početak:\n\n${base}\n\nAko želiš, mogu dalje da pričam o fit-u, uglu pristupa, tonu, follow-up poruci ili širem kontekstu oko ovog prospekta.`
-    : `We can talk through that freely. For this lead, I currently have this outreach starting point:\n\n${base}\n\nI can also help with fit, positioning, tone, follow-up strategy, or broader context around this prospect.`;
+    ? `Možemo slobodno. Za ovaj lead bih krenuo od ovoga:\n\n${base}\n\nPošalji mi i neurednu misao ako treba: da li želiš bolji fit angle, topliju poruku, direktniji follow-up, ili da procenimo da li uopšte vredi pisati?`
+    : `We can talk freely. For this lead I would start here:\n\n${base}\n\nSend even a rough thought: do you want a sharper fit angle, warmer copy, a direct follow-up, or a quick call on whether this lead is worth messaging?`;
 }
 
 export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
@@ -365,6 +389,8 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
             "You are Reachlyst AI. Help polish LinkedIn copy for one visible Sales Navigator person.",
             "Reply in the same language the user uses. If the user asks for a specific language, use that language. If the language is unclear, use concise English.",
             "Have a free, natural conversation with the user. They may ask about the lead, their business, positioning, sales strategy, websites, messaging, objections, or broader context.",
+            "Your goal is to keep the user writing. If the user gives a vague prompt, continue with a helpful assumption and ask one easy follow-up.",
+            "Never use a dead-end default. If the answer is uncertain, say what the visible context suggests and offer two practical directions.",
             "When relevant, connect the answer back to the selected lead, visible conversation, outreach strategy, or practical next message.",
             "If lead.conversationContext is present, you can see that visible LinkedIn/Sales Navigator thread. Use it when drafting replies or follow-ups and never say you cannot see the conversation.",
             "If lead.profileContext is present, use it to assess Good fit / Maybe / Skip, explain why, suggest the strongest outreach angle, and then offer better copy.",
@@ -385,6 +411,7 @@ export async function chatAboutLeadInvite(input: LeadInviteChatInput) {
               : "Help with visible card-based fit, outreach angle, or safe copyable LinkedIn invite for this lead."
           })
         },
+        ...ragContextMessages(input.ragContext),
         ...input.messages.map((message) => ({ role: message.role, content: message.content }))
       ]
     });

@@ -49,7 +49,7 @@ export function SearchAiChat({ mode, title, intro, placeholder, description = "U
       });
       const data = (await response.json()) as { reply?: string; error?: string };
       if (!response.ok) throw new Error(data.error ?? "AI chat failed.");
-      setMessages([...nextMessages, { role: "assistant", content: data.reply ?? "Tell me a little more about the audience you want to reach." }]);
+      setMessages([...nextMessages, { role: "assistant", content: data.reply ?? "Write it however it comes to mind. I will turn the rough version into clearer ICP, signals, filters, and message angles." }]);
     } catch (chatError) {
       setError(chatError instanceof Error ? chatError.message : "AI chat failed.");
       setMessages(nextMessages);

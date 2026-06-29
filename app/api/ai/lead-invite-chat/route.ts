@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 import { chatAboutLeadInvite, type LeadInviteChatInput } from "@/lib/openai";
+import { buildReachlystRagContext } from "@/lib/rag";
 import { recordAiUsage } from "@/lib/store";
 
 export async function POST(request: Request) {
@@ -26,7 +27,17 @@ export async function POST(request: Request) {
   const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
   if (!capacity.ok) return capacity.response;
 
-  const reply = await chatAboutLeadInvite({ lead, messages });
+  const ragContext = await buildReachlystRagContext({
+    query: [
+      JSON.stringify(lead),
+      messages.map((message) => `${message.role}: ${message.content}`).join("\n")
+    ].join("\n"),
+    leadName: lead.name,
+    leadCompany: lead.company,
+    limit: 8
+  });
+
+  const reply = await chatAboutLeadInvite({ lead, messages, ragContext });
   await recordAiUsage("message_generated");
   return NextResponse.json({ reply });
 }

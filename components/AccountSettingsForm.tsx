@@ -2,20 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
-import styles from "@/app/app/lead.module.css";
 
 const defaults = {
   fullName: "Predrag",
-  email: "user@example.com",
+  email: "predrag@example.com",
+  phone: "",
   role: "Workspace owner",
   timezone: "Europe/Belgrade",
   workspace: "Reachlyst Demo Workspace",
-  website: "",
-  offer: "",
-  audience: "",
-  tone: "Professional, concise, human",
-  exclusions: "Students, freelancers, unrelated industries, enterprise profiles when the search is SMB.",
-  rules: "Use only visible title, company, location, and about text. Do not invent context."
+  website: ""
 };
 
 export function AccountSettingsForm() {
@@ -42,46 +37,30 @@ export function AccountSettingsForm() {
 
   return (
     <>
-      <section className={styles.settingsGrid}>
-        <Card>
-          <h2>Profile</h2>
-          <div className={styles.formGrid}>
-            <label>Full name<input onChange={(event) => update("fullName", event.target.value)} value={values.fullName} /></label>
-            <label>Work email<input onChange={(event) => update("email", event.target.value)} type="email" value={values.email} /></label>
-            <label>Role<input onChange={(event) => update("role", event.target.value)} value={values.role} /></label>
-            <label>Timezone<input onChange={(event) => update("timezone", event.target.value)} value={values.timezone} /></label>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-6">
+          <h2 className="mb-4 text-lg font-extrabold text-ink">Profile</h2>
+          <div className="grid gap-3">
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Full name<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("fullName", event.target.value)} value={values.fullName} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Work email<input className="min-h-11 cursor-default rounded-lg border border-slate-200 bg-slate-100 px-3 text-sm font-bold normal-case text-muted" readOnly type="email" value={values.email} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Phone number<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("phone", event.target.value)} placeholder="+381..." type="tel" value={values.phone} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Role<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("role", event.target.value)} value={values.role} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Timezone<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("timezone", event.target.value)} value={values.timezone} /></label>
           </div>
         </Card>
 
-        <Card>
-          <h2>Workspace</h2>
-          <div className={styles.formGrid}>
-            <label>Workspace name<input onChange={(event) => update("workspace", event.target.value)} value={values.workspace} /></label>
-            <label>Company website<input onChange={(event) => update("website", event.target.value)} placeholder="https://example.com" value={values.website} /></label>
-            <label>Default offer<input onChange={(event) => update("offer", event.target.value)} placeholder="What are you selling?" value={values.offer} /></label>
-            <label>Default audience<input onChange={(event) => update("audience", event.target.value)} placeholder="Who should Reachlyst score as a fit?" value={values.audience} /></label>
+        <Card className="p-6">
+          <h2 className="mb-4 text-lg font-extrabold text-ink">Workspace</h2>
+          <div className="grid gap-3">
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Workspace name<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("workspace", event.target.value)} value={values.workspace} /></label>
+            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">Company website<input className="min-h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold normal-case text-ink" onChange={(event) => update("website", event.target.value)} placeholder="https://example.com" value={values.website} /></label>
           </div>
-        </Card>
-
-        <Card>
-          <h2>Outreach defaults</h2>
-          <div className={styles.formGrid}>
-            <label>Message tone<input onChange={(event) => update("tone", event.target.value)} value={values.tone} /></label>
-            <label>Bad-fit exclusions<textarea onChange={(event) => update("exclusions", event.target.value)} value={values.exclusions} /></label>
-            <label>Personalization rules<textarea onChange={(event) => update("rules", event.target.value)} value={values.rules} /></label>
-          </div>
-        </Card>
-
-        <Card>
-          <h2>Extension</h2>
-          <p>Chrome extension access is controlled by your billing status and extension token.</p>
-          <p>Generate or copy your token from Dashboard or Chrome Extension.</p>
         </Card>
       </section>
 
-      <div className={styles.settingsActions}>
-        <button onClick={save} type="button">Save changes</button>
-        {saved ? <span>Saved</span> : null}
+      <div className="mt-4 flex items-center gap-3">
+        <button className="min-h-11 rounded-lg bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-strong" onClick={save} type="button">Save changes</button>
+        {saved ? <span className="text-sm font-extrabold text-emerald-700">Saved</span> : null}
       </div>
     </>
   );

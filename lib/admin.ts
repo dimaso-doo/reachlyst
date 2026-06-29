@@ -1,41 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getSupabaseServerClient } from "@/lib/supabase";
-import { getStripe } from "@/lib/stripe";
+import { getStripe, plans } from "@/lib/stripe";
 
 export type AdminUser = {
   id: string;
   email: string;
   name: string;
-  createdAt?: string;
-  lastSignInAt?: string;
   workspace?: string;
   role?: string;
   plan?: string;
   status?: string;
   currentPeriodEnd?: string;
-  moneySpentCents: number;
-  searches: number;
-  leads: number;
-  aiSuggestions: number;
-  aiTokens: number;
-  messagesSynced: number;
-  extensionTokens: number;
+  paidSoFarCents: number;
+  monthlyRevenueCents: number;
 };
 
 export type AdminSnapshot = {
   users: AdminUser[];
   stats: {
     users: number;
-    workspaces: number;
-    searches: number;
-    leads: number;
-    activeSubscriptions: number;
+    monthlyRevenueCents: number;
+    monthlyCostsCents: number;
+    monthlyProfitCents: number;
   };
-  earlyAdopter: {
-    code: string;
-    enabled: boolean;
-    stripeCouponConfigured: boolean;
-  };
+  topSubscribers: AdminUser[];
 };
 
 export function getEarlyAdopterConfig() {
@@ -50,18 +38,13 @@ export async function getAdminSnapshot(): Promise<AdminSnapshot> {
   const supabase = getSupabaseServerClient();
   if (!supabase || !process.env.SUPABASE_SERVICE_ROLE_KEY) return getLocalAdminSnapshot();
 
-  const [authResult, profilesResult, membersResult, workspacesResult, subscriptionsResult, searchesResult, leadsResult, analysesResult, generatedResult, messagesResult, tokensResult] = await Promise.all([
+  const [authResult, profilesResult, membersResult, workspacesResult, subscriptionsResult, analysesResult] = await Promise.all([
     supabase.auth.admin.listUsers({ page: 1, perPage: 200 }),
     supabase.from("profiles").select("id,email,full_name,created_at"),
     supabase.from("workspace_members").select("workspace_id,user_id,role"),
     supabase.from("workspaces").select("id,name,owner_id,created_at"),
     supabase.from("subscriptions").select("workspace_id,plan,status,current_period_end,stripe_customer_id,created_at"),
-    supabase.from("search_campaigns").select("id,workspace_id"),
-    supabase.from("leads").select("id,workspace_id"),
-    supabase.from("ai_analyses").select("id,workspace_id,input_tokens,output_tokens,cost_estimate"),
-    supabase.from("generated_messages").select("id,workspace_id"),
-    supabase.from("linkedin_messages").select("id,workspace_id"),
-    supabase.from("extension_tokens").select("id,workspace_id,revoked_at")
+    supabase.from("ai_analyses").select("cost_estimate,created_at")
   ]);
 
   const authUsers = authResult.data?.users ?? [];
@@ -69,86 +52,90 @@ export async function getAdminSnapshot(): Promise<AdminSnapshot> {
   const members = membersResult.data ?? [];
   const workspaces = workspacesResult.data ?? [];
   const subscriptions = subscriptionsResult.data ?? [];
-  const searches = searchesResult.data ?? [];
-  const leads = leadsResult.data ?? [];
   const analyses = analysesResult.data ?? [];
-  const generated = generatedResult.data ?? [];
-  const messages = messagesResult.data ?? [];
-  const tokens = tokensResult.data ?? [];
 
   const users = await Promise.all((authUsers.length ? authUsers : profiles).map(async (user: any) => {
     const profile = profiles.find((item: any) => item.id === user.id);
     const member = members.find((item: any) => item.user_id === user.id);
     const workspace = workspaces.find((item: any) => item.id === member?.workspace_id || item.owner_id === user.id);
     const subscription = subscriptions.find((item: any) => item.workspace_id === workspace?.id);
-    const workspaceSearches = searches.filter((item: any) => item.workspace_id === workspace?.id);
-    const workspaceLeads = leads.filter((item: any) => item.workspace_id === workspace?.id);
-    const workspaceAnalyses = analyses.filter((item: any) => item.workspace_id === workspace?.id);
-    const workspaceGenerated = generated.filter((item: any) => item.workspace_id === workspace?.id);
-    const workspaceMessages = messages.filter((item: any) => item.workspace_id === workspace?.id);
-    const workspaceTokens = tokens.filter((item: any) => item.workspace_id === workspace?.id && !item.revoked_at);
+    const monthlyRevenueCents = subscription?.status === "active" ? planMonthlyCents(subscription.plan) : 0;
 
     return {
       id: user.id,
       email: user.email ?? profile?.email ?? "Unknown",
       name: profile?.full_name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User",
-      createdAt: user.created_at ?? profile?.created_at,
-      lastSignInAt: user.last_sign_in_at,
       workspace: workspace?.name,
       role: member?.role ?? (workspace?.owner_id === user.id ? "owner" : "member"),
       plan: subscription?.plan ?? "free",
       status: subscription?.status ?? "inactive",
       currentPeriodEnd: subscription?.current_period_end,
-      moneySpentCents: await getCustomerSpendCents(subscription?.stripe_customer_id),
-      searches: workspaceSearches.length,
-      leads: workspaceLeads.length,
-      aiSuggestions: workspaceAnalyses.length + workspaceGenerated.length,
-      aiTokens: workspaceAnalyses.reduce((total: number, item: any) => total + Number(item.input_tokens ?? 0) + Number(item.output_tokens ?? 0), 0),
-      messagesSynced: workspaceMessages.length,
-      extensionTokens: workspaceTokens.length
+      paidSoFarCents: await getCustomerSpendCents(subscription?.stripe_customer_id),
+      monthlyRevenueCents
     };
   }));
 
   if (!users.length) return getLocalAdminSnapshot();
 
+  const monthlyRevenueCents = users.reduce((total, user) => total + user.monthlyRevenueCents, 0);
+  const monthlyCostsCents = estimatedMonthlyCostsCents(analyses);
+  const topSubscribers = [...users]
+    .sort((a, b) => b.paidSoFarCents - a.paidSoFarCents || b.monthlyRevenueCents - a.monthlyRevenueCents)
+    .slice(0, 5);
+
   return {
     users,
     stats: {
       users: users.length,
-      workspaces: workspaces.length,
-      searches: searches.length,
-      leads: leads.length,
-      activeSubscriptions: subscriptions.filter((item: any) => item.status === "active" || item.status === "trialing").length
+      monthlyRevenueCents,
+      monthlyCostsCents,
+      monthlyProfitCents: monthlyRevenueCents - monthlyCostsCents
     },
-    earlyAdopter: getEarlyAdopterConfig()
+    topSubscribers
   };
 }
 
 function getLocalAdminSnapshot(): AdminSnapshot {
+  const users = [
+    {
+      id: "local-owner",
+      email: "demo@reachlyst.local",
+      name: "Predrag",
+      workspace: "Reachlyst Demo Workspace",
+      role: "owner",
+      plan: "growth",
+      status: "local",
+      currentPeriodEnd: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString(),
+      paidSoFarCents: 8700,
+      monthlyRevenueCents: 2900
+    }
+  ];
+  const monthlyCostsCents = Number(process.env.ADMIN_MONTHLY_COST_CENTS ?? 3000);
   return {
-    users: [
-      {
-        id: "local-owner",
-        email: "demo@reachlyst.local",
-        name: "Predrag",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 46).toISOString(),
-        lastSignInAt: new Date().toISOString(),
-        workspace: "Reachlyst Demo Workspace",
-        role: "owner",
-        plan: "growth",
-        status: "local",
-        moneySpentCents: 14700,
-        searches: 3,
-        leads: 428,
-        aiSuggestions: 92,
-        aiTokens: 18400,
-        messagesSynced: 37,
-        extensionTokens: 1
-      }
-    ],
-    stats: { users: 1, workspaces: 1, searches: 0, leads: 0, activeSubscriptions: 0 },
-    earlyAdopter: getEarlyAdopterConfig()
+    users,
+    stats: {
+      users: users.length,
+      monthlyRevenueCents: 2900,
+      monthlyCostsCents,
+      monthlyProfitCents: 2900 - monthlyCostsCents
+    },
+    topSubscribers: users
   };
+}
+
+function planMonthlyCents(plan?: string | null) {
+  const config = plans.find((item) => item.key === plan);
+  if (!config) return 0;
+  return Math.round(Number(config.price.replace(/[^0-9.]/g, "")) * 100);
+}
+
+function estimatedMonthlyCostsCents(analyses: any[]) {
+  const fixedCosts = Number(process.env.ADMIN_MONTHLY_COST_CENTS ?? 3000);
+  const monthPrefix = new Date().toISOString().slice(0, 7);
+  const aiCosts = analyses
+    .filter((item) => String(item.created_at ?? "").startsWith(monthPrefix))
+    .reduce((total, item) => total + Math.round(Number(item.cost_estimate ?? 0) * 100), 0);
+  return fixedCosts + aiCosts;
 }
 
 async function getCustomerSpendCents(customerId?: string | null) {

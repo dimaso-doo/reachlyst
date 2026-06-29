@@ -7,9 +7,9 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.response;
   const plan = await getPlanSnapshot();
   return NextResponse.json({
-    extensionVersion: "0.1.0",
-    parserVersion: "2026.06.25",
-    enabledHosts: ["https://www.linkedin.com/sales/search/*"],
+    extensionVersion: "0.1.4",
+    parserVersion: "2026.06.26",
+    enabledHosts: ["https://www.linkedin.com/sales/*"],
     inviteCharacterLimit: 280,
     parserReportSampleRate: 1,
     plan: {

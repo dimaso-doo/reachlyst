@@ -29,11 +29,24 @@ type LeadRecord = {
 };
 type ActivityRecord = { label: string; time: string; type?: string; leadId?: string; searchId?: string; createdAt?: string };
 type MessageRecord = { id: string; leadId?: string; threadUrl?: string; senderType: string; body: string; source: string; syncedAt: string };
-type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[] };
+export type AiPlaybookStatus = "not_trained" | "ready";
+export type AiPlaybookRecord = {
+  status: AiPlaybookStatus;
+  rawNotes: string;
+  offer?: string;
+  icp?: string;
+  exclusions?: string;
+  tone?: string;
+  cta?: string;
+  defaultMessageTypes: string[];
+  updatedAt?: string;
+};
+type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[]; aiPlaybook: AiPlaybookRecord };
 type DashboardData = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[] };
 
 const workspaceId = "00000000-0000-4000-8000-000000000001";
 const dbPath = process.env.VERCEL ? join(tmpdir(), "reachlyst-local-db.json") : join(process.cwd(), "data", "reachlyst-local-db.json");
+const defaultMessageTypes = ["Short connection invite", "Warmer connection invite", "Direct relevance message", "Follow-up after connection", "Not-now response"];
 
 function now() {
   return new Date().toISOString();
@@ -59,13 +72,19 @@ function seedDb(): LocalDb {
       updatedAt: now()
     })),
     activities: seedActivities,
-    messages: []
+    messages: [],
+    aiPlaybook: defaultAiPlaybook()
   };
+}
+
+function defaultAiPlaybook(): AiPlaybookRecord {
+  return { status: "not_trained", rawNotes: "", defaultMessageTypes, updatedAt: now() };
 }
 
 export function readDb(): LocalDb {
   if (!existsSync(dbPath)) return seedDb();
-  return JSON.parse(readFileSync(dbPath, "utf8")) as LocalDb;
+  const parsed = JSON.parse(readFileSync(dbPath, "utf8")) as Partial<LocalDb>;
+  return { ...seedDb(), ...parsed, aiPlaybook: parsed.aiPlaybook ?? defaultAiPlaybook() };
 }
 
 export function writeDb(db: LocalDb) {
@@ -103,6 +122,95 @@ export async function getDashboardData(): Promise<DashboardData> {
     };
   });
   return { searches, leads: db.leads, activities: db.activities, messages: db.messages };
+}
+
+export async function getAiPlaybook(): Promise<AiPlaybookRecord> {
+  if (hasSupabase()) return getSupabaseAiPlaybook();
+  return readDb().aiPlaybook;
+}
+
+export async function saveAiPlaybook(input: Partial<AiPlaybookRecord> & { rawNotes: string }): Promise<AiPlaybookRecord> {
+  const record: AiPlaybookRecord = {
+    ...defaultAiPlaybook(),
+    ...input,
+    rawNotes: sanitizeText(input.rawNotes).slice(0, 8000),
+    status: input.status ?? "ready",
+    defaultMessageTypes: input.defaultMessageTypes?.length ? input.defaultMessageTypes : defaultMessageTypes,
+    updatedAt: now()
+  };
+  if (hasSupabase()) return saveSupabaseAiPlaybook(record);
+  const db = readDb();
+  db.aiPlaybook = record;
+  db.activities.unshift({ label: "AI Playbook updated", time: "Just now", type: "ai_playbook_updated", createdAt: now() });
+  writeDb(db);
+  return record;
+}
+
+export function formatAiPlaybookContext(playbook: AiPlaybookRecord) {
+  if (playbook.status !== "ready" || !playbook.rawNotes.trim()) return "";
+  return [
+    "Reachlyst AI Playbook:",
+    playbook.rawNotes,
+    playbook.offer ? `Offer: ${playbook.offer}` : "",
+    playbook.icp ? `ICP: ${playbook.icp}` : "",
+    playbook.exclusions ? `Exclude: ${playbook.exclusions}` : "",
+    playbook.tone ? `Preferred tone: ${playbook.tone}` : "",
+    playbook.cta ? `CTA: ${playbook.cta}` : "",
+    playbook.defaultMessageTypes.length ? `Default message types: ${playbook.defaultMessageTypes.join(", ")}` : "",
+    "Use this Playbook as the primary outreach strategy. Still rely only on visible LinkedIn page context for personalization."
+  ].filter(Boolean).join("\n");
+}
+
+export async function applyAiPlaybookToLeadInput<T extends Record<string, unknown>>(input: T): Promise<T> {
+  const playbook = await getAiPlaybook();
+  const playbookContext = formatAiPlaybookContext(playbook);
+  if (!playbookContext) return input;
+  const existingContext = typeof input.campaignContext === "string" ? input.campaignContext : "";
+  return {
+    ...input,
+    campaignContext: [playbookContext, existingContext].filter(Boolean).join("\n\n"),
+    tone: typeof input.tone === "string" && input.tone.trim() ? input.tone : playbook.tone ?? "Professional, concise, human",
+    useCase: typeof input.useCase === "string" && input.useCase.trim() ? input.useCase : "sales_navigator_outreach"
+  };
+}
+
+async function getSupabaseAiPlaybook(): Promise<AiPlaybookRecord> {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) return defaultAiPlaybook();
+  await ensureWorkspace();
+  const { data } = await supabase.from("ai_playbooks").select("*").eq("workspace_id", workspaceId).maybeSingle();
+  if (!data) return defaultAiPlaybook();
+  return {
+    status: data.status === "ready" ? "ready" : "not_trained",
+    rawNotes: data.raw_notes ?? "",
+    offer: data.offer ?? undefined,
+    icp: data.icp ?? undefined,
+    exclusions: data.exclusions ?? undefined,
+    tone: data.tone ?? undefined,
+    cta: data.cta ?? undefined,
+    defaultMessageTypes: Array.isArray(data.default_message_types) && data.default_message_types.length ? data.default_message_types : defaultMessageTypes,
+    updatedAt: data.updated_at ?? undefined
+  };
+}
+
+async function saveSupabaseAiPlaybook(playbook: AiPlaybookRecord): Promise<AiPlaybookRecord> {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) return playbook;
+  await ensureWorkspace();
+  await supabase.from("ai_playbooks").upsert({
+    workspace_id: workspaceId,
+    status: playbook.status,
+    raw_notes: playbook.rawNotes,
+    offer: playbook.offer ?? null,
+    icp: playbook.icp ?? null,
+    exclusions: playbook.exclusions ?? null,
+    tone: playbook.tone ?? null,
+    cta: playbook.cta ?? null,
+    default_message_types: playbook.defaultMessageTypes,
+    updated_at: playbook.updatedAt ?? now()
+  }, { onConflict: "workspace_id" });
+  await supabase.from("activities").insert({ workspace_id: workspaceId, type: "note_added", metadata: { label: "AI Playbook updated" } });
+  return playbook;
 }
 
 async function getSupabaseDashboardData(): Promise<DashboardData> {

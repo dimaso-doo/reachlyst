@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireExtensionToken } from "@/lib/mockDb";
 import { requirePlanCapacity, requirePlanFeature } from "@/lib/entitlements";
 import { chatAboutLeadInvite, type LeadInviteChatInput } from "@/lib/openai";
-import { recordAiUsage, saveGeneratedMessage } from "@/lib/store";
+import { applyAiPlaybookToLeadInput, recordAiUsage, saveGeneratedMessage } from "@/lib/store";
 
 export async function POST(request: Request) {
   const auth = await requireExtensionToken(request);
@@ -25,8 +25,9 @@ export async function POST(request: Request) {
   const capacity = await requirePlanCapacity("monthlyAiSuggestions", 1);
   if (!capacity.ok) return capacity.response;
 
-  const reply = await chatAboutLeadInvite({ lead, messages });
-  await saveGeneratedMessage(lead, reply);
+  const enrichedLead = await applyAiPlaybookToLeadInput(lead);
+  const reply = await chatAboutLeadInvite({ lead: enrichedLead, messages });
+  await saveGeneratedMessage(enrichedLead, reply);
   await recordAiUsage("message_generated");
   return NextResponse.json({ reply });
 }

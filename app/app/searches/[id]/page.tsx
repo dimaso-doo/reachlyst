@@ -5,7 +5,6 @@ import { LeadAvatar } from "@/components/LeadAvatar";
 import { SearchAiChat } from "@/components/SearchAiChat";
 import { truncateMiddle } from "@/lib/format";
 import { getDashboardData } from "@/lib/store";
-import styles from "../../table.module.css";
 
 const fitStatuses = ["All", "New", "Good fit", "Maybe", "Skip", "Copied", "Invited", "Connected", "Replied", "Follow-up needed"];
 export const dynamic = "force-dynamic";
@@ -22,15 +21,15 @@ function displayLeadName(name: string) {
 }
 
 function statusClass(status: string) {
-  if (status === "good_fit" || status === "connected" || status === "replied") return styles.statusGood;
-  if (status === "maybe" || status === "follow_up_needed") return styles.statusWarn;
-  if (status === "skip" || status === "not_interested") return styles.statusDanger;
-  if (status === "copied" || status.includes("invite")) return styles.statusBlue;
-  return styles.statusNeutral;
+  if (status === "good_fit" || status === "connected" || status === "replied") return "text-emerald-700";
+  if (status === "maybe" || status === "follow_up_needed") return "text-amber-700";
+  if (status === "skip" || status === "not_interested") return "text-rose-700";
+  if (status === "copied" || status.includes("invite")) return "text-blue-700";
+  return "text-muted";
 }
 
 function StatusText({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <span className={`${styles.statusText} ${className ?? ""}`}><span aria-hidden="true" />{children}</span>;
+  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold capitalize leading-tight ${className ?? "text-muted"}`}><span className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_0_3px_rgba(102,112,133,.14)]" aria-hidden="true" />{children}</span>;
 }
 
 function leadDetails(lead: { title?: string; company?: string; location?: string; aiReason?: string; snippet?: string }) {
@@ -64,19 +63,19 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
   const campaignLeads = leads.filter((lead) => lead.campaignIds?.includes(search.id) || lead.campaign === search.name);
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
+    <div className="grid gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1>{search.name}</h1>
-          <p>{campaignLeads.length} leads in this search</p>
-          <div className={styles.urlLine}>
-            <span className={styles.urlText} title={search.url}>{truncateMiddle(search.url, 72)}</span>
+          <h1 className="text-3xl font-extrabold text-ink">{search.name}</h1>
+          <p className="mt-1 text-sm font-semibold text-muted">{campaignLeads.length} leads in this search</p>
+          <div className="mt-2 flex min-w-0 items-center gap-2">
+            <span className="inline-block max-w-[520px] overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs text-muted" title={search.url}>{truncateMiddle(search.url, 72)}</span>
             <CopyButton value={search.url} label="Copy Sales Nav URL" />
           </div>
         </div>
       </div>
 
-      <div className={styles.strategyPanel}>
+      <div className="overflow-hidden rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50 shadow-reachlyst">
         <SearchAiChat
           mode="train_search"
           title="AI training for this search"
@@ -88,22 +87,22 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
         />
       </div>
 
-      <div className={styles.controlBar}>
+      <div className="grid gap-3 md:grid-cols-[1fr_220px] md:items-center">
         <SearchInput placeholder="Search leads" />
-        <select aria-label="Filter by fit">{fitStatuses.map((filter) => <option key={filter}>{filter}</option>)}</select>
+        <select className="min-h-10 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-ink" aria-label="Filter by fit">{fitStatuses.map((filter) => <option key={filter}>{filter}</option>)}</select>
       </div>
 
-      <Card className={styles.table}>
-        <table>
+      <Card className="overflow-x-auto p-0">
+        <table className="min-w-[1120px] w-full border-collapse">
           <thead>
-            <tr>
-              <th>Lead</th>
-              <th>Details</th>
-              <th>Fit</th>
-              <th>Invite</th>
-              <th>Message used</th>
-              <th>Messages</th>
-              <th>Reply</th>
+            <tr className="text-left text-xs uppercase text-muted">
+              <th className="border-b border-line p-4">Lead</th>
+              <th className="border-b border-line p-4">Details</th>
+              <th className="border-b border-line p-4">Fit</th>
+              <th className="border-b border-line p-4">Invite</th>
+              <th className="border-b border-line p-4">Message used</th>
+              <th className="border-b border-line p-4">Messages</th>
+              <th className="border-b border-line p-4">Reply</th>
             </tr>
           </thead>
           <tbody>
@@ -113,36 +112,36 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
               const invite = inviteState(lead.status);
 
               return (
-                <tr className={styles.clickableRow} key={lead.id}>
-                  <td>
-                    <div className={styles.leadCell}>
+                <tr className="group relative cursor-pointer transition hover:bg-slate-50 hover:shadow-[inset_3px_0_0_#8aa39a]" key={lead.id}>
+                  <td className="border-b border-line p-4 align-top">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <LeadAvatar name={lead.name} size="sm" />
                       <div>
-                        <Link className={styles.rowLink} href={`/app/leads/${lead.id}`}>{displayLeadName(lead.name)}</Link>
-                        {lead.linkedinUrl ? <small>{truncateMiddle(lead.linkedinUrl, 42)}</small> : null}
+                        <Link className="static font-extrabold text-accent-strong after:absolute after:inset-0 after:z-[1]" href={`/app/leads/${lead.id}`}>{displayLeadName(lead.name)}</Link>
+                        {lead.linkedinUrl ? <small className="mt-1 block text-xs font-semibold text-muted">{truncateMiddle(lead.linkedinUrl, 42)}</small> : null}
                       </div>
                     </div>
                   </td>
-                  <td>
-                    {details.primary ? <strong>{details.primary}</strong> : <span className={styles.mutedDetail}>Details not captured yet</span>}
-                    {details.secondary ? <small>{details.secondary}</small> : null}
-                    {details.about ? <small className={styles.aboutSnippet}>About: {details.about}</small> : null}
+                  <td className="border-b border-line p-4 align-top">
+                    {details.primary ? <strong className="text-sm font-extrabold text-ink">{details.primary}</strong> : <span className="text-sm font-semibold text-muted">Details not captured yet</span>}
+                    {details.secondary ? <small className="mt-1 block text-xs font-semibold text-muted">{details.secondary}</small> : null}
+                    {details.about ? <small className="mt-1 line-clamp-3 max-w-xl text-xs font-semibold leading-5 text-muted">About: {details.about}</small> : null}
                   </td>
-                  <td><StatusText className={statusClass(lead.status)}>{statusLabel(lead.status)}</StatusText></td>
-                  <td><StatusText className={invite === "Invited" ? styles.statusBlue : invite === "Message ready" ? styles.statusGood : styles.statusNeutral}>{invite}</StatusText></td>
-                  <td>
+                  <td className="border-b border-line p-4 align-top"><StatusText className={statusClass(lead.status)}>{statusLabel(lead.status)}</StatusText></td>
+                  <td className="border-b border-line p-4 align-top"><StatusText className={invite === "Invited" ? "text-blue-700" : invite === "Message ready" ? "text-emerald-700" : "text-muted"}>{invite}</StatusText></td>
+                  <td className="border-b border-line p-4 align-top">
                     {lead.generatedMessage ? (
-                      <div className={styles.messagePreview}>
-                        <span>{lead.generatedMessage}</span>
+                      <div className="relative z-[2] grid max-w-sm gap-2">
+                        <span className="line-clamp-3 text-sm font-semibold leading-6 text-ink">{lead.generatedMessage}</span>
                         <CopyButton value={lead.generatedMessage} />
                       </div>
                     ) : (
-                      <span className={styles.mutedDetail}>No generated invite yet</span>
+                      <span className="text-sm font-semibold text-muted">No generated invite yet</span>
                     )}
                   </td>
-                  <td><span className={styles.metricText}>{syncedMessages || messageCount(lead.status)}</span></td>
-                  <td>
-                    <StatusText className={replyState(lead.status) === "Replied" ? styles.statusGood : replyState(lead.status) === "Waiting" ? styles.statusWarn : styles.statusNeutral}>
+                  <td className="border-b border-line p-4 align-top"><span className="text-sm font-extrabold text-ink">{syncedMessages || messageCount(lead.status)}</span></td>
+                  <td className="border-b border-line p-4 align-top">
+                    <StatusText className={replyState(lead.status) === "Replied" ? "text-emerald-700" : replyState(lead.status) === "Waiting" ? "text-amber-700" : "text-muted"}>
                       {replyState(lead.status)}
                     </StatusText>
                   </td>

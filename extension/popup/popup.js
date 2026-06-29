@@ -1,6 +1,8 @@
 const DEFAULTS = {
   reachlystApiBase: "https://reachlyst.com",
   reachlystToken: "",
+  reachlystDeviceId: "",
+  reachlystDeviceLabel: "",
   reachlystEnabled: false,
   reachlystVerified: false,
   reachlystPlanName: ""
@@ -33,13 +35,32 @@ async function ensureDefaults() {
   return { ...DEFAULTS, ...values, ...next };
 }
 
+function createDeviceId() {
+  if (globalThis.crypto?.randomUUID) return `rlydev_${globalThis.crypto.randomUUID()}`;
+  return `rlydev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+}
+
+async function ensureDeviceIdentity() {
+  const values = await chrome.storage.sync.get(["reachlystDeviceId", "reachlystDeviceLabel"]);
+  const next = {};
+  const deviceId = values.reachlystDeviceId || createDeviceId();
+  const deviceLabel = values.reachlystDeviceLabel || `Chrome on ${navigator.platform || "this computer"}`;
+  if (!values.reachlystDeviceId) next.reachlystDeviceId = deviceId;
+  if (!values.reachlystDeviceLabel) next.reachlystDeviceLabel = deviceLabel;
+  if (Object.keys(next).length) await chrome.storage.sync.set(next);
+  return { deviceId, deviceLabel };
+}
+
 async function callReachlyst(path, token) {
   const settings = await chrome.storage.sync.get(["reachlystApiBase"]);
+  const identity = await ensureDeviceIdentity();
   const response = await fetch(`${settings.reachlystApiBase || DEFAULTS.reachlystApiBase}${path}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-reachlyst-extension-token": token
+      "x-reachlyst-extension-token": token,
+      "x-reachlyst-extension-device-id": identity.deviceId,
+      "x-reachlyst-extension-device-label": identity.deviceLabel
     }
   });
   const data = await response.json().catch(() => ({}));
@@ -69,7 +90,7 @@ async function verifyToken() {
       reachlystVerified: true,
       reachlystPlanName: data.plan?.plan || data.plan?.status || "active"
     });
-    setStatus("Token verified. Open a Sales Navigator search and click Start.", false, true);
+    setStatus("Token verified. Open Sales Navigator search or messages and click Start.", false, true);
     return true;
   } catch (error) {
     await chrome.storage.sync.set({ reachlystVerified: false, reachlystEnabled: false });
@@ -93,14 +114,14 @@ async function startReachlyst() {
   if (!verified) return;
   await chrome.storage.sync.set({ reachlystEnabled: true });
   await messageActiveTab("reachlyst_start");
-  setStatus("Running on visible Sales Navigator search leads.", true, true);
+  setStatus("Running on visible Sales Navigator pages.", true, true);
 }
 
 async function stopReachlyst() {
   await chrome.storage.sync.set({ reachlystEnabled: false });
   await messageActiveTab("reachlyst_stop");
   const settings = await chrome.storage.sync.get(["reachlystVerified"]);
-  setStatus("Paused. Click Start when you want Reachlyst on this search.", false, settings.reachlystVerified === true);
+  setStatus("Paused. Click Start when you want Reachlyst on Sales Navigator.", false, settings.reachlystVerified === true);
 }
 
 verifyButton.addEventListener("click", verifyToken);
@@ -116,8 +137,8 @@ ensureDefaults().then((settings) => {
   setStatus(
     settings.reachlystVerified
       ? settings.reachlystEnabled
-        ? "Running on visible Sales Navigator search leads."
-        : "Token verified. Open a Sales Navigator search and click Start."
+        ? "Running on visible Sales Navigator pages."
+        : "Token verified. Open Sales Navigator search or messages and click Start."
       : "Paste your token from Reachlyst, then verify it.",
     settings.reachlystEnabled && settings.reachlystVerified,
     settings.reachlystVerified

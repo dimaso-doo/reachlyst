@@ -1,30 +1,39 @@
 .reachlyst-lead-button {
   align-items: center;
   background: #1677ff;
-  border: 1px solid #0a66c2;
+  border: 1px solid #0f6eef;
   border-radius: 50%;
-  box-shadow: 0 6px 14px rgba(22, 119, 255, .16);
-  color: white;
+  box-shadow: 0 6px 14px rgba(22, 119, 255, .18);
   cursor: pointer;
   display: inline-flex;
-  flex: 0 0 34px;
-  font: 900 14px/1 Inter, system-ui, sans-serif;
-  height: 34px;
+  flex: 0 0 32px;
+  font: 900 14px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  height: 32px;
   justify-content: center;
-  margin: 0 8px;
-  min-height: 34px;
-  min-width: 34px;
+  margin: 0 4px;
+  min-height: 32px;
+  min-width: 32px;
   padding: 0;
   position: relative;
   transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
-  width: 34px;
+  vertical-align: middle;
+  width: 32px;
   z-index: 1;
 }
 
 .reachlyst-lead-button:hover {
   background: #0958d9;
+  border-color: #0958d9;
   box-shadow: 0 12px 24px rgba(22, 119, 255, .26);
   transform: translateY(-1px);
+}
+
+.reachlyst-lead-button img {
+  display: block;
+  filter: brightness(0) invert(1);
+  height: 18px;
+  object-fit: contain;
+  width: 18px;
 }
 
 .reachlyst-lead-button[data-floating="true"] {
@@ -44,7 +53,7 @@
   color: #172033;
   display: flex;
   flex-direction: column;
-  max-height: min(660px, calc(100vh - 76px));
+  max-height: min(780px, calc(100vh - 56px));
   overflow: hidden;
   position: fixed;
   right: 76px;
@@ -89,22 +98,17 @@
 }
 
 .reachlyst-r {
-  align-items: center;
-  background: #1677ff;
-  border-radius: 11px;
-  box-shadow: 0 10px 22px rgba(22, 119, 255, .24);
-  color: white;
-  display: inline-flex;
-  font: 900 15px/1 Inter, system-ui, sans-serif;
+  display: block;
   height: 34px;
-  justify-content: center;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(22, 119, 255, .18));
   width: 34px;
 }
 
 .reachlyst-chat-top strong {
   color: #162033;
   display: block;
-  font: 900 14px/1.2 Inter, system-ui, sans-serif;
+  font: 900 14px/1.2 "IBM Plex Sans", Inter, system-ui, sans-serif;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -113,7 +117,7 @@
 .reachlyst-chat-top small {
   color: #607086;
   display: block;
-  font: 700 11px/1.35 Inter, system-ui, sans-serif;
+  font: 700 11px/1.35 "IBM Plex Sans", Inter, system-ui, sans-serif;
   margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -135,17 +139,52 @@
   color: #172033;
   cursor: pointer;
   display: inline-flex;
-  font: 900 18px/1 Inter, system-ui, sans-serif;
+  font: 900 18px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
   height: 30px;
   justify-content: center;
+  padding: 0;
+  position: relative;
   width: 30px;
 }
 
-.reachlyst-minimize {
+.reachlyst-minimize::before {
+  background: #172033;
   border-radius: 999px;
-  font: 900 11px/1 Inter, system-ui, sans-serif;
-  padding: 0 10px;
-  width: auto;
+  content: "";
+  height: 2px;
+  width: 12px;
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::before,
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::after {
+  background: #172033;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  width: 12px;
+}
+
+.reachlyst-floating-chat[data-minimized="true"] .reachlyst-minimize::after {
+  transform: rotate(90deg);
+}
+
+.reachlyst-close::before,
+.reachlyst-close::after {
+  background: #172033;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  width: 13px;
+}
+
+.reachlyst-close::before {
+  transform: rotate(45deg);
+}
+
+.reachlyst-close::after {
+  transform: rotate(-45deg);
 }
 
 .reachlyst-close:hover,
@@ -161,8 +200,8 @@
   border-radius: 0;
   display: grid;
   gap: 8px;
-  max-height: 310px;
-  min-height: 210px;
+  max-height: min(460px, calc(100vh - 320px));
+  min-height: 300px;
   overflow: auto;
   padding: 14px;
 }
@@ -175,7 +214,7 @@
 
 .reachlyst-message-row p {
   border-radius: 10px;
-  font: 700 12px/1.45 Inter, system-ui, sans-serif;
+  font: 700 12px/1.45 "IBM Plex Sans", Inter, system-ui, sans-serif;
   margin: 0;
   max-width: 88%;
   padding: 9px 10px;
@@ -205,10 +244,15 @@
   background: white;
   border: 1px solid #d8e7ff;
   border-radius: 8px;
+  color: transparent;
   cursor: pointer;
   flex: 0 0 auto;
+  font: 900 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
   height: 28px;
+  overflow: hidden;
+  padding: 0;
   position: relative;
+  transition: width .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
   width: 28px;
 }
 
@@ -240,28 +284,16 @@
 
 .reachlyst-copy-message[data-copied="true"]::before,
 .reachlyst-copy-message[data-copied="true"]::after {
-  border-color: #147c6c;
+  display: none;
 }
 
 .reachlyst-copy-message[data-copied="true"] {
   background: #e9fff7;
   border-color: #71d8bd;
   box-shadow: 0 8px 18px rgba(20, 124, 108, .18);
-}
-
-.reachlyst-copy-message[data-copied="true"]::before {
-  border-color: #147c6c;
-  border-radius: 0;
-  border-width: 0 2px 2px 0;
-  height: 13px;
-  left: 10px;
-  top: 5px;
-  transform: rotate(45deg);
-  width: 7px;
-}
-
-.reachlyst-copy-message[data-copied="true"]::after {
-  display: none;
+  color: #147c6c;
+  padding: 0 9px;
+  width: 58px;
 }
 
 .reachlyst-copy-toast {
@@ -273,7 +305,7 @@
   box-shadow: 0 18px 44px rgba(20, 124, 108, .25);
   color: white;
   display: inline-flex;
-  font: 900 12px/1 Inter, system-ui, sans-serif;
+  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
   opacity: 0;
   padding: 10px 14px;
   pointer-events: none;
@@ -295,7 +327,7 @@
   border-radius: 12px;
   color: #172033;
   display: block;
-  font: 700 12px/1.45 Inter, system-ui, sans-serif;
+  font: 700 12px/1.45 "IBM Plex Sans", Inter, system-ui, sans-serif;
   margin: 14px 14px 0;
   min-height: 84px;
   outline: none;
@@ -324,7 +356,7 @@
   color: white;
   cursor: pointer;
   flex: 0 0 auto;
-  font: 900 11px/1 Inter, system-ui, sans-serif;
+  font: 900 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
   min-height: 34px;
   padding: 8px 10px;
   transition: box-shadow .16s ease, transform .16s ease;
@@ -345,49 +377,120 @@
   align-items: center;
   color: #607086;
   display: inline-flex;
-  font: 800 11px/1 Inter, system-ui, sans-serif;
-  gap: 6px;
+  font: 800 11px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  gap: 8px;
   min-height: 34px;
   padding-left: 3px;
 }
 
 .reachlyst-enter-toggle input {
-  accent-color: #1677ff;
-  height: 14px;
-  width: 14px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
+.reachlyst-switch {
+  background: #c9d3e1;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(23, 32, 51, .08);
+  cursor: pointer;
+  display: inline-flex;
+  height: 20px;
+  position: relative;
+  transition: background .16s ease, box-shadow .16s ease;
+  width: 36px;
+}
+
+.reachlyst-switch::before {
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(23, 32, 51, .2);
+  content: "";
+  height: 16px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  transition: transform .16s ease;
+  width: 16px;
+}
+
+.reachlyst-enter-toggle input:checked + .reachlyst-switch {
+  background: #1677ff;
+  box-shadow: inset 0 0 0 1px rgba(10, 102, 194, .18);
+}
+
+.reachlyst-enter-toggle input:checked + .reachlyst-switch::before {
+  transform: translateX(16px);
 }
 
 .reachlyst-chat-status {
   color: #607086;
-  font: 800 11px/1.35 Inter, system-ui, sans-serif;
+  font: 800 11px/1.35 "IBM Plex Sans", Inter, system-ui, sans-serif;
   margin: 0;
   padding: 0 14px 14px;
 }
 
 .reachlyst-status {
-  background: #172033;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 999px;
-  box-shadow: 0 14px 40px rgba(23,32,51,.18);
-  color: white;
-  font: 900 12px/1 Inter, system-ui, sans-serif;
-  left: 18px;
-  padding: 10px 13px;
+  align-items: center;
+  background: #07111f;
+  border: 1px solid rgba(147, 197, 253, .2);
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(7, 17, 31, .24), 0 0 0 1px rgba(255, 255, 255, .05);
+  color: #f8fbff;
+  display: inline-flex;
+  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 12px;
   position: fixed;
-  top: 88px;
+  right: 18px;
+  top: 18px;
   z-index: 2147483647;
 }
 
-.reachlyst-status[data-tone="good"] { background: #147c6c; }
-.reachlyst-status[data-tone="warn"] { background: #8b5609; }
-.reachlyst-status[data-tone="danger"] { background: #9d2636; }
+.reachlyst-status-loader {
+  animation: reachlyst-spin .72s linear infinite;
+  border: 2px solid rgba(159, 176, 199, .34);
+  border-radius: 50%;
+  border-top-color: #1677ff;
+  display: none;
+  height: 16px;
+  width: 16px;
+}
+
+.reachlyst-status[data-tone="loading"] .reachlyst-status-loader {
+  display: inline-flex;
+}
+
+.reachlyst-status strong {
+  color: #f8fbff;
+  font: 900 12px/1 "IBM Plex Sans", Inter, system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.reachlyst-status[data-tone="warn"] .reachlyst-status-loader { border-top-color: #f59e0b; }
+.reachlyst-status[data-tone="danger"] .reachlyst-status-loader { border-top-color: #ef4444; }
+
+@keyframes reachlyst-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 640px) {
   .reachlyst-floating-chat {
     bottom: 12px;
     left: 12px;
+    max-height: calc(100vh - 24px);
     right: 12px;
     width: auto;
+  }
+
+  .reachlyst-chat-thread {
+    max-height: calc(100vh - 330px);
+    min-height: 240px;
   }
 
   .reachlyst-copy-toast {
@@ -398,5 +501,10 @@
   .reachlyst-lead-button[data-floating="true"] {
     margin: 8px 0 0 72px;
     position: static;
+  }
+
+  .reachlyst-status {
+    right: 12px;
+    top: 12px;
   }
 }

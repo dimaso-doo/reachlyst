@@ -56,8 +56,8 @@ export async function requirePlanCapacity(resource: keyof WorkspaceUsage, additi
   const nextUsage = usage[resource] + additional;
   if (nextUsage <= limit) return { ok: true as const, plan, usage, limit };
 
-  const nextPlan = "growth";
-  const label = resource === "monthlyAiSuggestions" ? "AI suggestions this month" : resource;
+  const nextPlan = plan === "free" ? "starter" : plan === "starter" ? "growth" : "scale";
+  const label = resource === "monthlyAiSuggestions" ? "AI replies this month" : resource;
   return {
     ok: false as const,
     response: NextResponse.json({

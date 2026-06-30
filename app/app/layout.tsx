@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppSidebarNav } from "@/components/AppSidebarNav";
+import { ReachlystBetaLogo } from "@/components/ReachlystBetaLogo";
 import { getDemoSession } from "@/lib/demoSession";
 import { canAccessSuperAdmin } from "@/lib/superAdmin";
 
@@ -23,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return <div className="min-h-screen bg-[#f6f8fc]">
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 px-4 py-3 text-ink shadow-[0_12px_32px_rgba(15,23,42,.06)] backdrop-blur-xl min-[821px]:hidden">
       <div className="flex items-center justify-between gap-3">
-        <Link className="inline-flex items-center rounded-lg bg-white px-2.5 py-1.5" href={homeHref}><img alt="Reachlyst" className="h-7 w-auto" src="/reachlyst-logo-light.svg" /></Link>
+        <Link className="inline-flex items-center rounded-lg bg-white px-2.5 py-1.5" href={homeHref}><ReachlystBetaLogo imageClassName="h-7 w-auto" badgeClassName="-right-2.5 -top-1" /></Link>
         <details className="group relative">
           <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-ink transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden" aria-label="Open navigation">
             <span className="grid gap-1.5"><i className="block h-0.5 w-5 rounded-full bg-current" /><i className="block h-0.5 w-5 rounded-full bg-current" /><i className="block h-0.5 w-5 rounded-full bg-current" /></span>
@@ -45,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
     </header>
     <aside className="fixed left-0 top-0 z-20 flex h-screen w-[252px] flex-col gap-1 border-r border-slate-200 bg-white px-4 py-5 text-ink shadow-[8px_0_34px_rgba(15,23,42,.04)] max-[820px]:hidden">
-      <Link className="mb-5 inline-flex w-fit items-center rounded-lg bg-white px-2.5 py-1.5" href={homeHref}><img alt="Reachlyst" className="h-7 w-auto" src="/reachlyst-logo-light.svg" /></Link>
+      <Link className="mb-5 inline-flex w-fit items-center rounded-lg bg-white px-2.5 py-1.5" href={homeHref}><ReachlystBetaLogo imageClassName="h-7 w-auto" badgeClassName="-right-2.5 -top-1" /></Link>
       <nav className="grid gap-1" aria-label="Primary">
         {showSuperAdmin ? <Link className="rounded-lg px-3 py-2.5 text-sm font-normal text-muted transition hover:bg-blue-50 hover:text-ink" href="/app/admin">Dashboard</Link> : <AppSidebarNav />}
       </nav>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ReachlystBetaLogo } from "@/components/ReachlystBetaLogo";
 
 export function UnderConstructionGate({ nextPath = "/" }: { nextPath?: string }) {
   const [username, setUsername] = useState("");
@@ -42,7 +43,8 @@ export function UnderConstructionGate({ nextPath = "/" }: { nextPath?: string })
       <div className="absolute left-0 top-0 h-full w-full opacity-[.18] [background-image:linear-gradient(rgba(22,119,255,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(22,119,255,.18)_1px,transparent_1px)] [background-size:42px_42px]" />
       <section className="relative mx-auto grid min-h-screen w-[min(1180px,calc(100%-32px))] items-center gap-10 py-10 lg:grid-cols-[1.05fr_.95fr]">
         <div className="max-w-2xl">
-          <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-blue-100 bg-white/80 px-4 py-2 shadow-[0_14px_40px_rgba(15,23,42,.08)] backdrop-blur">
+          <div className="relative mb-8 inline-flex items-center gap-3 rounded-full border border-blue-100 bg-white/80 px-4 py-2 shadow-[0_14px_40px_rgba(15,23,42,.08)] backdrop-blur">
+            <span className="pointer-events-none absolute right-3 top-0 -translate-y-1/2 rounded-[4px] bg-red-600 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-[0_6px_14px_rgba(220,38,38,.22)]">BETA</span>
             <img className="h-8 w-8" alt="Reachlyst" src="/reachlyst-mark.svg" />
             <span className="text-sm font-semibold text-accent-strong">Reachlyst</span>
           </div>
@@ -61,6 +63,7 @@ export function UnderConstructionGate({ nextPath = "/" }: { nextPath?: string })
           <section className="rounded-lg border border-blue-100 bg-white/88 p-6 shadow-[0_26px_80px_rgba(15,23,42,.12)] backdrop-blur">
             <span className="text-xs font-semibold uppercase tracking-[.1em] text-accent-strong">Private access</span>
             <h2 className="mt-3 text-2xl font-semibold text-ink">Enter workspace preview</h2>
+            <p className="mt-2 text-sm font-semibold text-muted">Only for devs and the launch team.</p>
             <div className="mt-5 grid gap-3">
               <input
                 className="min-h-12 rounded-lg border border-slate-200 bg-slate-50 px-4 text-base font-semibold text-ink outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"

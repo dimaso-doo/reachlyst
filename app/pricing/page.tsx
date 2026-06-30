@@ -47,7 +47,7 @@ export default function PricingPage() {
               <div className="grid content-start gap-2">
                 {plan.features.map((feature) => <p className="m-0 leading-6 text-muted" key={feature}>✓ {feature}</p>)}
               </div>
-              <form action="/api/stripe/checkout" method="post">
+              <form action="/signup" method="get">
                 <input name="plan" type="hidden" value={plan.key} />
                 <Button type="submit" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button>
               </form>

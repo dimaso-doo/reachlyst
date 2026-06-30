@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { ReachlystBetaLogo } from "@/components/ReachlystBetaLogo";
 import { Button } from "@/components/ui";
 
 const marketingLinks = [
@@ -53,5 +54,5 @@ export function MarketingFooter() {
 }
 
 function MarketingLogo() {
-  return <Link className="inline-flex items-center" href="/"><img className="h-9 w-auto" alt="Reachlyst" src="/reachlyst-logo-light.svg" /></Link>;
+  return <Link className="inline-flex items-center" href="/"><ReachlystBetaLogo /></Link>;
 }

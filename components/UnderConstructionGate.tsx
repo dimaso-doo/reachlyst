@@ -44,7 +44,7 @@ export function UnderConstructionGate({ nextPath = "/" }: { nextPath?: string })
       <section className="relative mx-auto grid min-h-screen w-[min(1180px,calc(100%-32px))] items-center gap-10 py-10 lg:grid-cols-[1.05fr_.95fr]">
         <div className="max-w-2xl">
           <div className="relative mb-8 inline-flex items-center gap-3 rounded-full border border-blue-100 bg-white/80 px-4 py-2 shadow-[0_14px_40px_rgba(15,23,42,.08)] backdrop-blur">
-            <span className="pointer-events-none absolute right-3 top-0 -translate-y-1/2 rounded-[4px] bg-red-600 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-[0_6px_14px_rgba(220,38,38,.22)]">BETA</span>
+            <span className="pointer-events-none absolute right-3 -top-2 -translate-y-1/2 rounded-[4px] bg-red-600 px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white shadow-[0_6px_14px_rgba(220,38,38,.22)]">BETA</span>
             <img className="h-8 w-8" alt="Reachlyst" src="/reachlyst-mark.svg" />
             <span className="text-sm font-semibold text-accent-strong">Reachlyst</span>
           </div>

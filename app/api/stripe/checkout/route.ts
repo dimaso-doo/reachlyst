@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       : undefined;
   const fromSignup = origin === "signup";
   const successUrl = fromSignup
-    ? `${appUrl}/signup?plan=${encodeURIComponent(plan)}&checkout=success`
+    ? `${appUrl}/signup?plan=${encodeURIComponent(plan)}&checkout=success&session_id={CHECKOUT_SESSION_ID}`
     : `${appUrl}/app/billing?checkout=success`;
   const cancelUrl = fromSignup
     ? `${appUrl}/signup?plan=${encodeURIComponent(plan)}&checkout=cancelled`

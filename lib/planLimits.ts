@@ -32,8 +32,7 @@ export const planCatalog: Record<BillingPlanKey, {
       "Stops AI generation when messages run out"
     ],
     guidance: [
-      "Best for testing the full workflow before paying.",
-      "Enough to train the Playbook, review leads, and draft a lighter batch of LinkedIn messages."
+      "Best for testing."
     ],
     addOns: ["Upgrade when you need more AI messages and heavier monthly usage."],
     limits: { monthlyAiSuggestions: 300, seats: 1 },
@@ -52,8 +51,7 @@ export const planCatalog: Record<BillingPlanKey, {
       "AI Playbook training"
     ],
     guidance: [
-      "Best for a focused founder or operator using Sales Navigator weekly.",
-      "A practical allowance for lead review, invite drafts, replies, and AI strategy chat."
+      "Best for one operator."
     ],
     addOns: [
       "Extra AI message packs"
@@ -74,8 +72,7 @@ export const planCatalog: Record<BillingPlanKey, {
       "Priority AI Playbook refinement"
     ],
     guidance: [
-      "Best for consistent prospecting and multiple outreach angles each month.",
-      "Built for heavier AI-assisted lead review, replies, follow-ups, and Playbook refinement."
+      "Best for weekly prospecting."
     ],
     addOns: [
       "Extra AI message packs"

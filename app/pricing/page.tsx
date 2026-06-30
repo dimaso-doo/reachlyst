@@ -32,7 +32,7 @@ export default function PricingPage() {
       <section className="min-w-0 bg-white py-20 sm:py-24">
         <div className="container">
           <div className="grid gap-4 md:grid-cols-3">
-            {plans.map((plan) => <Card className={`grid h-full grid-rows-[auto_auto_auto_auto_auto_1fr_auto] gap-5 p-5 ${plan.key === "growth" ? "-translate-y-2 border-blue-200 shadow-[0_24px_80px_rgba(22,119,255,.14)]" : ""}`} key={plan.key}>
+            {plans.map((plan) => <Card className={`grid h-full grid-rows-[auto_auto_auto_auto_1fr_auto_auto] gap-5 p-5 ${plan.key === "growth" ? "-translate-y-2 border-blue-200 shadow-[0_24px_80px_rgba(22,119,255,.14)]" : ""}`} key={plan.key}>
               <h3 className="min-h-7 text-xl">{plan.name}</h3>
               <strong className="block text-4xl">{plan.price}<span className="ml-1 text-sm text-muted">/mo</span></strong>
               <p className="min-h-[72px] leading-6 text-muted">{plan.summary}</p>
@@ -41,9 +41,6 @@ export default function PricingPage() {
                 <strong className="mt-1 block text-3xl text-ink">0 / {formatLimit(plan.limits.monthlyAiSuggestions)}</strong>
                 <div className="grid gap-1 border-t border-blue-100 py-2 leading-6 text-muted"><b className="text-ink">Unlimited</b><span>Sales Navigator context</span></div>
               </div>
-              <div className="grid min-h-[104px] gap-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                {plan.guidance.map((line) => <p className="m-0 text-sm leading-6 text-muted" key={line}>{line}</p>)}
-              </div>
               <div className="grid content-start gap-2">
                 {plan.features.map((feature) => <p className="m-0 leading-6 text-muted" key={feature}>✓ {feature}</p>)}
               </div>
@@ -51,6 +48,7 @@ export default function PricingPage() {
                 <input name="plan" type="hidden" value={plan.key} />
                 <Button type="submit" variant={plan.key === "growth" ? "primary" : "secondary"}>{plan.cta}</Button>
               </form>
+              <p className="m-0 border-t border-slate-100 pt-3 text-sm leading-6 text-muted">{plan.guidance[0]}</p>
             </Card>)}
           </div>
           <Card className="mt-5 grid gap-4 border-blue-100 bg-[#f8fbff] p-7 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">

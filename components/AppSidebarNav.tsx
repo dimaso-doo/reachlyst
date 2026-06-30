@@ -4,15 +4,27 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
+const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
 
 export function AppSidebarNav() {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState<"checking" | "ready" | "not_trained">("checking");
   const [extensionReady, setExtensionReady] = useState(false);
   const [aiUsage, setAiUsage] = useState<{ used: number; limit: number } | null>(null);
 
   useEffect(() => {
-    function syncStatus() {
-      setReady(window.localStorage.getItem(PLAYBOOK_STATUS_KEY) === "ready");
+    async function syncStatus() {
+      try {
+        const response = await fetch("/api/ai-playbook", { cache: "no-store" });
+        const data = await response.json();
+        const playbookReady = data?.playbook?.status === "ready" && Boolean(String(data?.playbook?.rawNotes ?? "").trim());
+        setReady(playbookReady ? "ready" : "not_trained");
+        window.localStorage.setItem(PLAYBOOK_STATUS_KEY, playbookReady ? "ready" : "not_trained");
+        if (!playbookReady) window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
+      } catch {
+        setReady("not_trained");
+        window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "not_trained");
+        window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
+      }
     }
 
     async function syncExtensionStatus() {
@@ -38,16 +50,24 @@ export function AppSidebarNav() {
       }
     }
 
-    syncStatus();
+    const syncStatusHandler = () => void syncStatus();
+    const syncStatusOnVisible = () => {
+      if (document.visibilityState === "visible") void syncStatus();
+    };
+    void syncStatus();
     void syncExtensionStatus();
     void syncPlanUsage();
-    window.addEventListener("storage", syncStatus);
-    window.addEventListener("reachlyst:playbook-status", syncStatus);
+    window.addEventListener("storage", syncStatusHandler);
+    window.addEventListener("reachlyst:playbook-status", syncStatusHandler);
+    window.addEventListener("focus", syncStatusHandler);
+    document.addEventListener("visibilitychange", syncStatusOnVisible);
     window.addEventListener("reachlyst:extension-status", syncExtensionStatus);
     window.addEventListener("reachlyst:plan-usage", syncPlanUsage);
     return () => {
-      window.removeEventListener("storage", syncStatus);
-      window.removeEventListener("reachlyst:playbook-status", syncStatus);
+      window.removeEventListener("storage", syncStatusHandler);
+      window.removeEventListener("reachlyst:playbook-status", syncStatusHandler);
+      window.removeEventListener("focus", syncStatusHandler);
+      document.removeEventListener("visibilitychange", syncStatusOnVisible);
       window.removeEventListener("reachlyst:extension-status", syncExtensionStatus);
       window.removeEventListener("reachlyst:plan-usage", syncPlanUsage);
     };
@@ -56,15 +76,17 @@ export function AppSidebarNav() {
   const navItem = "relative flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-normal text-muted transition hover:bg-blue-50 hover:text-ink";
   const readyBadge = "shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold leading-none text-emerald-800";
   const untrainedBadge = "shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold leading-none text-amber-800";
+  const checkingBadge = "shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-extrabold leading-none text-slate-500";
   const percent = aiUsage?.limit ? Math.min(100, Math.round((aiUsage.used / aiUsage.limit) * 100)) : 0;
+  const playbookIsReady = ready === "ready";
 
   return (
     <>
       <Link className="rounded-lg px-3 py-2.5 text-sm font-normal text-muted transition hover:bg-blue-50 hover:text-ink" href="/app/dashboard">Dashboard</Link>
       <Link className={navItem} href="/app/ai-playbook">
         <span>AI Playbook</span>
-        <small className={ready ? readyBadge : untrainedBadge} title={ready ? "AI Playbook is ready" : "AI Playbook is not trained yet"}>
-          {ready ? "Ready" : "Not trained"}
+        <small className={ready === "checking" ? checkingBadge : playbookIsReady ? readyBadge : untrainedBadge} title={playbookIsReady ? "AI Playbook is ready" : "AI Playbook is not trained yet"}>
+          {ready === "checking" ? "Checking" : playbookIsReady ? "Ready" : "Not trained"}
         </small>
       </Link>
       <Link className={navItem} href="/app/extension">

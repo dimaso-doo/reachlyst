@@ -4,21 +4,34 @@ import { useEffect, useState } from "react";
 import { Button, Card } from "@/components/ui";
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
+const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
 
 export function DashboardReadiness({ extensionReady, tokenCount }: { extensionReady: boolean; tokenCount: number }) {
   const [playbookReady, setPlaybookReady] = useState(false);
 
   useEffect(() => {
-    function syncStatus() {
-      setPlaybookReady(window.localStorage.getItem(PLAYBOOK_STATUS_KEY) === "ready");
+    async function syncStatus() {
+      try {
+        const response = await fetch("/api/ai-playbook", { cache: "no-store" });
+        const data = await response.json();
+        const ready = data?.playbook?.status === "ready" && Boolean(String(data?.playbook?.rawNotes ?? "").trim());
+        setPlaybookReady(ready);
+        window.localStorage.setItem(PLAYBOOK_STATUS_KEY, ready ? "ready" : "not_trained");
+        if (!ready) window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
+      } catch {
+        setPlaybookReady(false);
+        window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "not_trained");
+        window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
+      }
     }
 
-    syncStatus();
-    window.addEventListener("storage", syncStatus);
-    window.addEventListener("reachlyst:playbook-status", syncStatus);
+    const syncStatusHandler = () => void syncStatus();
+    void syncStatus();
+    window.addEventListener("storage", syncStatusHandler);
+    window.addEventListener("reachlyst:playbook-status", syncStatusHandler);
     return () => {
-      window.removeEventListener("storage", syncStatus);
-      window.removeEventListener("reachlyst:playbook-status", syncStatus);
+      window.removeEventListener("storage", syncStatusHandler);
+      window.removeEventListener("reachlyst:playbook-status", syncStatusHandler);
     };
   }, []);
 

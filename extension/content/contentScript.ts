@@ -317,7 +317,7 @@ function ensureFloatingChat() {
     <div class="reachlyst-chat-actions">
       <button class="reachlyst-button" data-action="generate" type="button">Generate invite</button>
       <button class="reachlyst-button reachlyst-button-secondary" data-action="send" type="button">Send</button>
-      <label class="reachlyst-enter-toggle"><span>Send on Enter</span><input data-role="sendOnEnter" type="checkbox" /><span class="reachlyst-switch" aria-hidden="true"></span></label>
+      <label class="reachlyst-enter-toggle"><span>Send on Enter</span><input data-role="sendOnEnter" type="checkbox" checked /><span class="reachlyst-switch" aria-hidden="true"></span></label>
     </div>
     <p class="reachlyst-chat-status"></p>
   `;
@@ -389,6 +389,7 @@ function visibleActionControl(element, card) {
   const cardRect = card.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return false;
   if (rect.left < cardRect.left + cardRect.width * 0.52) return false;
+  if (rect.top < cardRect.top - 2 || rect.bottom > cardRect.bottom + 2) return false;
 
   const label = [
     element.textContent || "",
@@ -419,13 +420,19 @@ function actionClusterFor(control, card) {
   let node = control.parentElement;
   while (node && node !== card) {
     const controls = actionControlsIn(node, card);
-    if (controls.length >= 2 && controls.length <= 8) return node;
+    const rect = node.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const insideCard = rect.width > 0 && rect.height > 0 && rect.left >= cardRect.left && rect.right <= cardRect.right + 4 && rect.top >= cardRect.top - 4 && rect.bottom <= cardRect.bottom + 4;
+    if (insideCard && controls.length >= 2 && controls.length <= 8) return node;
     node = node.parentElement;
   }
-  return control.parentElement;
+  return null;
 }
 
 function findLeadActionsContainer(card) {
+  if (!(card instanceof HTMLElement)) return null;
+  const cardRect = card.getBoundingClientRect();
+  if (cardRect.width < 240 || cardRect.height < 56) return null;
   const controls = actionControlsIn(card, card);
   const prioritized = controls.sort((a, b) => {
     const aLabel = controlLabel(a);
@@ -442,12 +449,11 @@ function placeLeadButton(card, button) {
   if (container) {
     container.append(button);
     button.dataset.floating = "false";
-    return;
+    return true;
   }
 
-  if (getComputedStyle(card).position === "static") card.style.position = "relative";
-  if (button.parentElement !== card) card.append(button);
-  button.dataset.floating = "true";
+  button.remove();
+  return false;
 }
 
 function ensureLeadButton(anchor, lead) {
@@ -470,8 +476,9 @@ function ensureLeadButton(anchor, lead) {
     queueMicrotask(() => { isMutatingReachlystUi = false; });
   }
   isMutatingReachlystUi = true;
-  placeLeadButton(card, button);
+  const placed = placeLeadButton(card, button);
   queueMicrotask(() => { isMutatingReachlystUi = false; });
+  if (!placed) return null;
   button.dataset.reachlystKey = key;
   button.reachlystLead = lead;
   button.title = `Open Reachlyst chat for ${lead.name}`;
@@ -481,6 +488,7 @@ function ensureLeadButton(anchor, lead) {
 function attachLeadButtons(leads) {
   const anchors = leadAnchors();
   const usedCards = new Set();
+  const activeKeys = new Set();
   for (const lead of leads) {
     const anchor = anchors.find((candidate) => {
       const card = leadCardFromAnchor(candidate);
@@ -488,8 +496,12 @@ function attachLeadButtons(leads) {
     });
     if (!anchor) continue;
     usedCards.add(leadCardFromAnchor(anchor));
-    ensureLeadButton(anchor, lead);
+    const button = ensureLeadButton(anchor, lead);
+    if (button) activeKeys.add(button.dataset.reachlystKey);
   }
+  document.querySelectorAll(".reachlyst-lead-button").forEach((button) => {
+    if (!activeKeys.has(button.dataset.reachlystKey)) button.remove();
+  });
   return usedCards.size;
 }
 

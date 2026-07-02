@@ -1,7 +1,7 @@
-import { formatAiPlaybookContext, getAiPlaybook, getDashboardData } from "@/lib/store";
+import { formatAiPlaybookContext, getAiMemories, getAiPlaybook, getDashboardData, getSemanticAiMemories, learnAiMemoriesFromPlaybook } from "@/lib/store";
 
 type RagCandidate = {
-  type: "playbook" | "search" | "lead" | "message" | "activity";
+  type: "memory" | "playbook" | "search" | "lead" | "message" | "activity";
   title: string;
   content: string;
   score: number;
@@ -73,7 +73,15 @@ export async function buildReachlystRagContext(input: ReachlystRagInput) {
     input.leadCompany
   ].filter(Boolean).join(" "));
 
-  const [playbook, dashboard] = await Promise.all([getAiPlaybook(), getDashboardData()]);
+  const [playbook, dashboard, initialMemories, semanticMemories] = await Promise.all([getAiPlaybook(), getDashboardData(), getAiMemories(), getSemanticAiMemories(query, input.limit ?? 8)]);
+  const learnedMemories = initialMemories.length || playbook.status !== "ready"
+    ? initialMemories
+    : await learnAiMemoriesFromPlaybook(playbook).then(() => getAiMemories()).catch(() => initialMemories);
+  const semanticIds = new Set(semanticMemories.map((memory) => memory.id));
+  const memories = [
+    ...semanticMemories,
+    ...learnedMemories.filter((memory) => !semanticIds.has(memory.id))
+  ];
   const candidates: RagCandidate[] = [];
   const boosts = [input.searchName, input.leadName, input.leadCompany].map(compact).filter(Boolean);
   const playbookContext = formatAiPlaybookContext(playbook);
@@ -92,6 +100,21 @@ export async function buildReachlystRagContext(input: ReachlystRagInput) {
       title: "AI Playbook",
       content,
       score: 6 + scoreText(queryTokens, content, boosts)
+    });
+  }
+
+  for (const memory of memories) {
+    const content = textFrom([
+      `Memory category: ${memory.category}`,
+      `Source: ${memory.source}`,
+      memory.content,
+      memory.updatedAt ? `Updated: ${memory.updatedAt}` : ""
+    ]);
+    candidates.push({
+      type: "memory",
+      title: memory.category.replace(/_/g, " "),
+      content,
+      score: (semanticIds.has(memory.id) ? 18 : 9) + scoreText(queryTokens, content, boosts)
     });
   }
 
@@ -169,7 +192,7 @@ export async function buildReachlystRagContext(input: ReachlystRagInput) {
   }
 
   const selected = candidates
-    .filter((candidate) => candidate.content && (candidate.score > 0 || candidate.type === "playbook"))
+    .filter((candidate) => candidate.content && (candidate.score > 0 || candidate.type === "playbook" || candidate.type === "memory"))
     .sort((a, b) => b.score - a.score)
     .slice(0, input.limit ?? 8);
 
@@ -181,7 +204,7 @@ export async function buildReachlystRagContext(input: ReachlystRagInput) {
 
   return [
     "Retrieved Reachlyst workspace context (RAG). Use this as background memory, not as a script.",
-    "Prefer the AI Playbook when it conflicts with older lead/search notes. Do not invent personal details beyond visible context.",
+    "Prefer semantic AI memories and the AI Playbook when they conflict with older lead/search notes. Do not invent personal details beyond visible context.",
     ...lines
   ].join("\n\n").slice(0, 7000);
 }

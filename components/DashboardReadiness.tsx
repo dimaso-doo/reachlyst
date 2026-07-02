@@ -49,7 +49,7 @@ export function DashboardReadiness({ extensionReady, tokenCount }: { extensionRe
         <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${extensionReady ? "bg-emerald-500 shadow-[0_0_0_6px_rgba(34,197,94,0.14)]" : "bg-amber-500 shadow-[0_0_0_6px_rgba(245,158,11,0.16)]"}`} />
         <div>
           <strong className="block text-sm font-extrabold text-ink">Extension Setup</strong>
-          <small className="mt-1 block text-sm font-semibold leading-6 text-muted">{tokenCount > 0 ? "Workspace token configured." : "Generate a workspace token and paste it into the Chrome extension."}</small>
+          <small className="mt-1 block text-sm font-semibold leading-6 text-muted">{extensionReady ? "Extension connected to this workspace." : tokenCount > 0 ? "Connection key generated. Verify it inside the Chrome extension." : "Generate a connection key and paste it into the Chrome extension."}</small>
         </div>
       </div>
       <Button href="/app/ai-playbook" variant="secondary">Train AI Playbook</Button>

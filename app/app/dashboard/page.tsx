@@ -1,13 +1,17 @@
 import { Badge, Button, Card } from "@/components/ui";
 import { AnimatedUsageBars } from "@/components/AnimatedUsageBars";
 import { DashboardReadiness } from "@/components/DashboardReadiness";
+import { OnboardingWizardOverlay } from "@/components/OnboardingWizardOverlay";
 import { SearchAiChat } from "@/components/SearchAiChat";
 import { getPlanSnapshot } from "@/lib/entitlements";
 import { getExtensionAccessState } from "@/lib/extensionTokens";
+import { getAiPlaybook } from "@/lib/store";
 import { getWorkspaceSubscription } from "@/lib/stripe";
 
 export default async function DashboardPage() {
-  const [snapshot, extensionAccess, subscription] = await Promise.all([getPlanSnapshot(), getExtensionAccessState(), getWorkspaceSubscription()]);
+  const [snapshot, extensionAccess, subscription, playbook] = await Promise.all([getPlanSnapshot(), getExtensionAccessState(), getWorkspaceSubscription(), getAiPlaybook()]);
+  const playbookReady = playbook.status === "ready" && Boolean(playbook.rawNotes.trim());
+  const extensionReady = extensionAccess.isPaid && Boolean(extensionAccess.boundAt || extensionAccess.lastTokenUsedAt);
   const packageStatus = snapshot.plan === "free"
     ? "Free plan"
     : subscription?.status === "active" || subscription?.status === "trialing"
@@ -19,6 +23,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="grid gap-6">
+      <OnboardingWizardOverlay initialPlaybookReady={playbookReady} initialExtensionAccess={extensionAccess} />
+
       <header className="grid gap-5 rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-6 shadow-reachlyst lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div>
           <Badge tone={snapshot.plan !== "free" ? "good" : "blue"}>{snapshot.config.name} plan</Badge>
@@ -57,7 +63,7 @@ export default async function DashboardPage() {
           {snapshot.plan === "free" ? <div className="mt-5 grid gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"><div><strong className="block text-sm font-extrabold text-ink">Free includes the full workflow.</strong><span className="mt-1 block text-sm font-semibold leading-6 text-muted">Use the extension and Sales Navigator context now. Upgrade only when you need more monthly AI messages.</span></div><Button href="/app/billing">Upgrade package</Button></div> : null}
         </Card>
 
-        <DashboardReadiness extensionReady={extensionAccess.isPaid && extensionAccess.tokenCount > 0} tokenCount={extensionAccess.tokenCount} />
+        <DashboardReadiness extensionReady={extensionReady} tokenCount={extensionAccess.tokenCount} />
       </section>
 
       <SearchAiChat

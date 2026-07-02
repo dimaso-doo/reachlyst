@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { activities as seedActivities, leads as seedLeads, searches as seedSearches } from "@/data/mock";
+import { createEmbedding } from "@/lib/embeddings";
 import { normalizeLinkedInUrl, sanitizeText } from "@/lib/mockDb";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import type { LeadStatus } from "@/types/domain";
@@ -42,10 +43,19 @@ export type AiPlaybookRecord = {
   defaultMessageTypes: string[];
   updatedAt?: string;
 };
-type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[]; aiPlaybook: AiPlaybookRecord; aiMessageGrants: AiMessageGrantRecord[] };
+export type AiMemoryCategory = "offer" | "icp" | "buying_signals" | "tone" | "cta" | "message_style" | "objection" | "example" | "general";
+export type AiMemoryRecord = {
+  id: string;
+  category: AiMemoryCategory;
+  content: string;
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+};
+type LocalDb = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[]; aiPlaybook: AiPlaybookRecord; aiMessageGrants: AiMessageGrantRecord[]; aiMemories: AiMemoryRecord[] };
 type DashboardData = { searches: SearchRecord[]; leads: LeadRecord[]; activities: ActivityRecord[]; messages: MessageRecord[] };
 
-const workspaceId = "00000000-0000-4000-8000-000000000001";
+export const workspaceId = "00000000-0000-4000-8000-000000000001";
 const dbPath = process.env.VERCEL ? join(tmpdir(), "reachlyst-local-db.json") : join(process.cwd(), "data", "reachlyst-local-db.json");
 const defaultMessageTypes = ["Short connection invite", "Warmer connection invite", "Direct relevance message", "Follow-up after connection", "Not-now response"];
 
@@ -75,7 +85,8 @@ function seedDb(): LocalDb {
     activities: seedActivities,
     messages: [],
     aiPlaybook: defaultAiPlaybook(),
-    aiMessageGrants: []
+    aiMessageGrants: [],
+    aiMemories: []
   };
 }
 
@@ -86,7 +97,7 @@ function defaultAiPlaybook(): AiPlaybookRecord {
 export function readDb(): LocalDb {
   if (!existsSync(dbPath)) return seedDb();
   const parsed = JSON.parse(readFileSync(dbPath, "utf8")) as Partial<LocalDb>;
-  return { ...seedDb(), ...parsed, aiPlaybook: parsed.aiPlaybook ?? defaultAiPlaybook(), aiMessageGrants: parsed.aiMessageGrants ?? [] };
+  return { ...seedDb(), ...parsed, aiPlaybook: parsed.aiPlaybook ?? defaultAiPlaybook(), aiMessageGrants: parsed.aiMessageGrants ?? [], aiMemories: parsed.aiMemories ?? [] };
 }
 
 export function writeDb(db: LocalDb) {
@@ -140,11 +151,16 @@ export async function saveAiPlaybook(input: Partial<AiPlaybookRecord> & { rawNot
     defaultMessageTypes: input.defaultMessageTypes?.length ? input.defaultMessageTypes : defaultMessageTypes,
     updatedAt: now()
   };
-  if (hasSupabase()) return saveSupabaseAiPlaybook(record);
+  if (hasSupabase()) {
+    const saved = await saveSupabaseAiPlaybook(record);
+    await learnAiMemoriesFromPlaybook(saved).catch(() => undefined);
+    return saved;
+  }
   const db = readDb();
   db.aiPlaybook = record;
   db.activities.unshift({ label: "AI Playbook updated", time: "Just now", type: "ai_playbook_updated", createdAt: now() });
   writeDb(db);
+  await learnAiMemoriesFromPlaybook(record).catch(() => undefined);
   return record;
 }
 
@@ -176,6 +192,127 @@ export function formatAiPlaybookContext(playbook: AiPlaybookRecord) {
     playbook.defaultMessageTypes.length ? `Default message types: ${playbook.defaultMessageTypes.join(", ")}` : "",
     "Use this Playbook as the primary outreach strategy. Still rely only on visible LinkedIn page context for personalization."
   ].filter(Boolean).join("\n");
+}
+
+function contentHash(value: string) {
+  return createHash("sha1").update(value.trim().toLowerCase()).digest("hex");
+}
+
+function memoryId(category: AiMemoryCategory, content: string) {
+  return stableUuid(`${category}:${contentHash(content)}`);
+}
+
+function sectionFromPlaybook(rawNotes: string, label: string) {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = rawNotes.match(new RegExp(`${escaped}:\\s*([\\s\\S]*?)(?=\\n\\n(?:Offer|ICP|Buying signals|Tone|CTA):|$)`, "i"));
+  return sanitizeText(match?.[1] ?? "").slice(0, 1800);
+}
+
+function memoryFromPlaybook(playbook: AiPlaybookRecord): Array<Omit<AiMemoryRecord, "id" | "createdAt" | "updatedAt">> {
+  const rawNotes = playbook.rawNotes;
+  const memories = [
+    { category: "offer" as const, source: "ai_playbook", content: playbook.offer || sectionFromPlaybook(rawNotes, "Offer") },
+    { category: "icp" as const, source: "ai_playbook", content: playbook.icp || sectionFromPlaybook(rawNotes, "ICP") },
+    { category: "buying_signals" as const, source: "ai_playbook", content: sectionFromPlaybook(rawNotes, "Buying signals") },
+    { category: "tone" as const, source: "ai_playbook", content: playbook.tone || sectionFromPlaybook(rawNotes, "Tone") },
+    { category: "cta" as const, source: "ai_playbook", content: playbook.cta || sectionFromPlaybook(rawNotes, "CTA") }
+  ];
+  return memories
+    .map((memory) => ({ ...memory, content: sanitizeText(memory.content).slice(0, 1800) }))
+    .filter((memory) => memory.content.length >= 12);
+}
+
+export async function getAiMemories(limit = 80): Promise<AiMemoryRecord[]> {
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    const { data, error } = await supabase
+      ?.from("ai_memories")
+      .select("id,category,content,source,created_at,updated_at")
+      .eq("workspace_id", workspaceId)
+      .order("updated_at", { ascending: false })
+      .limit(limit) ?? { data: [], error: null };
+    if (error) return [];
+    return (data ?? []).map((memory: any) => ({
+      id: memory.id,
+      category: memory.category,
+      content: memory.content ?? "",
+      source: memory.source ?? "manual",
+      createdAt: memory.created_at ?? now(),
+      updatedAt: memory.updated_at ?? memory.created_at ?? now()
+    }));
+  }
+  return readDb().aiMemories
+    .slice()
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, limit);
+}
+
+export async function getSemanticAiMemories(query: string, limit = 8): Promise<AiMemoryRecord[]> {
+  if (!hasSupabase()) return [];
+  const embedding = await createEmbedding(query);
+  if (!embedding?.length) return [];
+
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase?.rpc("match_ai_memories", {
+    target_workspace: workspaceId,
+    query_embedding: embedding,
+    match_count: limit,
+    min_similarity: 0.12
+  }) ?? { data: [], error: null };
+  if (error) return [];
+
+  return (data ?? []).map((memory: any) => ({
+    id: memory.id,
+    category: memory.category,
+    content: memory.content ?? "",
+    source: memory.source ?? "manual",
+    createdAt: memory.created_at ?? now(),
+    updatedAt: memory.updated_at ?? memory.created_at ?? now()
+  }));
+}
+
+export async function rememberAiMemory(input: Omit<AiMemoryRecord, "id" | "createdAt" | "updatedAt">) {
+  const content = sanitizeText(input.content).slice(0, 1800);
+  if (content.length < 12) return null;
+  const category = input.category;
+  const hash = contentHash(content);
+  const id = memoryId(category, content);
+  const timestamp = now();
+
+  if (hasSupabase()) {
+    const supabase = getSupabaseServerClient();
+    const embedding = await createEmbedding(content);
+    const { error } = await supabase?.from("ai_memories").upsert({
+      id,
+      workspace_id: workspaceId,
+      category,
+      content,
+      source: input.source,
+      content_hash: hash,
+      ...(embedding?.length ? { embedding } : {}),
+      updated_at: timestamp
+    }, { onConflict: "workspace_id,content_hash" }) ?? { error: null };
+    if (error) return null;
+    return { id, category, content, source: input.source, createdAt: timestamp, updatedAt: timestamp };
+  }
+
+  const db = readDb();
+  const existingIndex = db.aiMemories.findIndex((memory) => contentHash(memory.content) === hash);
+  const record: AiMemoryRecord = existingIndex >= 0
+    ? { ...db.aiMemories[existingIndex], category, content, source: input.source, updatedAt: timestamp }
+    : { id, category, content, source: input.source, createdAt: timestamp, updatedAt: timestamp };
+  if (existingIndex >= 0) db.aiMemories[existingIndex] = record;
+  else db.aiMemories.unshift(record);
+  db.aiMemories = db.aiMemories.slice(0, 200);
+  writeDb(db);
+  return record;
+}
+
+export async function learnAiMemoriesFromPlaybook(playbook: AiPlaybookRecord) {
+  if (playbook.status !== "ready" || !playbook.rawNotes.trim()) return [];
+  const memories = memoryFromPlaybook(playbook);
+  const saved = await Promise.all(memories.map((memory) => rememberAiMemory(memory)));
+  return saved.filter(Boolean);
 }
 
 export async function applyAiPlaybookToLeadInput<T extends Record<string, unknown>>(input: T): Promise<T> {

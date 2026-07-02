@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const PLAYBOOK_STATUS_KEY = "reachlyst_ai_playbook_status";
 const PLAYBOOK_NOTES_KEY = "reachlyst_ai_playbook_notes";
 
 export function AppSidebarNav() {
+  const pathname = usePathname();
   const [ready, setReady] = useState<"checking" | "ready" | "not_trained">("checking");
   const [extensionReady, setExtensionReady] = useState(false);
   const [aiUsage, setAiUsage] = useState<{ used: number; limit: number } | null>(null);
@@ -31,7 +33,7 @@ export function AppSidebarNav() {
       try {
         const response = await fetch("/api/extension/token", { cache: "no-store" });
         const data = await response.json();
-        setExtensionReady(Boolean(data?.isPaid && data?.tokenCount > 0));
+        setExtensionReady(Boolean(data?.isPaid && (data?.boundAt || data?.lastTokenUsedAt)));
       } catch {
         setExtensionReady(false);
       }
@@ -73,7 +75,8 @@ export function AppSidebarNav() {
     };
   }, []);
 
-  const navItem = "relative flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-normal text-muted transition hover:bg-blue-50 hover:text-ink";
+  const navItem = "relative flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-normal transition hover:bg-blue-50 hover:text-ink";
+  const navLink = (href: string) => `${navItem} ${pathname === href ? "bg-blue-50 text-ink" : "text-muted"}`;
   const readyBadge = "shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold leading-none text-emerald-800";
   const untrainedBadge = "shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold leading-none text-amber-800";
   const checkingBadge = "shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-extrabold leading-none text-slate-500";
@@ -82,20 +85,20 @@ export function AppSidebarNav() {
 
   return (
     <>
-      <Link className="rounded-lg px-3 py-2.5 text-sm font-normal text-muted transition hover:bg-blue-50 hover:text-ink" href="/app/dashboard">Dashboard</Link>
-      <Link className={navItem} href="/app/ai-playbook">
+      <Link className={navLink("/app/dashboard")} href="/app/dashboard">Dashboard</Link>
+      <Link className={navLink("/app/ai-playbook")} href="/app/ai-playbook">
         <span>AI Playbook</span>
         <small className={ready === "checking" ? checkingBadge : playbookIsReady ? readyBadge : untrainedBadge} title={playbookIsReady ? "AI Playbook is ready" : "AI Playbook is not trained yet"}>
           {ready === "checking" ? "Checking" : playbookIsReady ? "Ready" : "Not trained"}
         </small>
       </Link>
-      <Link className={navItem} href="/app/extension">
+      <Link className={navLink("/app/extension")} href="/app/extension">
         <span>Extension Setup</span>
-        <small className={extensionReady ? readyBadge : untrainedBadge} title={extensionReady ? "Extension token is ready" : "Extension setup is not ready yet"}>
+        <small className={extensionReady ? readyBadge : untrainedBadge} title={extensionReady ? "Extension is connected" : "Extension setup is not ready yet"}>
           {extensionReady ? "Ready" : "Not ready"}
         </small>
       </Link>
-      <Link className={navItem} href="/app/billing">
+      <Link className={navLink("/app/billing")} href="/app/billing">
         <span>Billing</span>
         <small className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-extrabold leading-none text-accent-strong">Plan</small>
       </Link>

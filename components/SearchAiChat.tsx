@@ -22,7 +22,7 @@ type SearchAiChatProps = {
 export function SearchAiChat({ mode, title, intro, placeholder, description = "Use this as a sales strategy chat for ICP, buying signals, message tone, and manual outreach copy.", assistantName = "Reachlyst AI", searchName, searchUrl, context }: SearchAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: intro }]);
   const [draft, setDraft] = useState("");
-  const [sendOnEnter, setSendOnEnter] = useState(false);
+  const [sendOnEnter, setSendOnEnter] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);

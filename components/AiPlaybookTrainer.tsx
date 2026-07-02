@@ -72,13 +72,17 @@ function calculateReadiness(messages: Message[]) {
 export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: AiUsage | null }) {
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: welcomeMessage }]);
   const [draft, setDraft] = useState("");
+  const [savedPlaybookReady, setSavedPlaybookReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [streaming, setStreaming] = useState(false);
-  const [sendOnEnter, setSendOnEnter] = useState(false);
+  const [sendOnEnter, setSendOnEnter] = useState(true);
   const [aiUsage, setAiUsage] = useState<AiUsage | null>(initialAiUsage);
   const endRef = useRef<HTMLDivElement | null>(null);
-  const readiness = calculateReadiness(messages);
+  const calculatedReadiness = calculateReadiness(messages);
+  const readiness = savedPlaybookReady
+    ? { ...calculatedReadiness, score: 100, missing: [], status: "Ready to start" }
+    : calculatedReadiness;
   const extensionReady = readiness.score >= 100;
 
   async function refreshAiUsage() {
@@ -102,11 +106,13 @@ export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: 
         if (!playbook?.rawNotes) {
           window.localStorage.removeItem(PLAYBOOK_NOTES_KEY);
           window.localStorage.setItem(PLAYBOOK_STATUS_KEY, "not_trained");
+          setSavedPlaybookReady(false);
           setMessages([{ role: "assistant", content: welcomeMessage }]);
           return;
         }
         window.localStorage.setItem(PLAYBOOK_NOTES_KEY, playbook.rawNotes);
         window.localStorage.setItem(PLAYBOOK_STATUS_KEY, playbook.status);
+        setSavedPlaybookReady(playbook.status === "ready");
         setMessages([
           { role: "assistant", content: welcomeMessage },
           { role: "user", content: playbook.rawNotes },
@@ -197,6 +203,7 @@ export function AiPlaybookTrainer({ initialAiUsage = null }: { initialAiUsage?: 
         body: JSON.stringify({ rawNotes: latestUserMessage, status: nextStatus })
       });
       if (!response.ok) throw new Error("Unable to save AI Playbook");
+      setSavedPlaybookReady(nextStatus === "ready");
       window.dispatchEvent(new Event("reachlyst:playbook-status"));
     } catch {
       window.dispatchEvent(new Event("reachlyst:playbook-status"));

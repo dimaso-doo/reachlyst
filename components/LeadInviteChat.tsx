@@ -24,7 +24,7 @@ type LeadInviteChatProps = {
 export function LeadInviteChat({ lead, initialMessage }: LeadInviteChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: initialMessage }]);
   const [draft, setDraft] = useState("");
-  const [sendOnEnter, setSendOnEnter] = useState(false);
+  const [sendOnEnter, setSendOnEnter] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);

@@ -37,16 +37,21 @@ export function MarketingNav() {
 
 export function MarketingFooter() {
   return <footer className="border-t border-slate-200 bg-white py-8 text-muted">
-    <div className="container flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
-      <MarketingLogo />
-      <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
-        <Link className="hover:text-ink" href="/#preview">Preview</Link>
-        <Link className="hover:text-ink" href="/#pricing">Pricing</Link>
-        <Link className="hover:text-ink" href="/#faq">FAQ</Link>
-        <Link className="hover:text-ink" href="/privacy">Privacy Policy</Link>
-        <Link className="hover:text-ink" href="/terms">Terms</Link>
-        <Link className="hover:text-ink" href="/refund">Refund Policy</Link>
-      </nav>
+    <div className="container">
+      <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <MarketingLogo />
+          <p className="m-0 text-xs font-semibold text-slate-400">made by <a className="transition hover:text-slate-600" href="https://dimaso.co" rel="noreferrer" target="_blank">dimaso.co</a></p>
+        </div>
+        <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
+          <Link className="hover:text-ink" href="/#preview">Preview</Link>
+          <Link className="hover:text-ink" href="/#pricing">Pricing</Link>
+          <Link className="hover:text-ink" href="/#faq">FAQ</Link>
+          <Link className="hover:text-ink" href="/privacy">Privacy Policy</Link>
+          <Link className="hover:text-ink" href="/terms">Terms</Link>
+          <Link className="hover:text-ink" href="/refund">Refund Policy</Link>
+        </nav>
+      </div>
     </div>
   </footer>;
 }

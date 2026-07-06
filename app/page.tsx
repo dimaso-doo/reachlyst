@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { MarketingFooter, MarketingNav } from "@/components/MarketingChrome";
 import { Button, Card } from "@/components/ui";
 import { formatLimit } from "@/lib/planLimits";
@@ -12,70 +13,6 @@ const workflow = [
   { icon: "navigator", title: "Open Sales Navigator", body: "Browse searches and lead lists as usual while Reachlyst reads visible context and keeps everything organized." },
   { icon: "reachlyst", title: "Sync to Reachlyst", body: "Searches, leads, statuses, notes, suggested invites, and message history land in one clean workspace.", brand: true },
   { icon: "outreach", title: "Polish outreach", body: "Train each search, score leads, regenerate invite copy, and copy the version you actually want to send." }
-];
-
-const aiHighlights = [
-  ["01", "AI fit scoring", "See who looks like a strong buyer before you open ten more tabs.", "chart"],
-  ["02", "AI invite drafts", "Generate short, human connection copy you can edit and paste manually.", "message"],
-  ["03", "Search training", "Teach each campaign what good, maybe, and skip should mean.", "search"],
-  ["04", "Reply suggestions", "Turn visible message context into cleaner follow-up ideas.", "reply"]
-];
-
-const heroLeads = [
-  ["Maya Chen", "Founder at RevPilot", "Good fit", "Recently hired 3 SDRs"],
-  ["Andre Keegan", "Owner at Serenity Marketing", "Contact next", "Shared posts about outbound systems"],
-  ["Jon Bell", "Revenue Lead at Northline", "Maybe", "Needs stronger agency signal"]
-];
-
-const heroChat = [
-  ["assistant", "Andre is the strongest next contact. He runs a small agency, posts about delivery bottlenecks, and your offer maps to his team size."],
-  ["user", "How should I open?"],
-  ["assistant", "Mention his recent post about agency systems. Keep it short and ask if improving reply quality is a priority this quarter."],
-  ["assistant", "Suggested invite: Hi Andre, noticed your work around small agency delivery systems. Thought it would be useful to connect."]
-];
-
-const features = [
-  ["Lead context chat", "Ask Reachlyst about the selected Sales Navigator lead and get practical fit notes, profile context, and outreach angles."],
-  ["Invite generation", "Generate concise connection invites from visible Sales Navigator context, then edit and send manually."],
-  ["Reply suggestions", "Use visible LinkedIn message context to draft warmer, clearer follow-ups for accepted connections."],
-  ["AI Playbook", "Train Reachlyst on your offer, ICP, tone, objections, and message style so suggestions match your business."],
-  ["Extension setup", "Manage a persistent extension token for your workspace and keep the Sales Navigator helper ready."],
-  ["Usage controls", "Track AI messages, package limits, and extension access from the dashboard."],
-  ["Search workflow support", "Work naturally inside Sales Navigator while Reachlyst helps organize lead context and outreach decisions."],
-  ["Manual-first safety", "Reachlyst never sends LinkedIn messages for you. It prepares copy and context, while you stay in control."]
-];
-
-const productScreenshots = [
-  {
-    demo: "lead",
-    useCase: "Demo video 01",
-    duration: "1:12",
-    client: "Web agency founder",
-    title: "Maya qualifies a messy lead list before lunch",
-    body: "Maya runs a five-person Webflow agency. The video follows her as she reviews agency-fit signals, keeps weak leads out, and prepares one clean manual invite.",
-    scene: "Search: B2B SaaS teams hiring design support",
-    outcome: "25 reviewed leads, 8 strong fits, 1 invite draft copied manually",
-  },
-  {
-    demo: "messages",
-    useCase: "Demo video 02",
-    duration: "0:58",
-    client: "RevOps consultant",
-    title: "Jon turns a warm reply into a softer next step",
-    body: "Jon sells RevOps audits to founder-led SaaS teams. The video shows him rewriting a pushy follow-up into a short, useful message he can review and send himself.",
-    scene: "Thread: buyer mentioned reply-rate drop-off",
-    outcome: "3 reply angles, 1 softer CTA, no fake personalization",
-  },
-  {
-    demo: "workspace",
-    useCase: "Demo video 03",
-    duration: "1:26",
-    client: "Small outbound team",
-    title: "A two-person team plans the day without another spreadsheet",
-    body: "A founder and part-time SDR review usage, campaign instructions, due follow-ups, and daily priorities before starting manual outreach.",
-    scene: "Workspace: weekly campaign cleanup",
-    outcome: "Clear ICP notes, due follow-ups, and message usage in one place",
-  }
 ];
 
 const reviews = [
@@ -157,147 +94,59 @@ export default function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MarketingNav />
       <section id="hero" className="hero-aurora overflow-hidden bg-[radial-gradient(circle_at_82%_16%,rgba(22,119,255,.18)_0,transparent_30%),linear-gradient(180deg,#f8fbff,#eef4ff)] py-14 text-ink sm:py-16">
-        <div className="container grid items-center gap-10 lg:min-h-[760px] lg:grid-cols-[.78fr_1.22fr]">
-          <motion.div className="max-w-[720px]" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="container grid grid-cols-1 items-center gap-10 lg:min-h-[760px] lg:grid-cols-[.78fr_1.22fr]">
+          <motion.div className="min-w-0 max-w-[720px]" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex rounded-full border border-blue-100 bg-white px-3 py-2 text-xs uppercase tracking-[.08em] text-accent-strong shadow-[0_12px_32px_rgba(22,119,255,.08)]">AI Sales Navigator helper</span>
-            <h1 className="my-5 max-w-[760px] text-5xl leading-[.94] tracking-normal text-ink sm:text-6xl lg:text-7xl">AI outreach assistant for LinkedIn Sales Navigator.</h1>
-            <p className="max-w-[650px] text-xl leading-relaxed text-muted sm:text-[22px]">Reachlyst helps you understand leads, draft better invites and replies, and keep every outreach step organized while you prospect.</p>
-            <div className="mt-7 flex flex-wrap items-center gap-3"><Button href="/signup">Create workspace</Button><Button href="#product-screenshots" variant="secondary">View product</Button></div>
-            <div className="mt-10 grid max-w-[640px] gap-3 sm:grid-cols-3">
-              {aiHighlights.slice(0, 3).map(([number, title, body]) => <div className="rounded-lg border border-white bg-white/78 p-4 shadow-[0_14px_40px_rgba(15,23,42,.08)]" key={title}>
-                <small className="text-xs uppercase tracking-[.08em] text-accent-strong">{number}</small>
-                <strong className="mt-3 block text-sm text-ink">{title}</strong>
-                <p className="mt-2 text-xs leading-5 text-muted">{body}</p>
-              </div>)}
-            </div>
+            <h1 className="my-5 max-w-full text-[44px] leading-[.96] tracking-normal text-ink sm:text-6xl lg:text-7xl">AI outreach assistant for LinkedIn Sales Navigator.</h1>
+            <p className="max-w-full text-xl leading-relaxed text-muted sm:max-w-[650px] sm:text-[22px]">Reachlyst helps you understand leads, draft better invites and replies, and keep every outreach step organized while you prospect.</p>
+            <div className="mt-7 flex flex-wrap items-center gap-3"><Button href="/signup">Create workspace</Button></div>
           </motion.div>
-          <motion.div className="relative min-h-[600px]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
-            <div className="absolute right-0 top-0 w-[min(820px,100%)] overflow-hidden rounded-[30px] border border-white bg-white shadow-[0_34px_120px_rgba(15,23,42,.18)]">
-              <div className="flex h-[50px] items-center gap-2 border-b border-slate-100 bg-slate-50 px-4">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-                <strong className="ml-2 text-xs text-muted">Sales Navigator with Reachlyst AI</strong>
-                <span className="ml-auto rounded-full bg-blue-50 px-3 py-1 text-xs text-accent-strong">Auto-playing</span>
-              </div>
-              <div className="relative grid min-h-[520px] overflow-hidden bg-[#f8fbff] p-5 lg:grid-cols-[minmax(360px,1fr)_330px]">
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_18px_56px_rgba(15,23,42,.08)]">
-                  <div className="border-b border-slate-100 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <small className="text-xs text-muted">LinkedIn Sales Navigator</small>
-                        <h3 className="mt-1 text-lg leading-tight text-ink">Agency founders in Europe</h3>
-                      </div>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">Live search</span>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-muted">
-                      <span className="rounded-lg bg-slate-50 px-3 py-2">Founder</span>
-                      <span className="rounded-lg bg-slate-50 px-3 py-2">11-50 employees</span>
-                      <span className="rounded-lg bg-slate-50 px-3 py-2">Marketing agency</span>
-                    </div>
+          <motion.div className="relative min-h-0 sm:min-h-[560px] lg:min-h-[650px]" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .15 }}>
+            <div className="product-hero-shot absolute right-0 top-0 w-[min(980px,100%)] overflow-hidden rounded-[30px] border border-white bg-white shadow-[0_34px_120px_rgba(15,23,42,.18)]">
+              <ScreenshotChrome label="Reachlyst chat over Sales Navigator" badge="AI panel">
+                <div className="product-chat-hero relative aspect-[1.54/1] overflow-hidden bg-slate-100">
+                  <SyntheticNavigatorBackdrop />
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,251,255,.5),rgba(248,251,255,.08)_34%,rgba(248,251,255,.18))]" />
+                  <div className="product-chat-focus absolute bottom-5 right-8 w-[min(440px,54%)] overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-[0_28px_90px_rgba(22,119,255,.2)]">
+                    <HeroChatPanel />
                   </div>
-                  <div className="grid gap-3 p-4">
-                    {heroLeads.map(([name, role, status, signal], index) => (
-                      <div className={`reachlyst-demo-lead grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-[auto_1fr_auto] ${index === 1 ? "reachlyst-demo-lead-active" : ""}`} key={name}>
-                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-sm text-accent-strong">{name.split(" ").map((part) => part[0]).join("")}</span>
-                        <span>
-                          <strong className="block text-sm text-ink">{name}</strong>
-                          <span className="mt-1 block text-xs leading-5 text-muted">{role}</span>
-                          <span className="mt-2 block text-xs leading-5 text-muted">{signal}</span>
-                        </span>
-                        <span className={`col-span-2 self-start rounded-full px-3 py-1 text-xs sm:col-span-1 ${index === 1 ? "bg-blue-50 text-accent-strong" : "bg-slate-50 text-muted"}`}>{status}</span>
-                      </div>
-                    ))}
+                  <div className="absolute bottom-5 left-5 max-w-[300px] rounded-2xl border border-white/70 bg-white/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,.16)] backdrop-blur">
+                    <span className="text-[11px] uppercase tracking-[.08em] text-accent-strong">Reachlyst is the focus</span>
+                    <p className="mt-2 text-sm leading-6 text-ink">The lead list becomes context. The chat panel is where fit, angle, and invite decisions happen.</p>
                   </div>
                 </div>
-                <div className="reachlyst-demo-chat relative mt-5 self-start overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-[0_24px_70px_rgba(22,119,255,.14)] lg:ml-[-22px] lg:mt-12">
-                  <div className="flex items-center gap-3 border-b border-blue-50 bg-white p-4">
-                    <img className="h-9 w-9 rounded-xl border border-blue-100 bg-blue-50 p-1.5" alt="" src="/reachlyst-mark.svg" />
-                    <div>
-                      <strong className="block text-sm text-ink">Reachlyst AI</strong>
-                      <span className="text-xs text-muted">Lead context chat</span>
-                    </div>
-                  </div>
-                  <div className="grid gap-3 p-4">
-                    {heroChat.map(([role, message], index) => (
-                      <p className={`reachlyst-demo-message m-0 rounded-xl border p-3 text-xs leading-5 ${role === "user" ? "justify-self-end border-blue-200 bg-blue-50 text-ink" : "border-slate-200 bg-white text-muted"}`} key={`${role}-${index}`}>
-                        {message}
-                      </p>
-                    ))}
-                  </div>
-                  <div className="border-t border-blue-50 p-4">
-                    <div className="reachlyst-demo-typing rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-muted">Ask who to contact next...</div>
-                  </div>
-                </div>
-              </div>
+              </ScreenshotChrome>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <section id="features" className="bg-white py-20 text-ink sm:py-24">
-        <div className="container grid gap-10 lg:grid-cols-[.82fr_1.18fr] lg:items-end">
-          <SectionIntro eyebrow="Features" title="Everything you need to turn Sales Navigator context into better outreach." />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {aiHighlights.map(([number, title, body, icon]) => <div className="feature-card relative isolate grid min-h-[236px] overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fbff] p-5 shadow-[0_14px_40px_rgba(15,23,42,.06)]" key={title}>
-              <span className="feature-card-dots" aria-hidden="true" />
-              <div className="relative z-[1] mb-8 flex items-center justify-between gap-4">
-                <FeatureStaticIcon type={icon} />
-                <small className="rounded-full border border-blue-100 bg-white/70 px-2.5 py-1 text-xs uppercase tracking-[.08em] text-accent-strong">{number}</small>
-              </div>
-              <strong className="relative z-[1] block text-2xl leading-[1.18] text-ink">{title}</strong>
-              <p className="relative z-[1] mt-3 text-sm leading-6 text-muted">{body}</p>
-            </div>)}
-          </div>
-        </div>
-      </section>
-
-      <section id="product-screenshots" className="bg-[#f5f7fb] py-24 text-ink sm:py-28">
-        <div className="container">
-          <SectionIntro eyebrow="Demo videos" title="More realistic walkthroughs with a buyer, a goal, and a specific outreach moment." />
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {productScreenshots.map((shot, index) => <motion.figure className="product-use-case overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_24px_76px_rgba(15,23,42,.1)]" key={shot.title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .08, duration: .5 }}>
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-                  <span className="ml-auto rounded-full bg-blue-50 px-3 py-1 text-[11px] text-accent-strong">{shot.useCase}</span>
-                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-extrabold text-muted">{shot.duration}</span>
-                </div>
-              </div>
-              <div className="relative">
-                <ProductDemoCard type={shot.demo} />
-                <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/70 bg-white/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,.16)] backdrop-blur">
-                  <span className="text-[11px] font-extrabold uppercase tracking-[.08em] text-accent-strong">{shot.client}</span>
-                  <p className="mt-1 text-sm font-extrabold leading-5 text-ink">{shot.scene}</p>
-                </div>
-              </div>
-              <figcaption className="min-h-[270px] border-t border-slate-100 bg-white p-5">
-                <strong className="text-xl leading-[1.2] text-ink">{shot.title}</strong>
-                <p className="mt-3 leading-7 text-muted">{shot.body}</p>
-                <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-                  <span className="block text-[11px] font-extrabold uppercase tracking-[.08em] text-accent-strong">What the viewer sees</span>
-                  <p className="mt-1 text-sm font-bold leading-6 text-ink">{shot.outcome}</p>
-                </div>
-              </figcaption>
-            </motion.figure>)}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-24 text-ink sm:py-28">
-        <div className="container">
-          <SectionIntro eyebrow="Create. Engage. Organize." title="Search workflow support without changing how you work in Sales Navigator." />
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {features.map(([title, body], index) => <Card className="feature-tile grid grid-rows-[auto_auto_1fr] overflow-hidden p-5 transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]" key={title}>
-              <FeatureMiniDemo index={index} />
-              <div className="mt-5 flex items-start justify-between gap-3">
-                <h3 className="text-xl leading-tight text-ink">{title}</h3>
-                <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs text-accent-strong">0{index + 1}</span>
-              </div>
-              <p className="mt-3 leading-7 text-muted">{body}</p>
-            </Card>)}
+      <section id="preview" className="bg-white py-20 text-ink sm:py-24">
+        <div className="container grid gap-10 lg:grid-cols-[.72fr_1.28fr] lg:items-center">
+          <SectionIntro eyebrow="Preview" title="Watch the Reachlyst chat flow happen in context." />
+          <div className="video-preview-frame overflow-hidden rounded-[28px] border border-blue-100 bg-white shadow-[0_30px_100px_rgba(15,23,42,.12)]">
+            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+              <strong className="ml-2 truncate text-xs text-muted">Reachlyst preview</strong>
+              <span className="ml-auto rounded-full bg-blue-50 px-3 py-1 text-[11px] text-accent-strong">1.5x</span>
+            </div>
+            <video
+              className="block aspect-[1188/1280] max-h-[720px] w-full bg-slate-100 object-contain"
+              autoPlay
+              controls
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              onLoadedMetadata={(event) => {
+                event.currentTarget.defaultPlaybackRate = 1.5;
+                event.currentTarget.playbackRate = 1.5;
+              }}
+            >
+              <source src="/product-videos/reachlyst-chat-preview.m4v" type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
@@ -392,6 +241,84 @@ function SectionIntro({ eyebrow, title, tone = "light" }: { eyebrow: string; tit
   </div>;
 }
 
+function ScreenshotChrome({ children, label, badge, compact = false }: { children: ReactNode; label: string; badge?: string; compact?: boolean }) {
+  return <div className="overflow-hidden bg-white">
+    <div className={`flex items-center gap-2 border-b border-slate-100 bg-slate-50 ${compact ? "px-3 py-2.5" : "px-4 py-3"}`}>
+      <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
+      <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+      <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+      <strong className="ml-2 min-w-0 truncate text-xs text-muted">{label}</strong>
+      {badge ? <span className="ml-auto shrink-0 rounded-full bg-blue-50 px-3 py-1 text-[11px] text-accent-strong">{badge}</span> : null}
+    </div>
+    {children}
+  </div>;
+}
+
+function HeroChatPanel() {
+  return <div className="hero-chat-panel flex h-full min-h-0 flex-col bg-white text-ink">
+    <div className="flex items-center gap-3 border-b border-blue-100 bg-blue-50/55 p-4">
+      <img className="h-9 w-9 rounded-xl border border-blue-100 bg-white p-1.5" alt="" src="/reachlyst-mark.svg" />
+      <div className="min-w-0">
+        <strong className="block truncate text-sm">Predrag Stojanovic</strong>
+        <span className="block truncate text-xs text-muted">dimaso.co</span>
+      </div>
+      <span className="ml-auto flex h-8 w-8 items-center justify-center rounded-full border border-blue-100 bg-white text-lg leading-none text-ink">-</span>
+      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-100 bg-white text-lg leading-none text-ink">×</span>
+    </div>
+    <div className="grid min-h-0 flex-1 content-start gap-3 overflow-hidden p-4">
+      <p className="m-0 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm leading-5 text-ink">Selected Predrag. Click Generate invite or tell me how to shape the message.</p>
+      <p className="m-0 justify-self-end rounded-xl bg-accent px-4 py-3 text-sm leading-5 text-white">Is Predrag a good fit for invitation?</p>
+      <p className="m-0 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm leading-5 text-ink">Predrag Stojanovic at dimaso.co looks aligned with a website and outreach workflow conversation. His company context suggests a practical angle around improving visibility, lead quality, and follow-up consistency.</p>
+      <p className="m-0 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm leading-5 text-ink">A concise invite should mention dimaso.co naturally and ask whether improving outbound research is a current priority.</p>
+    </div>
+    <div className="border-t border-blue-100 p-4">
+      <div className="min-h-20 rounded-xl border border-blue-100 bg-white p-3 text-sm leading-5 text-muted">Write naturally. Ask about fit, angle, invite, follow-up, or paste a rough idea...</div>
+      <div className="mt-3 flex items-center gap-2">
+        <span className="rounded-lg bg-accent px-4 py-2 text-sm text-white">Generate message</span>
+        <span className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-ink">Send</span>
+      </div>
+    </div>
+  </div>;
+}
+
+function SyntheticNavigatorBackdrop() {
+  const rows = [
+    ["Predrag Stojanovic", "Founder at dimaso.co", "Website and outbound workflow"],
+    ["Ana Markovic", "Growth lead", "Recently reviewed lead quality"],
+    ["Milan Petrovic", "Agency owner", "Looking at better follow-up systems"],
+    ["Jelena Ilic", "Marketing director", "Strong ICP signal"],
+    ["Stefan Nikolic", "Operations lead", "Manual outreach context"]
+  ];
+
+  return <div className="synthetic-navigator absolute inset-0 bg-white">
+    <div className="flex h-11 items-center gap-3 border-b border-slate-200 px-4 text-[11px] text-muted">
+      <span className="rounded bg-[#0a66c2] px-1.5 py-1 text-white">in</span>
+      <span>Sales Navigator</span>
+      <span className="ml-5 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-slate-500">marketing agency OR website services</span>
+      <span className="ml-auto rounded-full bg-slate-100 px-3 py-1">Fetched: 25/25</span>
+    </div>
+    <div className="grid h-[calc(100%-44px)] grid-cols-[180px_1fr]">
+      <div className="border-r border-slate-200 bg-slate-50/80 p-3">
+        {["Company", "Role", "Geography", "Industry"].map((label) => <div className="mb-4" key={label}>
+          <span className="block text-[10px] uppercase tracking-[.08em] text-slate-400">{label}</span>
+          <span className="mt-2 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[11px] text-emerald-800">Selected</span>
+        </div>)}
+      </div>
+      <div className="divide-y divide-slate-200 bg-white">
+        {rows.map(([name, title, note]) => <div className="grid grid-cols-[42px_1fr_auto] items-center gap-3 px-4 py-3" key={name}>
+          <span className="h-9 w-9 rounded-full bg-slate-200" />
+          <span className="min-w-0">
+            <strong className="block truncate text-sm text-[#0a66c2]">{name}</strong>
+            <span className="block truncate text-xs text-slate-700">{title}</span>
+            <span className="mt-1 block truncate text-xs text-slate-500">{note}</span>
+          </span>
+          <span className="rounded-full border border-blue-200 px-3 py-1 text-xs text-accent-strong">Save</span>
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
+
 function WorkflowIcon({ type }: { type: string }) {
   if (type === "reachlyst") return <img className="h-10 w-10 object-contain" alt="" src="/reachlyst-mark.svg" />;
 
@@ -413,98 +340,6 @@ function WorkflowIcon({ type }: { type: string }) {
     <path d="M13 31c7-1 14-8 18-18 4 4 5 11 3 17 3 1 5 4 6 8-5-1-8-3-9-6-5 2-12 2-18-1Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
     <path d="M17 35l-5 5M24 34l-3 6M33 15l-8 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
   </svg>;
-}
-
-function FeatureStaticIcon({ type }: { type: string }) {
-  const common = "h-11 w-11 text-accent-strong";
-  if (type === "chart") return <span className="feature-icon"><svg className={common} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-    <path d="M10 37h28M14 33V20M24 33V12M34 33V24" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-    <path d="M13 25c8-9 15-10 24-4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-  </svg></span>;
-  if (type === "message") return <span className="feature-icon"><svg className={common} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-    <path d="M12 14h24a6 6 0 016 6v10a6 6 0 01-6 6H25l-9 6v-6h-4a6 6 0 01-6-6V20a6 6 0 016-6Z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
-    <path d="M16 23h16M16 29h10" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-  </svg></span>;
-  if (type === "search") return <span className="feature-icon"><svg className={common} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-    <circle cx="22" cy="22" r="10" stroke="currentColor" strokeWidth="1.9" />
-    <path d="M30 30l8 8M17 21h10M17 26h6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-  </svg></span>;
-  return <span className="feature-icon"><svg className={common} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-    <path d="M12 13h24a5 5 0 015 5v11a5 5 0 01-5 5H24l-8 6v-6h-4a5 5 0 01-5-5V18a5 5 0 015-5Z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
-    <path d="M17 22h16M17 28h9M33 36l5 5 5-11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-  </svg></span>;
-}
-
-function ProductDemoCard({ type }: { type: string }) {
-  if (type === "messages") {
-    return <div className="product-demo product-demo-messages" aria-label="Animated Reachlyst message suggestion preview">
-      <div className="product-demo-sidebar">
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className="product-demo-main">
-        <div className="product-demo-thread">
-          <p className="product-demo-bubble product-demo-bubble-muted">Thanks for connecting. We are improving outbound quality this quarter.</p>
-          <p className="product-demo-bubble product-demo-bubble-user">Worth asking about reply rates?</p>
-          <p className="product-demo-bubble product-demo-bubble-ai">Yes. Keep it practical and mention the visible goal, not a pitch.</p>
-        </div>
-        <div className="product-demo-suggestion">
-          <span>Suggested follow-up</span>
-          <strong>Would it be useful to compare what is causing the drop-off?</strong>
-        </div>
-      </div>
-    </div>;
-  }
-
-  if (type === "workspace") {
-    return <div className="product-demo product-demo-workspace" aria-label="Animated Reachlyst dashboard and AI Playbook preview">
-      <div className="product-demo-nav">
-        <span className="is-active" />
-        <span />
-        <span />
-      </div>
-      <div className="product-demo-main">
-        <div className="product-demo-meter"><span /></div>
-        <div className="product-demo-playbook">
-          <strong>AI Playbook</strong>
-          <p>Offer, ICP, buying signals, tone, CTA</p>
-          <div><span /><span /><span /></div>
-        </div>
-        <div className="product-demo-usage">
-          <span>AI messages</span>
-          <strong>184 / 3,000</strong>
-        </div>
-      </div>
-    </div>;
-  }
-
-  return <div className="product-demo product-demo-lead" aria-label="Animated Sales Navigator lead and Reachlyst invite preview">
-    <div className="product-demo-list">
-      {heroLeads.map(([name, role, status], index) => <div className={`product-demo-row ${index === 1 ? "is-active" : ""}`} key={name}>
-        <span>{name.split(" ").map((part) => part[0]).join("")}</span>
-        <div><strong>{name}</strong><small>{role}</small></div>
-        <em>{status}</em>
-      </div>)}
-    </div>
-    <div className="product-demo-panel">
-      <span>Reachlyst AI</span>
-      <strong>Contact Andre next</strong>
-      <p>Strong agency signal. Open with the recent systems post and keep the invite under 180 characters.</p>
-    </div>
-  </div>;
-}
-
-function FeatureMiniDemo({ index }: { index: number }) {
-  const type = index % 8;
-  if (type === 0) return <div className="feature-mini feature-mini-chat"><span /><span /><span /></div>;
-  if (type === 1) return <div className="feature-mini feature-mini-invite"><span /><strong>Hi Andre...</strong><em /></div>;
-  if (type === 2) return <div className="feature-mini feature-mini-reply"><span /><span /><strong /></div>;
-  if (type === 3) return <div className="feature-mini feature-mini-playbook"><strong /><span /><span /><span /></div>;
-  if (type === 4) return <div className="feature-mini feature-mini-token"><span /><i /><i /><i /></div>;
-  if (type === 5) return <div className="feature-mini feature-mini-usage"><strong /><span /><em /></div>;
-  if (type === 6) return <div className="feature-mini feature-mini-search"><span /><span /><span /></div>;
-  return <div className="feature-mini feature-mini-safe"><span /><strong /><em /></div>;
 }
 
 function PlanCard({ plan }: { plan: (typeof plans)[number] }) {

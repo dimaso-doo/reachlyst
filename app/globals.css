@@ -239,6 +239,61 @@ button, input, textarea, select { font: inherit; }
   transform: translateY(-2px);
 }
 
+.product-hero-shot,
+.product-use-case {
+  transform: translateZ(0);
+}
+
+.product-hero-shot img,
+.product-use-case img {
+  filter: saturate(1.02) contrast(1.01);
+}
+
+.product-chat-hero-bg,
+.product-chat-shot-bg {
+  filter: blur(8px) saturate(.58) contrast(.82);
+  opacity: .34;
+  transform: scale(1.06);
+}
+
+.synthetic-navigator {
+  filter: blur(1.2px) saturate(.82);
+  opacity: .46;
+  transform: scale(1.01);
+}
+
+.product-chat-focus {
+  aspect-ratio: .76 / 1;
+}
+
+.product-chat-focus img,
+.product-chat-shot-card img {
+  transform: scale(1.02);
+  transform-origin: center;
+}
+
+.product-chat-shot-card {
+  isolation: isolate;
+}
+
+.product-screenshot-crop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24);
+}
+
+.product-use-case {
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.product-use-case:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 28px 86px rgba(22, 119, 255, .14);
+  transform: translateY(-2px);
+}
+
 @keyframes featureFieldDrift {
   0% {
     background-position: 0% 0%, 0 0, 0 0;
@@ -814,6 +869,31 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 640px) {
   .feature-tile {
     min-height: 370px;
+  }
+
+  .product-hero-shot {
+    position: relative;
+  }
+
+  .product-screenshot-crop {
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-chat-focus {
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+
+  .product-chat-shot-card {
+    inset: 14px;
+    width: auto;
+  }
+
+  .product-chat-focus img,
+  .product-chat-shot-card img {
+    transform: scale(1.06);
   }
 
   .product-demo {

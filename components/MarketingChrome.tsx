@@ -4,8 +4,7 @@ import { ReachlystBetaLogo } from "@/components/ReachlystBetaLogo";
 import { Button } from "@/components/ui";
 
 const marketingLinks = [
-  ["Features", "/#features"],
-  ["Product", "/#product-screenshots"],
+  ["Preview", "/#preview"],
   ["How it works", "/#how-it-works"],
   ["Pricing", "/#pricing"],
   ["FAQ", "/#faq"]
@@ -41,8 +40,7 @@ export function MarketingFooter() {
     <div className="container flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
       <MarketingLogo />
       <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
-        <Link className="hover:text-ink" href="/#features">Features</Link>
-        <Link className="hover:text-ink" href="/#product-screenshots">Product</Link>
+        <Link className="hover:text-ink" href="/#preview">Preview</Link>
         <Link className="hover:text-ink" href="/#pricing">Pricing</Link>
         <Link className="hover:text-ink" href="/#faq">FAQ</Link>
         <Link className="hover:text-ink" href="/privacy">Privacy Policy</Link>

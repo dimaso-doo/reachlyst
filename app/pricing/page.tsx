@@ -33,7 +33,10 @@ export default function PricingPage() {
         <div className="container">
           <div className="grid gap-4 md:grid-cols-3">
             {plans.map((plan) => <Card className={`grid h-full grid-rows-[auto_auto_auto_auto_1fr_auto_auto] gap-5 p-5 ${plan.key === "growth" ? "-translate-y-2 border-blue-200 shadow-[0_24px_80px_rgba(22,119,255,.14)]" : ""}`} key={plan.key}>
-              <h3 className="min-h-7 text-xl">{plan.name}</h3>
+              <div className="flex min-h-7 items-center justify-between gap-3">
+                <h3 className="text-xl">{plan.name}</h3>
+                {plan.limits.monthlyAiSuggestions === 300 ? <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] uppercase tracking-[.08em] text-amber-700">Beta</span> : null}
+              </div>
               <strong className="block text-4xl">{plan.price}<span className="ml-1 text-sm text-muted">/mo</span></strong>
               <p className="min-h-[72px] leading-6 text-muted">{plan.summary}</p>
               <div className="rounded-lg border border-blue-100 bg-blue-50/70 p-4">

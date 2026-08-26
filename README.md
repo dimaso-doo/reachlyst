@@ -1,5 +1,25 @@
 # Reachlyst
 
+## Live product
+
+https://reachlyst.com
+
+## Product
+
+Reachlyst is an AI-assisted workflow workspace for LinkedIn Sales Navigator. It combines a Next.js SaaS application with a Chrome Extension Manifest V3 while keeping outreach manual and under user control.
+
+## My role
+
+I defined the product scope, user flows and UX, directed AI-assisted implementation, reviewed authentication and data flows, debugged integrations, tested the complete product journey and managed deployment.
+
+## Stack
+
+Next.js, TypeScript, Supabase/PostgreSQL, Chrome Extension Manifest V3, OpenAI, Stripe and Vercel.
+
+## Status
+
+Live product with ongoing iteration.
+
 Read-only LinkedIn Sales Navigator assistant and outreach logbook.
 
 Reachlyst helps users work faster while they stay in control. It does not automate LinkedIn actions: no LinkedIn auto-login, no password storage, no headless browser, no automatic connect, no automatic send, no background scraping, and no bypassing LinkedIn limits.
@@ -151,33 +171,3 @@ pnpm build
 Cognee is configured as a Codex MCP memory server for Reachlyst development context.
 
 See `docs/cognee.md` and `docs/reachlyst-cognee-seed.md`.
-
-## GitHub repository
-
-Requested repository:
-
-- Name: `reachlyst`
-- Description: `Read-only LinkedIn Sales Navigator assistant and outreach logbook`
-- Visibility: private
-- Branches: `main` and `dev`
-- Active development branch: `dev`
-
-If GitHub CLI is installed and authenticated:
-
-```bash
-gh repo create reachlyst --private --description "Read-only LinkedIn Sales Navigator assistant and outreach logbook" --source=. --remote=origin --push
-git push -u origin dev
-```
-
-If GitHub CLI is not authenticated:
-
-```bash
-gh auth login
-```
-
-If GitHub CLI is missing:
-
-```bash
-brew install gh
-gh auth login
-```
